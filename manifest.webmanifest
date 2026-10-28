@@ -1,17 +1,24 @@
 {
   "name": "PCC gidas – 1040 medkuopa",
   "short_name": "PCC gidas",
-  "description": "Ilgalaikė sužeistojo priežiūra lauke: stebėjimo lapas, skysčių balansas, priežiūros grafikas, telekonsultacija",
+  "description": "Ilgalaikė sužeistojo priežiūra lauke: stebėjimo lapas, skysčių balansas, priežiūros grafikas, telekonsultacija, MIST",
   "lang": "lt",
+  "id": "./",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#171218",
-  "theme_color": "#1C1C1B",
+  "background_color": "#161912",
+  "theme_color": "#161912",
+  "categories": ["medical", "education"],
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Paciento failas", "short_name": "Pacientas", "url": "./#/pacientas", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Priminimai", "short_name": "Priminimai", "url": "./#/priminimai", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Telekonsultacija", "short_name": "Telekons.", "url": "./#/telekonsultacija", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
   ]
 }

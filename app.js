@@ -1,290 +1,368 @@
 'use strict';
-// app.js – maršrutai, įvykiai, apatiniai langai, priminimai.
+const app = document.getElementById('app');
+const backBtn = document.getElementById('back');
+const IMG_CACHE = 'pcc-img-1';
+let depth = 0;
+let night = !!LS.get('pcc-naktis', false); // naktinis raudonas režimas
+const dec = s => { try { return decodeURIComponent(s); } catch (e) { return s; } };
+// Sąrašo apačioje: išvalyti šio sąrašo žymėjimus (dabartinio sužeistojo; su „Atšaukti“). Naujas sužeistasis – juostos „+“.
+const clrCk = (p, q) => { let id = ''; try { id = HCFG().listOf(p, q || {}); } catch (e) {} if (!id) return ''; const n = (ckAll()[id] || []).length;
+  return `<button class="btn newpt" data-act="ck-clr" data-l="${esc(id)}"${n ? '' : ' disabled'}>Išvalyti žymėjimus${n ? ' (' + n + ')' : ''}</button>`; };
+// „Išvalyti žymėjimus“ mygtuko būsena po žymėjimo (be perpiešimo)
+const ckBtn = l => { const cb = app.querySelector('[data-act=ck-clr]'); if (!cb || cb.dataset.l !== l) return; const n = (ckAll()[l] || []).length; cb.disabled = !n; cb.textContent = 'Išvalyti žymėjimus' + (n ? ' (' + n + ')' : ''); };
+// Senas MIST maršrutas – paciento ekrano kortelė (mokymosi režime lieka atskiras puslapis su paaiškinimais)
+const REDIR = p => p[0] === 'mist' && mode !== 'learn' ? '#/pacientas?t=kortele' : '';
+// Sąrašo ⏱ turniketui: po laiko – galūnės pasirinkimas (rašoma į MIST kortelę)
+const limbsOn = () => { try { const st = MC.state(), c = st.pts[st.cur]; return Object.keys(c.tq || {}).some(k => c.tq[k] && c.tq[k].on); } catch (e) { return false; } };
+const limbPick = t => `<span class="muted">Turniketas ${esc(t)} – kuri galūnė?</span><div class="tmq tml" role="group" aria-label="Turniketo galūnė">` +
+  MC.TQ.map(([k, lt]) => `<button class="btn" data-act="tm-limb" data-k="${k}">${esc(lt)}</button>`).join('') + '<button class="btn" data-act="tm-limbx">Vėliau</button></div>';
+const ckOn = ck => { if (!ck || !ck.classList.contains('ck') || ck.classList.contains('on')) return; ckToggle(ck.dataset.l, +ck.dataset.i); ck.classList.add('on'); ck.setAttribute('aria-checked', 'true'); const cl = ck.closest('.cl'); if (cl) updCount(cl); ckBtn(ck.dataset.l); };
+const PT_BAR = []; // įrankiai, virš kurių rodoma pacientų juosta
+const fbLink = () => '<button class="btn fbrow" data-act="fb">Pastebėjote klaidą ar turite pasiūlymą? Praneškite</button>';
 
-let route = { v: 'list' }, UNDO = null, SH = null, notified = new Set(), lastAkt = 0;
-const $ = id => document.getElementById(id);
+// Visos vietinės iliustracijos (įgūdžiai + mokymosi puslapiai) – išsaugoti naudojimui be interneto
+function allImgs() {
+  const set = new Set();
+  (E.igudziai || []).forEach(s => (s.vaizdai || []).forEach(v => v.src && set.add(v.src)));
+  Object.keys(E.puslapiai || {}).forEach(k => { const m = String(E.puslapiai[k].html || '').match(/img\/(?!logo-)[^"'\s)]+\.(?:webp|png|jpe?g)/g); (m || []).forEach(x => set.add(x)); });
+  return Array.from(set);
+}
 
-function parse() {
-  const h = location.hash.replace(/^#\/?/, ''), [path, qs] = h.split('?'), q = new URLSearchParams(qs || ''), seg = path.split('/');
-  if (seg[0] === 'p' && seg[1]) return { v: 'pt', id: seg[1], tab: TABS.some(t => t[0] === q.get('t')) ? q.get('t') : 'apz' };
-  if (seg[0] === 'prim') return { v: 'prim' };
-  if (seg[0] === 'nust') return { v: 'set' };
-  return { v: 'list' };
+// Tikrai talpykloje esančių vaizdų skaičius (po versijos atnaujinimo ar išvalymo – pcc-img atnaujinamas)
+async function imgStatus() {
+  if (!('caches' in window)) return;
+  try {
+    const c = await caches.open(IMG_CACHE), list = allImgs();
+    let n = 0;
+    for (const u of list) if (await c.match(new Request(u))) n++;
+    const have = n >= list.length ? list.length : 0;
+    if (have !== LS.get('pcc-img', 0)) { LS.set('pcc-img', have); if (route().p[0] === 'nustatymai') render(); }
+  } catch (e) { /* tyliai */ }
 }
-function applyTheme() {
-  const s = S();
-  document.body.classList.toggle('field', s.theme !== 'light');
-  document.body.classList.toggle('night', !!s.night);
-  const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = s.theme === 'light' ? '#F7F6F2' : '#1C1C1B';
+
+function route() {
+  const raw = (location.hash || '#/').slice(1), qi = raw.indexOf('?'), q = {};
+  const path = qi < 0 ? raw : raw.slice(0, qi);
+  if (qi >= 0) raw.slice(qi + 1).split('&').forEach(kv => { const i = kv.indexOf('='); if (i > 0) q[kv.slice(0, i)] = dec(kv.slice(i + 1)); });
+  return { p: path.split('/').filter(Boolean).map(dec), q };
 }
+
+function view(p, q) {
+  switch (p[0]) {
+    case undefined: return V.home();
+    case 'f': return V.phase(p[1], +q.t || 0) + clrCk(p, q);
+    case 's': return V.list(p[1]) + clrCk(p, q);
+    case 'sarasai': return V.lists();
+    case '9line': return NL.view();
+    case 'mist': return MC.view();
+    case 'sitrep': return SR.view();
+    case 'priminimai': return PC.remView();
+    case 'telekonsultacija': return PC.page('tc');
+    case 'turniketai': return PC.page('tq');
+    case 'evakuacija': return PC.page('evac');
+    case 'scenarijai': return SC.view(p[1], q);
+    case 'pacientas': return HUB.view(q);
+    case 'qr': case 'qr-priimti': return QR.view(p[0]);
+    case 'vaistai': return V.drugs();
+    case 'vaistas': return V.drug(p[1]);
+    case 'igudziai': return V.skills(q);
+    case 'igudis': return V.skill(p[1]);
+    case 'temos': return V.topics();
+    case 'tema': return V.topic(p[1]);
+    case 'p': return V.page(p[1]);
+    case 'paieska': return V.search(q.q || '');
+    case 'nustatymai': return V.settings();
+    case 'idiegimas': return V.install();
+    case 'egzaminas': return EX.view(p[1]);
+    case 'korteles': return FC.view();
+    case 'vertinimas': return VL.view(p[1]);
+    default: return notFound();
+  }
+}
+
 function render() {
-  route = parse();
-  const d = D(), app = $('app');
-  let ttl = 'PCC gidas', sub = 'Ilgalaikė priežiūra lauke', back = '';
-  if (route.v === 'pt') { const p = pt(d, route.id); ttl = p ? p.nm : 'Sužeistasis'; sub = p && p.tInj ? 'Nuo traumos ' + dur(now() - p.tInj) : ''; back = '#/'; if (p && d.cur !== p.id) { d.cur = p.id; LS.set(K.data, d); } }
-  if (route.v === 'prim') { ttl = 'Priminimai'; sub = ''; }
-  if (route.v === 'set') { ttl = 'Nustatymai'; sub = ''; }
-  $('ttl').innerHTML = esc(ttl) + (sub ? `<small>${esc(sub)}</small>` : '');
-  $('back').hidden = !back; if (back) $('back').href = back;
-  const y = scrollY;
-  app.innerHTML = route.v === 'pt' ? V.pt(route.id, route.tab) : route.v === 'prim' ? V.prim() : route.v === 'set' ? V.set() : V.list();
-  nav(d);
-  return y;
-}
-function rerender() { const y = scrollY; render(); scrollTo(0, y); }
-function nav(d) {
-  const n = dueAll().length, cur = d.cur && pt(d, d.cur);
-  const a = (href, on, ic, t, dot) => `<a href="${href}" class="${on ? 'on' : ''}"${on ? ' aria-current="page"' : ''}>${ic}<span>${t}</span>${dot ? `<span class="dot">${dot}</span>` : ''}</a>`;
-  $('nav').innerHTML = a('#/', route.v === 'list', ICO.pts, 'Sužeistieji') + (cur ? a('#/p/' + cur.id, route.v === 'pt', ICO.cur, esc(cur.nm.replace('Sužeistasis ', '')).slice(0, 14)) : '') +
-    a('#/prim', route.v === 'prim', ICO.bell, 'Priminimai', n || '') + a('#/nust', route.v === 'set', ICO.set, 'Nustatymai');
+  const { p, q } = route();
+  document.body.className = night ? 'field night' : mode; // naktinis režimas – visada tamsi paletė + raudonas filtras
+  document.getElementById('mF').classList.toggle('on', mode === 'field');
+  document.getElementById('mL').classList.toggle('on', mode === 'learn');
+  document.getElementById('mF').setAttribute('aria-pressed', mode === 'field');
+  document.getElementById('mL').setAttribute('aria-pressed', mode === 'learn');
+  backBtn.style.display = p.length ? '' : 'none'; // pradžios ekrane vietoje „Atgal“ – atnaujinimo mygtukas dešinėje
+  const ub = document.getElementById('upd'); if (ub) ub.style.display = p.length ? 'none' : '';
+  const sec = { f: 'home', s: 'home', sarasai: 'home', '9line': 'home', mist: 'pacientas', sitrep: 'home', scenarijai: 'igudziai', pacientas: 'pacientas', qr: 'pacientas', 'qr-priimti': 'pacientas', vaistai: 'vaistai', vaistas: 'vaistai', igudziai: 'igudziai', igudis: 'igudziai', temos: 'igudziai', tema: 'igudziai', p: 'igudziai', egzaminas: 'home', korteles: 'vaistai', vertinimas: 'home', priminimai: 'priminimai', telekonsultacija: 'pacientas', turniketai: 'pacientas', evakuacija: 'pacientas' }[p[0]] || (p.length ? '' : 'home');
+  document.querySelectorAll('#nav a').forEach(a => { const on = a.dataset.s === sec; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
+  try { PT.sync(); } catch (e) { console.error(e); }
+  if (typeof DICT !== 'undefined') DICT.stop();
+  let pb = ''; try { pb = HUB.bar(p[0]); } catch (e) { console.error(e); } // sužeistojo juosta virš apatinės navigacijos (ir atvertas langas)
+  if (pb) document.body.classList.add('hasbar');
+  if (pb && HUB.isOpen()) document.body.classList.add('hbopen');
+  try { app.innerHTML = (PT_BAR.indexOf(p[0]) >= 0 ? PT.bar() : '') + view(p, q) + pb; if (p[0] === 'nustatymai') imgStatus(); }
+  catch (err) { console.error(err); app.innerHTML = '<h1>Klaida</h1><p class="muted">Nepavyko atidaryti puslapio. Grįžkite į pradžią arba praneškite apie klaidą.</p>' + fbLink(); }
+  try { HUB.nav(); PC.nav(); } catch (e) { console.error(e); }
+  app.querySelectorAll('.tabs, .ptabs, .hbt').forEach(sc => { const b = sc.querySelector('button.on'), add = sc.querySelector('.add'); if (b && sc.scrollWidth > sc.clientWidth) { const av = sc.clientWidth - (add ? add.offsetWidth + 12 : 0); sc.scrollLeft = Math.max(0, b.offsetLeft - (av - b.offsetWidth) / 2); } });
+  const h1 = app.querySelector('h1');
+  document.title = h1 && p.length ? (h1.dataset.title || (h1.childNodes[0] || h1).textContent.trim()) + ' · PCC gidas' : 'PCC gidas';
+  try { QR.after(p[0]); DICT.enhance(app); } catch (e) { console.error(e); }
+  if (p[0] === 'paieska') { const i = document.getElementById('qs'); if (i) { i.focus(); try { i.setSelectionRange(i.value.length, i.value.length); } catch (e) {} } }
 }
 
-// ───────── apatiniai langai ─────────
-function openSheet(state) { SH = state; drawSheet(); $('sheet').classList.add('open'); $('sheet').setAttribute('aria-hidden', 'false'); }
-function closeSheet() { SH = null; $('sheet').classList.remove('open'); $('sheet').setAttribute('aria-hidden', 'true'); $('sheetPn').innerHTML = ''; }
-const hd = t => `<div class="hd"><b>${esc(t)}</b><button class="ib" data-act="sheet-close" aria-label="Uždaryti">×</button></div>`;
-const KP = (extra) => '<div class="kp">' + ['1', '2', '3', '4', '5', '6', '7', '8', '9', extra || ',', '0', '⌫'].map(k => `<button data-act="kp" data-k="${k}"${k === '⌫' ? ' aria-label="Trinti"' : ''}>${k}</button>`).join('') + '</div>';
-const timeChips = (t, list) => '<div class="chips" role="group" aria-label="Laikas">' + list.map(([m, l]) => chip('sh-t', m, Math.abs(t - (SH.t0 + m * MIN)) < 30e3, l)).join('') + `<span class="tag">${hm(t)}</span></div>`;
-const TBACK = [[0, 'Dabar'], [-5, '−5 min'], [-10, '−10'], [-15, '−15'], [-30, '−30']];
-const MEDS = ['Ketaminas', 'Fentanilis', 'Morfinas', 'Paracetamolis', 'Meloksikamas', 'Ertapenemas', 'Moksifloksacinas', 'Ceftriaksonas', 'TXA', 'Kalcis', 'Ondansetronas', 'Naloksonas', 'Hipertoninis NaCl', 'Levetiracetamas'];
-const INTS = ['Turniketo konversija', 'Šlapimo kateteris', 'Pleuros drenas', 'Pirštinė torakostomija', 'Intubacija', 'Krikotiroidotomija', 'Kraujo perpylimas', 'IV / IO prieiga', 'Tvarsčio keitimas', 'Žaizdos plovimas', 'Įtvaras', 'Šildymas'];
-const ROUTES = ['IV', 'IO', 'IM', 'PO', 'IN', 'Kita'];
-const MIVL = [[0, 'Nekartoti'], [30, '30 min'], [60, '1 val.'], [240, '4 val.'], [360, '6 val.'], [480, '8 val.'], [720, '12 val.'], [1440, '24 val.']];
+function onNav(first) {
+  { const r = REDIR(route().p); if (r) { try { history.replaceState(history.state, '', r); } catch (e) { location.replace(r); return; } } }
+  const { p, q } = route(), s = history.state;
+  if (!(s && s.d != null)) { try { LU.onRoute(p, q); } catch (e) { console.error(e); } } // dažniausi sąrašai: tik naujas perėjimas (ne atgal / pirmyn / perkrovimas)
+  HUB.close();
+  depth = !p.length ? 0 : (s && s.d != null ? s.d : (first ? 0 : depth + 1));
+  history.replaceState(Object.assign({}, s, { d: depth }), '');
+  tmEdit = null;
+  render();
+  if (!first) scrollTo(0, 0);
+  HUB.after();
+}
 
-function drawSheet() {
-  const s = SH, pn = $('sheetPn'); if (!s) return;
-  let h = '';
-  if (s.type === 'vit') {
-    h = hd('Gyvybiniai rodikliai') + timeChips(s.t, TBACK);
-    h += '<div class="flds">' + VF.map(([k, nm, u]) => `<button class="fld${s.f === k ? ' on' : ''}" data-act="vf" data-k="${k}"><small>${nm}${u ? ' ' + u : ''}</small><b>${esc(s.v[k] || '')}</b></button>`).join('') + '</div>';
-    h += `<div class="disp" aria-live="polite">${esc((VF.find(x => x[0] === s.f) || ['', ''])[1])}: ${esc(s.v[s.f] || '')}<span style="opacity:.4">|</span></div>` + KP() +
-      '<div class="acts"><button class="btn" data-act="vf-next">Toliau ›</button></div>';
-    h += '<div class="lb">AVPU</div><div class="chips">' + AVPU.map(a => chip('vs-avpu', a, s.v.avpu === a, a)).join('') + '</div>';
-    h += '<div class="lb">Kapiliarų prisipildymas</div><div class="chips">' + CRT.map(([k, t]) => chip('vs-crt', k, s.v.crt === k, t)).join('') + '</div>';
-    h += '<div class="lb">Skausmas 0–10</div><div class="chips">' + Array.from({ length: 11 }, (_, i) => chip('vs-pain', i, s.v.pain === String(i), String(i))).join('') + '</div>';
-    h += '<div class="acts"><button class="btn pri wide" data-act="vit-save">Įrašyti</button></div>';
-  } else if (s.type === 'io') {
-    const L = s.k === 'in' ? IN_T : OUT_T;
-    h = hd(s.k === 'in' ? 'Įvesta (skysčiai)' : 'Išskirta') + '<div class="chips">' + L.map(([k, t]) => chip('io-type', k, s.typ === k, t)).join('') + '</div>';
-    h += `<div class="disp">${esc(s.ml || '0')} ml</div><div class="chips">` + (s.k === 'in' ? [100, 250, 500, 1000] : [50, 100, 200, 500]).map(x => chip('io-q', x, String(x) === s.ml, x + ' ml')).join('') + '</div>' + KP('');
-    h += timeChips(s.t, TBACK.concat([[-60, '−1 val.']]));
-    h += `<label class="lb" for="sh-note">Pastaba</label><input class="inp" id="sh-note" data-sf="note" value="${esc(s.note)}" placeholder="${s.k === 'in' ? 'pvz. Ringerio laktatas, pilnas kraujas O' : 'pvz. drenas D'}" autocomplete="off">`;
-    h += '<div class="acts"><button class="btn pri wide" data-act="io-save">Įrašyti</button></div>';
-  } else if (s.type === 'med') {
-    const L = s.kind === 'int' ? INTS : MEDS;
-    h = hd(s.kind === 'int' ? 'Veiksmas' : 'Vaistas') + `<input class="inp" id="sh-name" data-sf="name" value="${esc(s.name)}" placeholder="${s.kind === 'int' ? 'Veiksmas' : 'Vaisto pavadinimas'}" autocomplete="off">` +
-      '<div class="chips">' + L.map(n => chip('med-name', n, s.name === n, n)).join('') + '</div>';
-    if (s.kind === 'med') {
-      h += `<label class="lb" for="sh-dose">Dozė</label><input class="inp" id="sh-dose" data-sf="dose" value="${esc(s.dose)}" placeholder="pvz. 20 mg" autocomplete="off">`;
-      h += '<div class="lb">Būdas</div><div class="chips">' + ROUTES.map(r => chip('med-route', r, s.route === r, r)).join('') + '</div>';
-      h += '<div class="lb">Kartoti kas</div><div class="chips">' + MIVL.map(([m, t]) => chip('med-ivl', m, s.ivl === m, t)).join('') + '</div>';
-      if (/^txa/i.test(s.name)) h += '<p class="muted">PCC gairės, galvos trauma: vienkartinis 2 g IV/IO, antros dozės nereikia.</p>';
-      h += `<p class="muted">Dozės – <a href="${SRC.etc[1]}" target="_blank" rel="noopener">ETC gide ↗</a></p>`;
+function setMode(m) { if (m === mode) return; mode = m; LS.set('pcc-rezimas', m); tmEdit = null; render(); }
+
+addEventListener('hashchange', () => onNav(false));
+backBtn.onclick = () => { if (depth > 0) history.back(); else location.replace('#/'); };
+document.getElementById('mF').onclick = () => setMode('field');
+document.getElementById('mL').onclick = () => setMode('learn');
+document.getElementById('fbb').onclick = () => FB.open();
+document.getElementById('srch').onclick = () => { if (route().p[0] !== 'paieska') location.hash = '#/paieska'; };
+
+// Elementą parodyti virš apatinės navigacijos (scrollIntoView nepaiso fiksuotos juostos)
+function showAboveNav(elm) {
+  const nav = document.getElementById('nav'), r = elm.getBoundingClientRect(), top = nav ? nav.getBoundingClientRect().top : innerHeight;
+  const hdr = document.querySelector('header'), hb = hdr ? hdr.getBoundingClientRect().bottom : 0;
+  if (r.bottom > top - 8) scrollBy({ top: Math.min(r.bottom - top + 16, r.top - hb - 8), behavior: 'smooth' });
+  const b = elm.querySelector('button'); if (b) b.focus({ preventScroll: true });
+}
+
+async function saveImgs(el) {
+  if (!('caches' in window)) { toast('Ši naršyklė to nepalaiko'); return; }
+  if (!navigator.onLine) { toast('Reikia interneto ryšio'); return; }
+  const list = allImgs(), sm = el.querySelector('small');
+  el.disabled = true;
+  let n = 0, bad = 0;
+  try {
+    const c = await caches.open(IMG_CACHE);
+    for (const u of list) {
+      try {
+        const req = new Request(u);
+        if (!(await c.match(req))) { const r = await fetch(req); if (r.ok) await c.put(req, r); else bad++; }
+      } catch (e) { bad++; }
+      n++; if (sm) sm.textContent = 'Išsaugota ' + n + ' / ' + list.length;
     }
-    h += timeChips(s.t, TBACK);
-    h += `<label class="lb" for="sh-mnote">Pastaba</label><input class="inp" id="sh-mnote" data-sf="note" value="${esc(s.note)}" autocomplete="off">`;
-    h += '<div class="acts"><button class="btn pri wide" data-act="med-save">Įrašyti</button></div>';
-  } else if (s.type === 'pt') {
-    const p = pt(D(), s.pid); if (!p) return closeSheet();
-    const inp = (k, lb, ph) => `<label class="lb" for="pf-${k}">${lb}</label><input class="inp" id="pf-${k}" data-pf="${k}" value="${esc(p[k])}" placeholder="${esc(ph || '')}" autocomplete="off">`;
-    const ta = (k, lb, ph) => `<label class="lb" for="pf-${k}">${lb}</label><textarea class="inp" id="pf-${k}" data-pf="${k}" rows="2" placeholder="${esc(ph || '')}">${esc(p[k])}</textarea>`;
-    h = hd('Sužeistojo duomenys') + inp('nm', 'Vardas, ID, šaukinys') + '<div class="chips">' + [['V', 'Vyras'], ['M', 'Moteris']].map(([k, t]) => chip('pf-sex', t, p.sex === t, t)).join('') + '</div>' +
-      inp('age', 'Amžius', 'metai') + '<div class="chips">' + ['LT karys', 'Sąjungininkas', 'Civilis', 'Priešo karys'].map(t => chip('pf-status', t, p.status === t, t)).join('') + '</div>' +
-      inp('mech', 'Mechanizmas', 'pvz. sprogimas, šautinė žaizda') + ta('inj', 'Sužalojimai, problemos') + inp('allerg', 'Alergijos', 'nežinoma / nėra / …') + inp('hist', 'Ligos, operacijos, vaistai');
-    h += `<div class="acts"><button class="btn" data-act="ed-tinj">⏱ Trauma ${p.tInj ? dhm(p.tInj) : '—'}</button><button class="btn" data-act="ed-kg">⚖ ${p.kg ? p.kg + ' kg' : 'Svoris'}</button></div>`;
-    h += '<div class="lb">Evakuacijos kategorija</div><div class="chips">' + EVC.map(([k, t]) => chip('pf-evc', k, p.evac.cat === k, t)).join('') + '</div>';
-    h += `<div class="acts"><button class="btn" data-act="ed-eta">🚁 Evakuacija ${p.evac.eta ? hm(p.evac.eta) : '—'}</button></div>`;
-    h += '<div class="chips">' + chip('tbi', '1', p.tbi, (p.tbi ? '✓ ' : '') + 'Galvos trauma') + chip('burns', '1', p.burns, (p.burns ? '✓ ' : '') + 'Nudegimai') + '</div>';
-    h += '<div class="acts"><button class="btn pri wide" data-act="sheet-close">Gerai</button></div>';
-  } else if (s.type === 'time') {
-    const isEta = s.field === 'eta', list = isEta ? [[30, '+30 min'], [60, '+1 val.'], [120, '+2'], [240, '+4'], [480, '+8'], [720, '+12'], [1440, '+24']] : [[0, 'Dabar'], [-15, '−15 min'], [-30, '−30'], [-60, '−1 val.'], [-120, '−2'], [-240, '−4'], [-480, '−8']];
-    h = hd(isEta ? 'Numatomas evakuacijos laikas' : 'Traumos laikas') + '<div class="chips">' + list.map(([m, l]) => chip('tm-rel', m, false, l)).join('') + '</div>';
-    h += `<div class="disp">${esc(fmtBuf(s.buf))}</div>` + KP('') + '<div class="acts"><button class="btn" data-act="tm-clear">Išvalyti</button><button class="btn pri" data-act="tm-set">Nustatyti</button></div><p class="muted">Įveskite VVMM, pvz. 1420.</p>';
-  } else if (s.type === 'kg') {
-    h = hd('Svoris, kg') + '<div class="chips">' + [60, 70, 80, 90, 100, 110, 120].map(x => chip('kg-q', x, String(x) === s.buf, x + ' kg')).join('') + '</div>' + `<div class="disp">${esc(s.buf || '')} kg</div>` + KP('') + '<div class="acts"><button class="btn pri wide" data-act="kg-set">Nustatyti</button></div>';
-  } else if (s.type === 'imp') {
-    h = hd('Įkelti duomenis') + '<p class="muted">Įklijuokite kitame telefone nukopijuotus duomenis. Sužeistieji bus pridėti prie esamų.</p><textarea class="inp" id="imp-txt" rows="6"></textarea><div class="acts"><button class="btn pri wide" data-act="imp-do">Įkelti</button></div>';
+    // pašalinti nebenaudojamus (senesnių versijų) vaizdus
+    const want = new Set(list.map(u => new URL(u, location.href).href));
+    for (const k of await c.keys()) if (!want.has(k.url)) await c.delete(k);
+  } catch (e) { bad = list.length; }
+  LS.set('pcc-img', bad ? 0 : list.length);
+  toast(bad ? 'Nepavyko išsaugoti ' + bad + ' vaizdų – bandykite dar kartą' : 'Iliustracijos išsaugotos');
+  if (route().p[0] === 'nustatymai') render();
+}
+
+app.addEventListener('click', e => {
+  const lnk = e.target.closest('a[href]');
+  if (lnk && !lnk.dataset.act && app.contains(lnk)) return; // paprastos nuorodos (pvz., paaiškinime) – tik naršymas, be žymėjimo
+  const el = e.target.closest('[data-act]');
+  if (!el || !app.contains(el)) return;
+  const d = el.dataset;
+  if (d.act === 'ck') {
+    if (e.target.closest('.lk')) return; // tarpas tarp nuorodų mygtukų – nežymėti
+    try { if (String(getSelection()).trim()) return; } catch (x) {} // žymimas tekstas
   }
-  pn.innerHTML = h;
-}
-const fmtBuf = b => { b = (b || '').padEnd(4, '_'); return b.slice(0, 2) + ':' + b.slice(2, 4); };
-
-// ───────── veiksmai ─────────
-function act(el) {
-  const a = el.dataset.act, k = el.dataset.k, r = route, pid = el.dataset.p || (r.v === 'pt' ? r.id : '') || (SH && SH.pid);
-  const up = fn => { update(pid, fn); rerender(); };
-  switch (a) {
-    case 'sheet-close': closeSheet(); rerender(); return;
-    case 'read-close': $('read').classList.remove('on'); return;
-    case 'night': setS({ night: !S().night }); applyTheme(); return;
-    case 'undo': return undo();
-    case 'pt-new': { const d = D(); d.n = (d.n || 0) + 1; const p = defPt(d.n); d.pts.push(p); d.cur = p.id; saveD(d); location.hash = '#/p/' + p.id; setTimeout(() => openSheet({ type: 'pt', pid: p.id }), 50); return; }
-    case 'pt-del': {
-      const d = D(), i = d.pts.findIndex(p => p.id === pid); if (i < 0) return;
-      if (!confirm('Ištrinti ' + d.pts[i].nm + ' ir visus jo įrašus?')) return;
-      UNDO = { type: 'pt', p: d.pts[i], i }; d.pts.splice(i, 1); if (d.cur === pid) d.cur = ''; saveD(d); location.hash = '#/'; toast('Ištrinta', true); return;
+  // Įrankiai (tools.js): 9-Line, MIST kortelė, TST, SITREP
+  if (/^nl-/.test(d.act)) { NL.act(el); return; }
+  if (/^mc-/.test(d.act)) { MC.act(el, e); return; }
+  if (/^sr-/.test(d.act)) { SR.act(el); return; }
+  if (/^pc-/.test(d.act)) { PC.act(el, e); return; }
+  if (/^sc-/.test(d.act)) { SC.act(el); return; }
+  if (/^pt-/.test(d.act)) { PT.act(el); return; }
+  if (/^hb-/.test(d.act)) { HUB.act(el); return; }
+  if (/^rem-/.test(d.act)) { REM.act(el); return; }
+  if (/^qr-/.test(d.act)) { QR.act(el); return; }
+  if (/^ex-/.test(d.act)) { EX.act(el); return; }
+  if (/^vl-/.test(d.act)) { VL.act(el); return; }
+  if (/^fc-/.test(d.act)) { FC.act(el); return; }
+  if (/^op-/.test(d.act)) { OP.act(el); return; }
+  if (/^gl-/.test(d.act)) { GL.act(el); return; }
+  switch (d.act) {
+    case 'ck': {
+      ckToggle(d.l, +d.i); el.classList.toggle('on'); el.setAttribute('aria-checked', el.classList.contains('on'));
+      const box = el.closest('.cl'); updCount(box); ckBtn(d.l);
+      const tb = document.querySelector('.tabs button.on'), all = box.querySelectorAll('.ck').length;
+      if (tb) tb.classList.toggle('done', all > 0 && box.querySelectorAll('.ck.on').length === all);
+      if (navigator.vibrate) navigator.vibrate(15); break;
     }
-    case 'ed-pt': return openSheet({ type: 'pt', pid });
-    case 'ed-tinj': { const p = pt(D(), pid); return openSheet({ type: 'time', pid, field: 'tInj', buf: '', back: SH && SH.type === 'pt' }); }
-    case 'ed-eta': return openSheet({ type: 'time', pid, field: 'eta', buf: '', back: true });
-    case 'ed-kg': { const p = pt(D(), pid); return openSheet({ type: 'kg', pid, buf: p && p.kg ? String(p.kg) : '', back: SH && SH.type === 'pt' }); }
-    case 'crit': return up(p => { p.crit = k; p.vint = k === 'crit' ? 15 : k === 'ser' ? 240 : 720; });
-    case 'trend': return up(p => { p.trend = p.trend === k ? '' : k; });
-    case 'vint': return up(p => { p.vint = +k; });
-    case 'uoh': setS({ uoh: +k }); rerender(); return;
-    case 'burns': update(pid, p => { p.burns = !p.burns; }); SH ? drawSheet() : rerender(); return;
-    case 'tbi': update(pid, p => { p.tbi = !p.tbi; }); SH ? drawSheet() : rerender(); return;
-    case 'heat': return up(p => { if (p.care.sild) delete p.care.sild; else p.care.sild = now(); });
-    case 'care-off': return up(p => { if (p.off[k]) delete p.off[k]; else p.off[k] = 1; });
-    case 'care-done': { update(pid, p => { p.care[k] = now(); }); notified.forEach(x => { if (x.startsWith(pid + ':care:' + k)) notified.delete(x); }); toast('Atlikta ' + hm(now())); rerender(); return; }
-    case 'tq-add': return up(p => { p.tq.push({ id: uid(), limb: k, t: now() }); });
-    case 'tq-conv': return up(p => { const q = p.tq.find(x => x.id === k); if (q) q.conv = now(); p.meds.push({ id: uid(), kind: 'int', name: 'Turniketo konversija', note: q ? q.limb : '', t: now(), ivl: 0 }); });
-    case 'tq-del': { if (!confirm('Ištrinti turniketo įrašą?')) return; return up(p => { p.tq = p.tq.filter(x => x.id !== k); }); }
-    case 'evck': return update(pid, p => { p.evck[k] = el.checked; });
-    // rodikliai
-    case 'vit-new': return openSheet({ type: 'vit', pid, t0: now(), t: now(), v: {}, f: 'hr' });
-    case 'vf': SH.f = k; return drawSheet();
-    case 'vf-next': { const i = VF.findIndex(x => x[0] === SH.f); SH.f = VF[(i + 1) % VF.length][0]; return drawSheet(); }
-    case 'vs-avpu': SH.v.avpu = SH.v.avpu === k ? '' : k; return drawSheet();
-    case 'vs-crt': SH.v.crt = SH.v.crt === k ? '' : k; return drawSheet();
-    case 'vs-pain': SH.v.pain = SH.v.pain === k ? '' : k; return drawSheet();
-    case 'vit-save': return vitSave();
-    case 'vit-del': { const p = pt(D(), pid), v = p && p.vit.find(x => x.id === k); if (!v) return; UNDO = { type: 'vit', pid, e: v }; up(p => { p.vit = p.vit.filter(x => x.id !== k); }); toast('Matavimas ištrintas', true); return; }
-    // skysčiai
-    case 'io-new': return openSheet({ type: 'io', pid, k, typ: k === 'in' ? 'krist' : 'slap', ml: '', t0: now(), t: now(), note: '' });
-    case 'io-type': SH.typ = k; return drawSheet();
-    case 'io-q': SH.ml = k; return drawSheet();
-    case 'io-save': {
-      const ml = parseInt(SH.ml, 10); if (!(ml > 0 && ml <= 10000)) return toast('Įveskite kiekį ml');
-      const e = { id: uid(), k: SH.k, type: SH.typ, ml, t: SH.t, note: (SH.note || '').trim() };
-      update(SH.pid, p => { p.io.push(e); }); closeSheet(); toast('Įrašyta: ' + ioName(e.k, e.type) + ' ' + ml + ' ml'); rerender(); return;
+    case 'go': e.preventDefault(); if (location.hash !== d.r) { if (d.rep) location.replace(d.r); else location.hash = d.r; } break;
+    case 'toc': { const t = document.getElementById(d.t); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' }); break; }
+    case 'mp4': {
+      const v = document.createElement('video');
+      v.src = d.src; v.controls = true; v.autoplay = true; v.playsInline = true; v.preload = 'auto';
+      el.classList.remove('vthumb', 'vmp4'); el.removeAttribute('data-act'); el.removeAttribute('role'); el.innerHTML = ''; el.appendChild(v);
+      break;
     }
-    case 'io-del': { const p = pt(D(), pid), e = p && p.io.find(x => x.id === k); if (!e) return; UNDO = { type: 'io', pid, e }; up(p => { p.io = p.io.filter(x => x.id !== k); }); toast('Įrašas ištrintas', true); return; }
-    // vaistai
-    case 'med-new': return openSheet({ type: 'med', pid, kind: k, name: '', dose: '', route: k === 'med' ? 'IV' : '', ivl: 0, t0: now(), t: now(), note: '' });
-    case 'med-name': SH.name = k; return drawSheet();
-    case 'med-route': SH.route = k; return drawSheet();
-    case 'med-ivl': SH.ivl = +k; return drawSheet();
-    case 'med-save': {
-      const name = (SH.name || '').trim(); if (!name) return toast('Įveskite pavadinimą');
-      const m = { id: uid(), kind: SH.kind, name, dose: (SH.dose || '').trim(), route: SH.route || '', ivl: SH.ivl || 0, t: SH.t, note: (SH.note || '').trim() };
-      update(SH.pid, p => { p.meds.push(m); }); closeSheet(); toast('Įrašyta: ' + name); rerender(); return;
+    case 'yt': {
+      const f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + d.id + '?autoplay=1&rel=0';
+      f.title = 'Vaizdo įrašas'; f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'; f.allowFullscreen = true;
+      el.classList.remove('vthumb'); el.removeAttribute('style'); el.removeAttribute('data-act'); el.removeAttribute('role'); el.innerHTML = ''; el.appendChild(f);
+      break;
     }
-    case 'med-again': { const p = pt(D(), pid), m = p && p.meds.find(x => x.id === k); if (!m) return; return openSheet({ type: 'med', pid, kind: 'med', name: m.name, dose: m.dose, route: m.route, ivl: m.ivl, t0: now(), t: now(), note: '' }); }
-    case 'med-del': { const p = pt(D(), pid), e = p && p.meds.find(x => x.id === k); if (!e) return; UNDO = { type: 'med', pid, e }; up(p => { p.meds = p.meds.filter(x => x.id !== k); }); toast('Įrašas ištrintas', true); return; }
-    // laikas ir svoris
-    case 'sh-t': SH.t = SH.t0 + (+k) * MIN; return drawSheet();
-    case 'kp': return kp(k);
-    case 'tm-rel': return timeSet(now() + (+k) * MIN);
-    case 'tm-clear': return timeSet(0);
-    case 'tm-set': {
-      if (!/^\d{4}$/.test(SH.buf || '')) return toast('Įveskite VVMM');
-      const hh = +SH.buf.slice(0, 2), mm = +SH.buf.slice(2); if (hh > 23 || mm > 59) return toast('Neteisingas laikas');
-      const d0 = new Date(); d0.setHours(hh, mm, 0, 0); let t = d0.getTime();
-      if (SH.field === 'tInj' && t > now() + MIN) t -= 24 * HR; if (SH.field === 'eta' && t < now() - MIN) t += 24 * HR;
-      return timeSet(t);
+    case 'tm': MC.sheet('time', { field: d.k }); break; // laiko langas – tas pats visur (kartu su MIST kortele)
+    case 'tm-q': { // sąrašo ⏱: laikas, punktas pažymimas; turniketui – dar galūnė
+      const k = d.k, ts = Date.now() - (+d.m || 0) * 60000, lb = k === 'turn' ? 'Turniketas' : 'Trauma', box = el.closest('.tmq-ck');
+      setTm(ts, k);
+      app.querySelectorAll('.tmk[data-k="' + k + '"]').forEach(x => { x.textContent = '⏱ ' + hm(ts); });
+      if (box) ckOn(box.previousElementSibling);
+      toast(lb + ': ' + hm(ts)); if (navigator.vibrate) navigator.vibrate(30);
+      if (k === 'turn' && box && !limbsOn()) { box.innerHTML = limbPick(hm(ts)); showAboveNav(box); } else app.querySelectorAll('.tmq-ck').forEach(x => x.remove());
+      break;
     }
-    case 'kg-q': SH.buf = k; return drawSheet();
-    case 'kg-set': { const kg = parseInt(SH.buf, 10); if (!(kg >= 3 && kg <= 250)) return toast('Svoris 3–250 kg'); const b = SH.back, id = SH.pid; update(id, p => { p.kg = kg; }); b ? openSheet({ type: 'pt', pid: id }) : closeSheet(); rerender(); return; }
-    case 'pf-sex': update(pid, p => { p.sex = p.sex === k ? '' : k; }); return drawSheet();
-    case 'pf-status': update(pid, p => { p.status = p.status === k ? '' : k; }); return drawSheet();
-    case 'pf-evc': update(pid, p => { p.evac.cat = p.evac.cat === k ? '' : k; }); return drawSheet();
-    // perdavimas
-    case 'tc-read': { const p = pt(D(), pid); return readMode('Telekonsultacija', teleLines(p)); }
-    case 'tc-copy': return copyText(teleText(pt(D(), pid)));
-    case 'tc-share': return shareText('Telekonsultacija', teleText(pt(D(), pid)));
-    case 'at-read': return readMode('ATMISTER', atmistLines(pt(D(), pid)));
-    case 'at-copy': return copyText(atmistText(pt(D(), pid)));
-    case 'at-share': return shareText('ATMISTER', atmistText(pt(D(), pid)));
-    // nustatymai
-    case 'theme': setS({ theme: k }); applyTheme(); rerender(); return;
-    case 'sound': setS({ sound: !S().sound }); rerender(); return;
-    case 'vib': setS({ vib: !S().vib }); rerender(); return;
-    case 'opsec': setS({ opsec: +k }); rerender(); return;
-    case 'exp': return copyText(JSON.stringify({ app: 'pcc-gidas', v: 1, pts: D().pts }));
-    case 'imp': return openSheet({ type: 'imp' });
-    case 'imp-do': {
-      let o; try { o = JSON.parse($('imp-txt').value); } catch (e) { return toast('Netinkami duomenys'); }
-      const L = Array.isArray(o) ? o : o && Array.isArray(o.pts) ? o.pts : null; if (!L || !L.length) return toast('Sužeistųjų nerasta');
-      const d = D(); L.forEach(p => { if (!p || typeof p !== 'object') return; const q = Object.assign(defPt(++d.n), p); if (d.pts.some(x => x.id === q.id)) q.id = uid(); d.pts.push(q); });
-      saveD(d); closeSheet(); toast('Įkelta: ' + L.length); location.hash = '#/'; rerender(); return;
+    case 'tm-limb': {
+      const T = LS.get('pcc-laikai', {}) || {}; if (!MC.setTq(d.k, T.turn ? hm(T.turn) : nowHM())) break;
+      app.querySelectorAll('.tmq-ck').forEach(x => x.remove());
+      toast('Turniketas: ' + MC.tqName(d.k) + (T.turn ? ' · ' + hm(T.turn) : '')); break;
     }
-    case 'wipe': if (!confirm('Ištrinti VISUS sužeistųjų duomenis šiame telefone?')) return; LS.del(K.data); UNDO = null; notified.clear(); toast('Duomenys ištrinti'); location.hash = '#/'; rerender(); return;
+    case 'tm-limbx': app.querySelectorAll('.tmq-ck').forEach(x => x.remove()); break;
+    case 'tm-mark': {
+      const T = LS.get('pcc-laikai', {}) || {}, lb = d.k === 'turn' ? 'Turniketas' : 'Trauma', ck = el.closest('.ck');
+      const open = ck && ck.nextElementSibling && ck.nextElementSibling.classList.contains('tmq-ck');
+      app.querySelectorAll('.tmq-ck').forEach(x => x.remove());
+      if (T[d.k]) {
+        ckOn(ck);
+        if (d.k === 'turn' && ck && !open && !limbsOn()) { ck.insertAdjacentHTML('afterend', `<div class="tmq-ck">${limbPick(hm(T.turn))}</div>`); showAboveNav(ck.nextElementSibling); }
+        else toast(lb + ' jau pažymėtas ' + hm(T[d.k]) + ' · keisti – paciento faile');
+        break;
+      }
+      if (ck && !open) { ck.insertAdjacentHTML('afterend', `<div class="tmq-ck"><span class="muted">${d.k === 'turn' ? 'Kada uždėtas turniketas?' : 'Kada sužeista?'}</span>${tmQuick(d.k)}</div>`); showAboveNav(ck.nextElementSibling); }
+      break;
+    }
+    case 'ok': LS.set('pcc-ok', true); el.closest('.warn').remove(); break;
+    case 'w': LS.set('pcc-svoris', +d.w); render(); break;
+    case 'rate': {
+      const R = LS.get('pcc-ivert', {}), v = +d.v;
+      if (R[d.id] === v) delete R[d.id]; else R[d.id] = v;
+      LS.set('pcc-ivert', R); render(); break;
+    }
+    case 'new-pt': { const prev = PT.list().cur; PT.add(); render(); PT.added(prev); break; } // kitas sužeistasis; ankstesni lieka sąraše
+    case 'ck-clr': {
+      const all = ckAll(), prev = all[d.l]; if (!prev || !prev.length) break;
+      delete all[d.l]; LS.set('pcc-ck', all); { const y = scrollY; render(); scrollTo(0, y); }
+      toastAct('Žymėjimai išvalyti', 'Atšaukti', () => { const a = ckAll(); a[d.l] = prev; LS.set('pcc-ck', a); const y = scrollY; render(); scrollTo(0, y); });
+      break;
+    }
+    case 'tikcls': { LS.set('pcc-tikcls', !tikCLS()); IDX = null; render(); const f = app.querySelector('[data-act=tikcls]'); if (f) f.focus(); toast(tikCLS() ? 'Rodomi tik CLS veiksmai' : 'Rodomi visi veiksmai'); break; }
+    case 'reset-ivert': if (confirm('Ištrinti visus įsivertinimus?')) { LS.set('pcc-ivert', {}); render(); } break;
+    case 'fb': FB.open(); break;
+    case 'fb-flush':
+      if (!FB.configured()) { alert('Pranešimų priėmimas dar neįjungtas. Pranešimai bus išsiųsti automatiškai, kai jis veiks.'); break; }
+      if (!navigator.onLine) { alert('Nėra interneto ryšio.'); break; }
+      el.disabled = true; FB.flush().then(n => { alert(n ? 'Išsiųsta: ' + n + '.' : 'Išsiųsti nepavyko – bandysime vėliau.'); render(); }); break;
+    case 'img-dl': saveImgs(el); break;
+    case 'install': if (installEv) { installEv.prompt(); installEv.userChoice.finally(() => { installEv = null; render(); }); } break;
+    case 'upd':
+      if (!navigator.onLine) { alert('Atnaujinti galima tik su interneto ryšiu.'); break; }
+      caches.keys().then(ks => Promise.all(ks.filter(k => k !== IMG_CACHE).map(k => caches.delete(k))))
+        .then(() => navigator.serviceWorker ? navigator.serviceWorker.getRegistrations() : [])
+        .then(rs => Promise.all((rs || []).map(r => r.update().catch(() => {}))))
+        .finally(() => location.reload());
+      break;
   }
-}
-function kp(k) {
-  const s = SH; if (!s) return;
-  const edit = (cur, max) => k === '⌫' ? cur.slice(0, -1) : (cur + k).slice(0, max);
-  if (s.type === 'vit') {
-    const f = VF.find(x => x[0] === s.f), cur = s.v[s.f] || '';
-    if (k === ',' && (!f[5] || cur.includes(','))) return;
-    s.v[s.f] = edit(cur, f[5] ? 4 : 3);
-  } else if (s.type === 'io') { if (k !== ',') s.ml = edit(s.ml || '', 5); }
-  else if (s.type === 'time') { if (k !== ',') s.buf = edit(s.buf || '', 4); }
-  else if (s.type === 'kg') { if (k !== ',') s.buf = edit(s.buf || '', 3); }
-  drawSheet();
-}
-function timeSet(t) {
-  const s = SH, b = s.back, id = s.pid;
-  update(id, p => { if (s.field === 'eta') p.evac.eta = t; else p.tInj = t; });
-  b ? openSheet({ type: 'pt', pid: id }) : closeSheet(); rerender();
-}
-function vitSave() {
-  const s = SH, v = { id: uid(), t: s.t };
-  for (const [k, nm, , mn, mx] of VF) {
-    const raw = (s.v[k] || '').replace(',', '.'); if (raw === '') continue;
-    const n = +raw; if (isNaN(n) || n < mn || n > mx) { s.f = k; drawSheet(); return toast(nm + ': ' + mn + '–' + mx); }
-    v[k] = k === 'temp' ? Math.round(n * 10) / 10 : Math.round(n);
-  }
-  if (v.sys && v.dia && v.dia >= v.sys) { s.f = 'dia'; drawSheet(); return toast('Diastolinis turi būti mažesnis'); }
-  ['avpu', 'crt'].forEach(k => { if (s.v[k]) v[k] = s.v[k]; });
-  if (s.v.pain !== undefined && s.v.pain !== '') v.pain = +s.v.pain;
-  if (Object.keys(v).length <= 2) return toast('Įveskite bent vieną rodiklį');
-  update(s.pid, p => { p.vit.push(v); p.vit.sort((a, b) => a.t - b.t); if (p.vit.length > 500) p.vit = p.vit.slice(-500); });
-  notified.forEach(x => { if (x.startsWith(s.pid + ':care:vit')) notified.delete(x); });
-  closeSheet(); toast('Rodikliai įrašyti ' + hm(v.t)); rerender();
-}
-function undo() {
-  const u = UNDO; if (!u) return; UNDO = null;
-  if (u.type === 'pt') { const d = D(); d.pts.splice(Math.min(u.i, d.pts.length), 0, u.p); saveD(d); }
-  else update(u.pid, p => { const L = u.type === 'vit' ? p.vit : u.type === 'io' ? p.io : p.meds; L.push(u.e); L.sort((a, b) => a.t - b.t); });
-  $('toast').classList.remove('on'); rerender();
-}
-
-// ───────── priminimai ir OPSEC ─────────
-function opsecCheck() {
-  const s = S(), last = +LS.get(K.akt, 0) || 0;
-  if (s.opsec > 0 && last && now() - last > s.opsec * HR && D().pts.length) { LS.del(K.data); toast('Duomenys ištrinti (nenaudota ' + s.opsec + ' val.)'); }
-}
-function tick() {
-  const a = dueAll(); let fresh = false;
-  a.forEach(x => { const key = x.p.id + ':' + x.k + ':' + Math.round(x.due / MIN); if (!notified.has(key)) { notified.add(key); fresh = true; } });
-  if (fresh && document.visibilityState === 'visible') beep();
-  const typing = document.activeElement && /INPUT|TEXTAREA/.test(document.activeElement.tagName);
-  if (!SH && !typing && !$('read').classList.contains('on')) rerender(); else nav(D());
-}
-
-// ───────── įvykiai ─────────
-document.addEventListener('click', e => {
-  if (now() - lastAkt > 60e3) { lastAkt = now(); LS.set(K.akt, now()); }
-  const el = e.target.closest('[data-act]'); if (!el) return;
-  if (el.tagName === 'A') return; // nuorodos
-  if (el.type !== 'checkbox') e.preventDefault();
-  act(el);
 });
-document.addEventListener('input', e => {
+
+app.addEventListener('keydown', e => {
+  const t = e.target, a = t.dataset && t.dataset.act;
+  if ((e.key === 'Enter' || e.key === ' ') && (a === 'ck' || a === 'tikcls' || a === 'yt' || a === 'mp4' || a === 'ex-ck' || a === 'gl-tg' || a === 'pc-evck')) { e.preventDefault(); t.click(); }
+  if ((e.key === 'Enter' || e.key === ' ') && a === 'mc-mdel' && !(t instanceof HTMLButtonElement)) { e.preventDefault(); MC.act(t, e); } // SVG žymė
+});
+
+// Įrankių laukai: įvedimas be perpiešimo (time laukams – ir 'change', nes kai kurios naršyklės 'input' nesiunčia)
+function toolInput(t) {
+  const d = t.dataset || {};
+  if (d.nl) { NL.onInput(t); return true; }
+  if (d.mc || d.mcf || d.mcm != null || d.mctq || d.mcp != null || d.mcr || d.mcas) { MC.onInput(t); return true; }
+  if (d.sr) { SR.onInput(t); return true; }
+  if (d.pc) { PC.onInput(t); return true; }
+  if (d.vl) { VL.onInput(t); return true; }
+  return false;
+}
+app.addEventListener('change', e => { if (e.target.type === 'time') toolInput(e.target); });
+
+app.addEventListener('input', e => {
   const t = e.target;
-  if (t.dataset.sf && SH) { SH[t.dataset.sf] = t.value; if (t.dataset.sf === 'name' && SH.type === 'med') { const c = t.selectionStart; drawSheet(); const n = $('sh-name'); if (n) { n.focus(); n.setSelectionRange(c, c); } } return; }
-  if (t.dataset.pf && SH) { update(SH.pid, p => { p[t.dataset.pf] = t.value; }); return; }
-  if (t.dataset.tc && route.v === 'pt') { update(route.id, p => { p.tc[t.dataset.tc] = t.value; }); const p = pt(D(), route.id), o = $('tc-out'), at = $('at-out'); if (o) o.textContent = teleText(p); if (at) at.textContent = atmistText(p); return; }
-  if (t.dataset.set) { setS({ [t.dataset.set]: t.value }); }
+  if (toolInput(t)) return;
+  if (t.id !== 'q' && t.id !== 'qs') return;
+  let res = document.getElementById('res');
+  if (!res) { res = document.createElement('div'); res.id = 'res'; t.after(res); }
+  const v = t.value, empty = !v.trim();
+  res.innerHTML = results(v);
+  if (t.id === 'q') {
+    Array.from(app.children).forEach(c => { if (c !== t && c !== res) c.style.display = empty ? '' : 'none'; });
+    res.style.display = empty ? 'none' : '';
+  } else history.replaceState(history.state, '', '#/paieska' + (empty ? '' : '?q=' + encodeURIComponent(v)));
 });
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { if ($('read').classList.contains('on')) $('read').classList.remove('on'); else if (SH) { closeSheet(); rerender(); } }
-});
-window.addEventListener('hashchange', () => { if (SH) closeSheet(); $('read').classList.remove('on'); render(); scrollTo(0, 0); });
-document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { opsecCheck(); tick(); } });
 
-applyTheme(); opsecCheck(); render();
-setInterval(tick, 20e3);
-if ('serviceWorker' in navigator && location.protocol !== 'file:') window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+setInterval(() => { if (!tmEdit) updTimers(); REM.tick(); HUB.tick(); PC.tick(); }, 30000);
+addEventListener('keydown', e => { if (e.key === 'Escape' && HUB.isOpen()) HUB.esc(); });
+setTimeout(() => REM.tick(), 3000);
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !tmEdit) updTimers(); });
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); installEv = e; if (['nustatymai', 'idiegimas', undefined].indexOf(route().p[0]) >= 0) render(); });
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+
+OP.init(); GL.apply();
+onNav(true);
+
+// ───────── Atnaujinimas: mygtukas antraštėje (pradžios ekrane, šalia paieškos) ─────────
+// Bakstelėjus – tikrinama, ar serveryje yra nauja versija (service worker update); radus – įdiegiama ir puslapis perkraunamas.
+// Programėlė tikrina ir pati (atidarius ir grįžus po ≥ 30 min); radus naują versiją mygtukas pažymimas tašku.
+const UPD = (() => {
+  const btn = document.getElementById('upd');
+  let busy = false, avail = false, last = 0, had = !!(navigator.serviceWorker && navigator.serviceWorker.controller), reloading = false;
+  const ver = () => String((E && E.versija) || '').split(' (')[0];
+  function mark(on) {
+    avail = on; if (!btn) return;
+    btn.classList.toggle('new', on);
+    const t = on ? 'Yra nauja versija – bakstelėkite, kad atnaujintumėte' : 'Tikrinti, ar yra nauja versija';
+    btn.setAttribute('aria-label', t); btn.title = t;
+  }
+  const getReg = () => 'serviceWorker' in navigator ? navigator.serviceWorker.getRegistration().catch(() => null) : Promise.resolve(null);
+  function settle(r) { // laukiama, kol nauja versija įsidiegs ir pradės veikti (iki 15 s)
+    return new Promise(res => {
+      const w = r && (r.installing || r.waiting); if (!w) return res();
+      const tm = setTimeout(res, 15000);
+      w.addEventListener('statechange', () => { if (w.state === 'activated' || w.state === 'redundant') { clearTimeout(tm); res(); } });
+    });
+  }
+  function reload() { reloading = true; toast('Atnaujinama…'); setTimeout(() => location.reload(), 350); }
+  async function check(manual) {
+    if (busy) return; busy = true;
+    if (manual && btn) btn.classList.add('spin');
+    try {
+      const r = await getReg();
+      if (!r) { if (manual) reload(); return; }
+      if (manual && avail) { await settle(r); return reload(); }
+      if (manual && navigator.onLine === false) { toast('Nėra interneto ryšio – patikrinti nepavyko'); return; }
+      await r.update(); last = Date.now();
+      if (r.installing || r.waiting) { mark(true); if (manual) { await settle(r); return reload(); } }
+      else if (manual) toast('Naujausia versija · ' + ver());
+    } catch (e) { if (manual) toast('Nepavyko patikrinti – nėra ryšio?'); }
+    finally { busy = false; if (btn && !reloading) btn.classList.remove('spin'); }
+  }
+  if (btn) btn.onclick = () => check(true);
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !reloading) mark(true); had = true; });
+    getReg().then(r => { if (r) r.addEventListener('updatefound', () => { if (had) mark(true); }); });
+    addEventListener('load', () => setTimeout(() => check(false), 4000));
+    document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - last > 30 * 60000) check(false); });
+  }
+  return { check, mark, available: () => avail };
+})();
+
+// ───────── Naktinis raudonas režimas (mėnulio mygtukas antraštėje; prisimenamas) ─────────
+function applyNight() {
+  const b = document.getElementById('night');
+  if (b) { b.setAttribute('aria-pressed', night); b.title = night ? 'Išjungti naktinį režimą' : 'Naktinis raudonas režimas'; }
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = night ? '#000000' : '#161912';
+}
+document.getElementById('night').onclick = () => { night = !night; LS.set('pcc-naktis', night); applyNight(); render(); };
+applyNight();
