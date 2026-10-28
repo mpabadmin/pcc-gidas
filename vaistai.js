@@ -57,7 +57,12 @@ window.ETC.vaistai = [
       {
         "k": "Nuskausminimas IM (TCCC 2026)",
         "d": "100 mg",
-        "p": "Kai nėra IV / IO. PCC metu pirmenybė IV / IO, į nosį – vengti (JTS PFC)."
+        "p": "Kai nėra IV / IO."
+      },
+      {
+        "k": "Nuskausminimas į nosį (TCCC 2026)",
+        "d": "50 mg",
+        "p": "Tik 100 mg/ml – 0,5 ml. PCC metu į nosį – vengti, pirmenybė IV / IO (JTS PFC)."
       },
       {
         "k": "Sedacija: prisotinamoji (JTS PFC, CPP)",
@@ -279,7 +284,8 @@ window.ETC.vaistai = [
     "trukme": "30–60 min (IV)",
     "pakuote": "Ampulės 50 mcg/ml (2 ml = 100 mcg)",
     "pastabos": [
-      "Narkotinė medžiaga – apskaita pagal SOP."
+      "Narkotinė medžiaga – apskaita pagal SOP.",
+      "Skiriasi nuo March gido: March (TCCC 2024) – dar 100 mcg į nosį; PCC metu į nosį vengti ir IM nerekomenduojama (JTS PFC). Lygis CPP – kaip March."
     ],
     "susije": [
       "naloksonas",
@@ -486,9 +492,14 @@ window.ETC.vaistai = [
     "kontra": "PCS: hiperkalcemija; vartojantiems digoksiną – tik gyvybei pavojingos būklės atveju.",
     "dozes": [
       {
-        "k": "IV / IO (TCCC 2026)",
+        "k": "Transfuzija IV / IO (TCCC 2026)",
         "d": "30 ml 10 % kalcio gliukonato (arba 10 ml 10 % kalcio chlorido) lėtai",
-        "p": "TCCC tai vadina „1 g kalcio“: gliukonato – 3 ampulės po 10 ml. Tęsiant transfuziją – ta pati dozė po kas 4 vienetų."
+        "p": "Transfuzija. TCCC tai vadina „1 g kalcio“: gliukonato – 3 ampulės po 10 ml. Tęsiant transfuziją – ta pati dozė po kas 4 vienetų (JTS DCR PFC)."
+      },
+      {
+        "k": "Hiperkalemija (JTS Crush PFC)",
+        "d": "10 ml 10 % kalcio gliukonato IV per 2–3 min",
+        "p": "Kartoti pagal EKG ir poreikį. Poveikis iš karto, trunka 30–60 min; kalio nemažina – toliau insulinas su gliukoze."
       }
     ],
     "ispejimai": [
@@ -496,11 +507,14 @@ window.ETC.vaistai = [
       "Kalcio chloridas – tik į gerai veikiančią prieigą: ekstravazacija sukelia nekrozę."
     ],
     "pakuote": "Ampulės 10 ml, 10 % (100 mg/ml)",
+    "pastabos": [
+      "Skiriasi nuo ETC gido: hiperkalemijai ETC – 30 ml 10 % gliukonato per 10 min (JTS hiperkalemijos CPG, CGO, UK RA); čia – JTS Crush PFC dozė."
+    ],
     "susije": [
       "txa",
       "insulinas"
     ],
-    "saltinis": "TCCC gairės 2026-05-01 (TFC 6); JTS CPG „Damage Control Resuscitation in PFC“; PCS (kalcio gliukonatas 10 %)",
+    "saltinis": "TCCC gairės 2026-05-01 (TFC 6); JTS CPG „Damage Control Resuscitation in PFC“; JTS CPG „Crush Syndrome in PFC“ (2023); PCS (kalcio gliukonatas 10 %)",
     "nuorodos": [
       [
         "TCCC gairės 2026-05-01 (PDF, Deployed Medicine)",
@@ -509,6 +523,10 @@ window.ETC.vaistai = [
       [
         "JTS CPG „Damage Control Resuscitation in PFC“ (ID 73, tccc.org.ua)",
         "https://tccc.org.ua/en/guide/damage-control-resuscitation-in-prolonged-field-care-pcc"
+      ],
+      [
+        "JTS CPG „Crush Syndrome in PFC“ (tccc.org.ua, 2023)",
+        "https://tccc.org.ua/en/guide/crush-syndrome-under-prolonged-field-care-pcc"
       ],
       [
         "PCS – kalcio gliukonatas 10 % (JK eMC)",
@@ -608,6 +626,9 @@ window.ETC.vaistai = [
       "Švirkšte ar maiše – aiškiai paženklinta koncentracija."
     ],
     "pakuote": "Ampulės 1 mg/ml",
+    "pastabos": [
+      "Skiriasi nuo ETC gido: ETC – 0,05–1 mcg/kg/min (PCS); čia – JTS PCC CPG 0,1–0,4 mcg/kg/min."
+    ],
     "saltinis": "JTS CPG ID 91 (2021) – kraujotaka; PCS (noradrenalinas)",
     "nuorodos": [
       [
@@ -917,12 +938,15 @@ window.ETC.vaistai = [
     "dozes": [
       {
         "k": "Pagal skiepijimą (JTS PFC)",
-        "d": "Nežinomas ar nepilnas: Tdap + TIG 500 VV (užterštai karo žaizdai)",
-        "p": "Pilnas, revakcinacija prieš 5–10 m. – Tdap užterštai žaizdai; > 10 m. – Tdap; neseniai – nieko."
+        "d": "Nežinomas ar nepilnas: Tdap + TIG (užterštai karo žaizdai – 500 VV; švariai didelei – 250 VV)",
+        "p": "Smulki švari žaizda – tik Tdap. Pilnas, revakcinacija prieš 5–10 m. – Tdap užterštai žaizdai; > 10 m. – Tdap; neseniai – nieko."
       }
     ],
     "ispejimai": [
       "Skiepijimo duomenis tikslinkite pagal medicininius įrašus."
+    ],
+    "pastabos": [
+      "TIG 500 VV užterštai karo žaizdai – taip nurodo JTS žaizdų PFC (2023); įprasta profilaktinė dozė – 250 VV. Patvirtina gydytojas."
     ],
     "saltinis": "JTS CPG „Acute Traumatic Wound Management in PFC“ (2023)",
     "nuorodos": [
@@ -955,7 +979,7 @@ window.ETC.vaistai = [
     ],
     "pakuote": "Pagal vieneto rinkinį",
     "pastabos": [
-      "PCC tikslai galvos traumai: SpO₂ > 94 %, sAKS ≥ 110 mm Hg, EtCO₂ 35–40 mm Hg, galvūgalis 30–60° (JTS).",
+      "PCC tikslai galvos traumai: SpO₂ ≥ 92 % (ventiliuojamam > 95 %), sAKS > 110 mm Hg, EtCO₂ 35–40 mm Hg, galvūgalis 30–60° (JTS TBI PFC; SpO₂ riba – TCCC 2026).",
       "Be laboratorijos 250 ml 3 % NaCl padidina natrį ~2–3 mmol/l (80 kg; JTS TBI PFC)."
     ],
     "susije": [
@@ -1020,6 +1044,9 @@ window.ETC.vaistai = [
       "Tik esant padidėjusio spaudimo požymiams, ne profilaktiškai."
     ],
     "pakuote": "20 % tirpalas",
+    "pastabos": [
+      "Skiriasi nuo ETC gido: ETC – 0,5 g/kg (0,25–1 g/kg; ETC vadovas 5.0); čia – JTS TBI PFC 1 g/kg."
+    ],
     "susije": [
       "nacl-hipert"
     ],
@@ -1210,7 +1237,7 @@ window.ETC.vaistai = [
     "dozes": [
       {
         "k": "Per burną arba IV / IO (JTS TBI PFC)",
-        "d": "20 g per burną arba 25 g IV / IO (50 ml 50 %)",
+        "d": "20 g per burną arba 25 g IV / IO (50 ml 50 % arba 250 ml 10 %)",
         "p": "Po 1 val. pakartoti matavimą."
       }
     ],
@@ -1219,7 +1246,8 @@ window.ETC.vaistai = [
     ],
     "pastabos": [
       "Nemaitinamam gliukozę matuoti kas 8 val. (JTS ID 70).",
-      "Galvos traumai tikslas ~10 mmol/l (JTS TBI PFC)."
+      "Galvos traumai tikslas ~10 mmol/l (JTS TBI PFC).",
+      "Skiriasi nuo ETC gido: ETC – 200 ml 10 % gliukozės per 15 min (NHS / JBDS); čia – JTS TBI PFC 25 g (50 ml 50 % arba 250 ml 10 %)."
     ],
     "susije": [
       "insulinas"
@@ -1250,12 +1278,8 @@ window.ETC.vaistai = [
     "dozes": [
       {
         "k": "Infiltracija (JTS PFC)",
-        "d": "iki 3 mg/kg (su adrenalinu – iki 7 mg/kg)",
-        "c": {
-          "per": 3,
-          "conc": 10
-        },
-        "p": "ml – 1 % (10 mg/ml) tirpalo. Poveikis po 10–15 min. Su adrenalinu atsargiai: nosies galiukas, ausis, varpa, pirštai."
+        "d": "ne daugiau kaip 3 mg/kg (su adrenalinu – ne daugiau kaip 7 mg/kg)",
+        "p": "80 kg – ne daugiau kaip 240 mg (24 ml 1 % tirpalo). Poveikis po 10–15 min. Su adrenalinu atsargiai: nosies galiukas, ausis, varpa, pirštai."
       }
     ],
     "ispejimai": [
@@ -1279,29 +1303,37 @@ window.ETC.vaistai = [
     "tipas": "pagr",
     "ne26": true,
     "kam": "Kovos medikas (CMC)",
-    "ind": "Opioidų sukelta per gili sedacija ar kvėpavimo slopinimas (JTS PCC).",
+    "ind": "Opioidų sukelta per gili sedacija ar kvėpavimo slopinimas (JTS PCC ID 91, JTS PFC analgezija).",
     "kontra": "Alergija.",
     "dozes": [
       {
-        "k": "IV / IO (JTS PCC)",
-        "d": "40 mcg pagal poreikį",
-        "p": "0,4 mg praskiesti 9 ml 0,9 % NaCl = 40 mcg/ml; leisti po 1 ml, kol atsistato kvėpavimas, išlaikant nuskausminimą."
+        "k": "IV / IO – titruoti (JTS PCC ID 91)",
+        "d": "po 40 mcg, kol atsistato kvėpavimas",
+        "p": "0,4 mg praskiesti 9 ml 0,9 % NaCl = 40 mcg/ml; leisti po 1 ml lėtai, išlaikant nuskausminimą."
       }
     ],
     "ispejimai": [
       "Gali baigti veikti anksčiau nei opioidas – stebėti, ar slopinimas negrįžta.",
-      "Visa dozė iš karto – stiprus skausmas, ažitacija (PCS: abstinencija, hipertenzija, aritmijos, plaučių edema)."
+      "Per greitas atstatymas – stiprus skausmas, ažitacija (PCS: abstinencija, hipertenzija, aritmijos, plaučių edema)."
     ],
     "pakuote": "Ampulės 0,4 mg / 1 ml",
+    "pastabos": [
+      "Titravimas pasirinktas, nes PCC sužeistajam reikia išlaikyti nuskausminimą (JTS PCC ID 91; JTS PFC analgezijos B–C priedai).",
+      "JTS PFC analgezijos D priedas: 0,4–2 mg IV / IM / IN, kartoti kas 2–3 min, iki 10 mg – tinka apnėjai ar kai nuskausminimas nesvarbus. Skiriasi nuo March gido: March – 0,4 mg."
+    ],
     "susije": [
       "fentanilis",
       "ketaminas"
     ],
-    "saltinis": "JTS CPG ID 91 (2021) – nuskausminimas ir sedacija; PCS (naloksonas)",
+    "saltinis": "JTS CPG ID 91 (2021) – nuskausminimas ir sedacija; JTS CPG „Analgesia and Sedation Management during PFC“ (2023), B–D priedai; PCS (naloksonas)",
     "nuorodos": [
       [
         "JTS CPG „Prolonged Casualty Care Guidelines“ (ID 91, 2021)",
         "https://jts.health.mil/assets/docs/cpgs/prolonged_casualty_care_guidelines_21_dec_2021_id91.pdf"
+      ],
+      [
+        "JTS CPG „Analgesia and Sedation Management during PFC“ (tccc.org.ua, 2023)",
+        "https://tccc.org.ua/en/guide/analgesia-and-sedation-management-during-prolonged-field-care-pcc"
       ],
       [
         "PCS – naloksonas 400 mcg/ml (JK eMC)",
@@ -1322,13 +1354,3 @@ window.ETC.vaistai = [
     }
   }
 ];
-
-// ───────── Programėlės priedai (ne medicininis turinys): greitosios dozės vaisto languose ir dažniausi vaistai pradžios ekrane ─────────
-// E.qd – tik tos reikšmės, kurios pažodžiui yra dozių tekste aukščiau: [būdas, kiekis, vienetai].
-window.ETC.qd = {
-  ketaminas: [['IV', '25', 'mg'], ['IM', '100', 'mg']], meloksikamas: [['PO', '15', 'mg']],
-  fentanilis: [['IV', '50', 'mcg']], txa: [['IV', '2', 'g']], kalcis: [['IV', '30', 'ml']], cefadroksilis: [['PO', '1', 'g']],
-  ceftriaksonas: [['IV', '2', 'g'], ['IM', '2', 'g']], ertapenemas: [['IV', '1', 'g']], moksifloksacinas: [['PO', '400', 'mg']], cefazolinas: [['IV', '2', 'g']],
-  'nacl-hipert': [['IV', '250', 'ml']], levetiracetamas: [['IV', '2000', 'mg']], ondansetronas: [['ODT', '4', 'mg'], ['IV', '4', 'mg']], naloksonas: [['IV', '40', 'mcg']]
-};
-window.ETC.daznVaistai = ['ketaminas', 'paracetamolis', 'txa', 'ceftriaksonas', 'kristaloidai', 'ondansetronas'];

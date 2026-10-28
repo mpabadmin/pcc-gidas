@@ -82,7 +82,7 @@ const HUB = (() => {
   };
   const tab = () => { const t = ss.get(); return TABS.some(x => x[0] === t) ? t : 'apz'; };
   const wSet = () => { const w = +LS.get(WK, 0); return w > 0 ? w : 0; };
-  const dur = ms => { const m = Math.max(0, Math.floor(ms / 60000)); return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); };
+  const dur = ms => { const m = Math.max(0, Math.floor(ms / 60000)); return m < 60 ? m + ' min' : Math.floor(m / 60) + ' val.' + (m % 60 ? ' ' + (m % 60) + ' min' : ''); }; // „2 val. 15 min“, ne laikrodžio forma
   const ago = ms => { const m = Math.max(0, Math.floor(ms / 60000)); return m < 1 ? 'ką tik' : 'prieš ' + (m < 60 ? m + ' min' : Math.floor(m / 60) + ' val. ' + String(m % 60).padStart(2, '0') + ' min'); };
   const wOn = () => HCFG().weight !== false;
   const txaOk = () => TCFG.txa !== false && (typeof ok !== 'function' || ok('CMC')); // March „tik CLS“ – TXA (CMC) nerodomas

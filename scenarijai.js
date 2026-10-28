@@ -157,11 +157,11 @@ window.ETC.scenarijai = [
     "klaus": "Ką skiriate po pirmo kraujo vieneto?",
     "opt": [
      {
-      "t": "10 ml 10 % kalcio gliukonato greita injekcija",
+      "t": "Kalcio dar ne – tik po ketvirto vieneto",
       "ok": false
      },
      {
-      "t": "Antrą TXA dozę 2 g",
+      "t": "Antrą TXA dozę 2 g lėtai IV",
       "ok": false
      },
      {
@@ -685,7 +685,7 @@ window.ETC.scenarijai = [
   "id": "p8",
   "pav": "Per gili sedacija",
   "tema": "Skausmas",
-  "lygis": "CMC",
+  "lygis": "CPP",
   "q": [
    {
     "sit": "Naktį budintis medikas pagal vieneto SOP suleido fentanilio, o kitas – midazolamo nerimui. Sužeistasis sunkiai pažadinamas.",
@@ -726,11 +726,11 @@ window.ETC.scenarijai = [
     "klaus": "Kaip skiriate naloksoną?",
     "opt": [
      {
-      "t": "0,4 mg IV iš karto visą dozę, kad greičiau veiktų",
+      "t": "Neskiriate – naloksonas atšauktų ir midazolamą",
       "ok": false
      },
      {
-      "t": "2 mg IM į šlaunį, kad poveikis truktų ilgiau",
+      "t": "Kartojate fentanilį mažesne doze nuo ažitacijos",
       "ok": false
      },
      {
@@ -738,7 +738,7 @@ window.ETC.scenarijai = [
       "ok": true
      }
     ],
-    "why": "JTS PCC: 0,4 mg praskiesti 9 ml NaCl (40 mcg/ml) ir leisti po 40 mcg, kol atsistato kvėpavimas, išlaikant nuskausminimą. Visa dozė iš karto – stiprus skausmas ir ažitacija.",
+    "why": "JTS PCC (ID 91): 0,4 mg praskiesti 9 ml NaCl (40 mcg/ml) ir titruoti po 40 mcg, kol atsistato kvėpavimas, išlaikant nuskausminimą. Apnėjai JTS PFC leidžia ir 0,4–2 mg (iki 10 mg); March gide – 0,4 mg. Naloksonas midazolamo neatšaukia; opioido kartoti negalima.",
     "ref": [
      "#/vaistas/naloksonas",
      "#/igudis/18"
@@ -1297,7 +1297,7 @@ window.ETC.scenarijai = [
   "id": "p15",
   "pav": "Turniketas keturias valandas",
   "tema": "Žaizdos",
-  "lygis": "CMC",
+  "lygis": "CPP",
   "q": [
    {
     "sit": "Turniketas ant blauzdos – 4 val. (uždėtas CUF metu). Evakuaciją trukdo artilerija. Šoko nėra, žaizdą galima stebėti, ne amputacija.",
@@ -1338,7 +1338,7 @@ window.ETC.scenarijai = [
     "klaus": "Ką skiriate pirmiausia?",
     "opt": [
      {
-      "t": "30 ml 10 % kalcio gliukonato IV",
+      "t": "10 ml 10 % kalcio gliukonato IV per 2–3 min",
       "ok": true
      },
      {
@@ -1346,11 +1346,11 @@ window.ETC.scenarijai = [
       "ok": false
      },
      {
-      "t": "Atropiną dėl bradikardijos",
+      "t": "Atropiną 1 mg IV dėl bradikardijos",
       "ok": false
      }
     ],
-    "why": "Hiperkalemija su EKG pokyčiais – pirmiausia kalcis (stabilizuoja širdį, poveikis iš karto, trunka 30–60 min).",
+    "why": "Hiperkalemija su EKG pokyčiais – pirmiausia kalcis: JTS Crush PFC – 10 ml 10 % kalcio gliukonato per 2–3 min, kartoti pagal poreikį (poveikis iš karto, trunka 30–60 min). ETC gide hiperkalemijai – 30 ml.",
     "ref": [
      "#/vaistas/kalcis",
      "#/s/y-crush"
@@ -1489,11 +1489,11 @@ window.ETC.scenarijai = [
     "klaus": "Kurie tikslai teisingi PCC metu?",
     "opt": [
      {
-      "t": "SpO₂ > 88 %, sAKS > 80 mm Hg",
+      "t": "SpO₂ > 85 %, sAKS > 80 mm Hg",
       "ok": false
      },
      {
-      "t": "SpO₂ > 94 %, sAKS ≥ 110 mm Hg",
+      "t": "SpO₂ ≥ 92 %, sAKS > 110 mm Hg",
       "ok": true
      },
      {
@@ -1501,7 +1501,7 @@ window.ETC.scenarijai = [
       "ok": false
      }
     ],
-    "why": "Galvos trauma (JTS PCC ir TBI PFC): SpO₂ > 94 %, sAKS ≥ 110 mm Hg, ventiliuojamam EtCO₂ 35–40 mm Hg. SpO₂ 91 % ir sAKS 104 – žemiau tikslo.",
+    "why": "Galvos trauma PCC metu: sAKS > 110 mm Hg (JTS TBI PFC; TCCC 2026 – > 100), SpO₂ ≥ 92 % (TCCC 2026; JTS – > 90 %, ventiliuojamam > 95 %), ventiliuojamam EtCO₂ 35–40 mm Hg. SpO₂ 91 % ir sAKS 104 – žemiau tikslo.",
     "ref": [
      "#/igudis/32",
      "#/s/y-galva"
@@ -2123,15 +2123,15 @@ window.ETC.scenarijai = [
     "klaus": "Ką skiriate pirmiausia?",
     "opt": [
      {
-      "t": "Kalcį: 30 ml 10 % kalcio gliukonato",
+      "t": "Kalcį: 10 ml 10 % gliukonato per 2–3 min",
       "ok": true
      },
      {
-      "t": "Salbutamolį 10 mg purkštuvu",
+      "t": "Salbutamolį 10 mg purkštuvu per kaukę",
       "ok": false
      },
      {
-      "t": "Insuliną 10 VV su gliukoze",
+      "t": "Insuliną 10 VV su 25 g gliukozės",
       "ok": false
      }
     ],

@@ -26,8 +26,10 @@ const listRow = id => {
 };
 function doseShort(v, w) {
   const d = (v.dozes || [])[0]; if (!d) return v.klase || '';
-  return d.k + ': ' + (d.c ? calc(d.c, w) + ' (' + w + ' kg)' + (d.c.alt ? ' · ' + d.c.alt : '') : d.d);
+  return d.k + ': ' + (d.c ? calcD(d, w) + ' (' + w + ' kg)' + (d.c.alt ? ' · ' + d.c.alt : '') : d.d);
 }
+// Skaičiuoklės rezultatas: jei gido tekste dozė – riba („iki 3 mg/kg“), rodoma „iki …“, ne kaip skiriama dozė
+function calcD(d, w) { return (/^\s*(iki|ne daugiau|maks)/i.test(d.d || '') ? 'iki ' : '') + calc(d.c, w); }
 function tocHtml(html) {
   const hs = []; let i = 0;
   const out = html.replace(/<h3>([\s\S]*?)<\/h3>/g, (m, t) => { const id = 'h' + (i++); hs.push([id, strip(t)]); return `<h3 id="${id}">${t}</h3>`; });
@@ -106,7 +108,7 @@ const V = {
   // Perdavimas: telekonsultacija, MIST, 9-Line, SITREP, QR
   toolTiles() {
     return '<div class="tools">' +
-      tile('#/telekonsultacija', ICO.tele, 'Tele\u00adkonsul\u00adtacija', pcSt(() => PC.st('tc')), 'Telekonsultacija ir ATMISTER') + tile('#/pacientas?t=kortele', ICO.mist, 'MIST', stOf(() => MC), 'MIST kortelė') +
+      tile('#/telekonsultacija', ICO.tele, 'Tele\u00adkonsultacija', pcSt(() => PC.st('tc')), 'Telekonsultacija ir ATMISTER') + tile('#/pacientas?t=kortele', ICO.mist, 'MIST', stOf(() => MC), 'MIST kortelė') +
       tile('#/9line', '9', '9-Line', stOf(() => NL), '9-Line MEDEVAC') + tile('#/sitrep', ICO.sitrep, 'SITREP', stOf(() => SR)) +
       tile('#/qr', ICO.qr, 'Perduoti QR', '', 'Perduoti QR kodu') + tile('#/qr-priimti', ICO.qrin, 'Priimti QR', '', 'Priimti pacientą QR kodu') + '</div>';
   },
@@ -148,7 +150,7 @@ const V = {
       ((E.fazes || []).length ? '<h2>Fazės</h2>' + V.phaseTiles(false) : '') +
       '<h2>Perdavimas</h2>' + V.toolTiles() +
       '<h2>Viskas vienoje vietoje</h2>' +
-      row('#/igudziai', 'Įgūdžiai', lt(n, ['įgūdis', 'įgūdžiai', 'įgūdžių']) + ': žingsniai, svarbiausi priminimai, video') +
+      row('#/igudziai', 'Įgūdžiai', lt(n, ['įgūdis', 'įgūdžiai', 'įgūdžių']) + ': žingsniai, svarbiausi priminimai') +
       row('#/sarasai', 'Kontroliniai sąrašai', (E.fazes || []).map(phLbl).join(', ')) +
       row('#/vaistai', 'Vaistai', lt((E.vaistai || []).filter(v => ok(v.lygis)).length, ['vaistas', 'vaistai', 'vaistų'])) +
       installRow() + row('#/nustatymai', 'Nustatymai');
@@ -233,7 +235,7 @@ const V = {
 
   drugs() {
     const D = (E.vaistai || []).filter(v => ok(v.lygis)), w = wCalc(), field = mode === 'field';
-    let h = '<h1>Vaistai</h1><p class="muted">' + esc(E.vaistaiIntro || 'Dozės – pagal kuopos vaistų korteles ir vieneto SOP. Žyma „Medikas“ – kovos medikas (CMC), „Gydytojas“ – paramedikas ar gydytojas (CPP).') + '</p>';
+    let h = '<h1>Vaistai</h1><p class="muted">' + esc(E.vaistaiIntro || 'Dozės – pagal kuopos vaistų korteles ir vieneto SOP. CMC – kovos medikas, CPP – paramedikas ar gydytojas.') + '</p>';
     if (!field) h += row('#/korteles', 'Dozių kortelės', FC.status());
     const G = E.vaistuGrupes || [], drow = v => row('#/vaistas/' + v.id, v.name, field ? doseShort(v, w) : v.klase, tag(v.lygis));
     G.forEach(g => {
@@ -252,7 +254,7 @@ const V = {
     const v = drugById(id);
     if (!v) return notFound();
     const w = wCalc(), learn = mode === 'learn';
-    const doseHtml = d => `<div class="dose"><div class="lb">${esc(d.k)}${d.c ? ' · ' + esc(d.d) : ''}</div><div class="big">${esc(d.c ? calc(d.c, w) : d.d)}</div>${d.p ? '<div class="lb">' + br(d.p) + '</div>' : ''}</div>`;
+    const doseHtml = d => `<div class="dose"><div class="lb">${esc(d.k)}${d.c ? ' · ' + esc(d.d) : ''}</div><div class="big">${esc(d.c ? calcD(d, w) : d.d)}</div>${d.p ? '<div class="lb">' + br(d.p) + '</div>' : ''}</div>`;
     let h = `<h1>${esc(v.name)}</h1>` + (v.klase ? `<p class="muted">${esc(v.klase)}</p>` : '');
     h += (v.tccc26 ? '<span class="tag grn">TCCC 2026</span>' : v.ne26 ? '<span class="tag amb">Ne TCCC 2026</span>' : '') + lvTag(v);
     if (v.kam) h += `<p class="muted mt0">Kas skiria: ${esc(v.kam)}</p>`;
@@ -319,7 +321,7 @@ const V = {
     let h = `<h1>${esc(s.pav)}</h1><span class="tag">#${esc(s.id)}</span>${lvTag(s)}` + (s.fazes || []).map(f => { const x = fazeById(f); return `<span class="tag ${phCls(f)}">${esc(x ? phLbl(x) : f)}</span>`; }).join('');
     if (s.aprasas) h += `<p class="lead">${esc(s.aprasas)}</p>`;
     const ulr = a => '<ul>' + a.map(x => '<li>' + skRefs(x) + '</li>').join('') + '</ul>';
-    if (!ok(s.lygis)) h += '<div class="warn">Mediko ar gydytojo įgūdis – įjungtas filtras „Rodyti tik komandos veiksmus“, todėl jo nėra sąrašuose.</div>';
+    if (!ok(s.lygis)) h += '<div class="warn">CMC / CPP įgūdis – įjungtas filtras „Rodyti tik komandos veiksmus“, todėl jo nėra sąrašuose.</div>';
     if ((s.zingsniai || []).length) h += '<h2>Žingsniai</h2><ol class="steps">' + s.zingsniai.map(x => '<li>' + skRefs(x) + '</li>').join('') + '</ol>';
     if ((s.esme || []).length) h += '<div class="card esme"><b>Svarbu</b>' + ulr(s.esme) + '</div>';
     if ((s.klaidos || []).length) h += '<div class="warn wl"><b>Dažnos klaidos ir pavojai</b>' + ulr(s.klaidos) + '</div>';
@@ -378,7 +380,7 @@ const V = {
   settings() {
     const b = (act, t, s) => `<button class="row" data-act="${act}"><div>${t}<small>${s}</small></div></button>`;
     let h = '<h1>Nustatymai</h1>' + GL.settingRow();
-    if (advAny()) h += `<div class="ck${tikCLS() ? ' on' : ''}" data-act="tikcls" role="checkbox" aria-checked="${tikCLS()}" tabindex="0"><span class="bx">✓</span><div class="t">Rodyti tik komandos veiksmus<div class="muted">Paslepia mediko (CMC) ir gydytojo / paramediko (CPP) veiksmus, vaistus ir įgūdžius.</div></div></div>`;
+    if (advAny()) h += `<div class="ck${tikCLS() ? ' on' : ''}" data-act="tikcls" role="checkbox" aria-checked="${tikCLS()}" tabindex="0"><span class="bx">✓</span><div class="t">Rodyti tik komandos veiksmus<div class="muted">Paslepia kovos mediko (CMC) ir paramediko ar gydytojo (CPP) veiksmus, vaistus ir įgūdžius.</div></div></div>`;
     h += '<h2>Aš</h2>' + (typeof MC !== 'undefined' && MC.profileView ? MC.profileView() : '') + pcSt(() => PC.settings());
     h += '<h2>Sužeistasis</h2>' + row('#/pacientas', 'Paciento failas', 'Rodikliai, skysčiai, priežiūra, perdavimas') + b('new-pt', '+ Kitas sužeistasis', 'Ankstesni lieka sąraše') + REM.settings() + pcSt(() => PC.dataSettings()) + OP.settings();
     if (FB.configured() || FB.pending()) {

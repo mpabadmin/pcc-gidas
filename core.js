@@ -15,7 +15,7 @@ const isAdv = g => /^(CMC|CPP)/.test(g || '');
 const tikCLS = () => LS.get('pcc-tikcls', false);
 const ok = g => !(tikCLS() && isAdv(g));
 // Lygiai PCC komandoje: CLS – visa komanda, CMC – kovos medikas, CPP – paramedikas / gydytojas (duomenų kodai kaip March gide)
-const LVN = { CLS: 'Komanda', CMC: 'Medikas', CPP: 'Gydytojas' }, LVT = { CLS: 'Visa PCC komanda (CLS)', CMC: 'Kovos medikas (CMC)', CPP: 'Paramedikas, gydytojas (CPP)' };
+const LVN = { CLS: 'Komanda', CMC: 'CMC', CPP: 'CPP' }, LVT = { CLS: 'Visa PCC komanda (CLS)', CMC: 'Kovos medikas (CMC)', CPP: 'Paramedikas ar gydytojas (CPP)' };
 const lvName = g => LVN[g] || g || '';
 const tag = g => isAdv(g) ? `<span class="tag ${g === 'CPP' ? 'red' : 'amb'}" title="${LVT[g] || ''}">${esc(lvName(g))}</span>` : '';
 const row = (href, title, small, extra) => `<a class="row" href="${href}"><div>${esc(title)}${small ? '<small>' + esc(small) + '</small>' : ''}</div>${extra || ''}<span class="ar">›</span></a>`;
@@ -138,7 +138,7 @@ function timersHtml() {
   return h; // keičiama bakstelėjus kortelę – laiko langas (MC.sheet 'time'), kartu su MIST kortele
 }
 // Greitas laiko pasirinkimas: dabar arba prieš 5–30 min
-const tmQuick = k => `<div class="tmq" role="group" aria-label="Kada?">${[0, 5, 10, 15, 30].map(m => `<button class="btn${m ? '' : ' pri sm'}" data-act="tm-q" data-k="${k}" data-m="${m}">${m ? '−' + m + ' min' : 'Dabar'}</button>`).join('')}</div>`;
+const tmQuick = k => `<div class="tmq" role="group" aria-label="Kada?">${[0, 5, 10, 15, 30, 60, 120, 240, 360].map(m => `<button class="btn${m ? '' : ' pri sm'}" data-act="tm-q" data-k="${k}" data-m="${m}">${m ? '−' + (m >= 60 ? m / 60 + ' val.' : m + ' min') : 'Dabar'}</button>`).join('')}<button class="btn" data-act="tm" data-k="${k}">Kitas laikas…</button></div>`;
 // Kompaktiška laikų juosta fazių puslapiuose ir mokymosi pradžioje (rodoma, kai bent vienas laikas pažymėtas)
 function timersMini() {
   const T = LS.get('pcc-laikai', {}) || {}, now = Date.now();

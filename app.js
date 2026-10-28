@@ -100,6 +100,7 @@ function render() {
   catch (err) { console.error(err); app.innerHTML = '<h1>Klaida</h1><p class="muted">Nepavyko atidaryti puslapio. Grįžkite į pradžią arba praneškite apie klaidą.</p>' + fbLink(); }
   try { HUB.nav(); PC.nav(); } catch (e) { console.error(e); }
   app.querySelectorAll('.tabs, .ptabs, .hbt').forEach(sc => { const b = sc.querySelector('button.on'), add = sc.querySelector('.add'); if (b && sc.scrollWidth > sc.clientWidth) { const av = sc.clientWidth - (add ? add.offsetWidth + 12 : 0); sc.scrollLeft = Math.max(0, b.offsetLeft - (av - b.offsetWidth) / 2); } });
+  app.querySelectorAll('.pcvt').forEach(x => { x.scrollLeft = x.scrollWidth; }); // stebėjimo lapas: naujausi matavimai dešinėje
   const h1 = app.querySelector('h1');
   document.title = h1 && p.length ? (h1.dataset.title || (h1.childNodes[0] || h1).textContent.trim()) + ' · PCC gidas' : 'PCC gidas';
   try { QR.after(p[0]); DICT.enhance(app); } catch (e) { console.error(e); }
@@ -126,6 +127,7 @@ backBtn.onclick = () => { if (depth > 0) history.back(); else location.replace('
 document.getElementById('mF').onclick = () => setMode('field');
 document.getElementById('mL').onclick = () => setMode('learn');
 document.getElementById('fbb').onclick = () => FB.open();
+if (!FB.configured()) document.getElementById('fbb').style.display = 'none'; // be priėmimo adreso mygtukas nerodomas
 document.getElementById('srch').onclick = () => { if (route().p[0] !== 'paieska') location.hash = '#/paieska'; };
 
 // Elementą parodyti virš apatinės navigacijos (scrollIntoView nepaiso fiksuotos juostos)

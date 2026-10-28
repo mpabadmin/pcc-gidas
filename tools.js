@@ -365,10 +365,10 @@ const MC = (() => {
     strs(s.mech).forEach(m => { const o = MECH_OLD[m]; const v = o ? o[0] : m; if (MECH.some(x => x[0] === v) && mech.indexOf(v) < 0) mech.push(v); if (o && o[1]) mt.push(o[1]); });
     s.mech = mech; if (mt.length) s.mechTxt = [mt.join(', '), s.mechTxt.trim()].filter(Boolean).join('; ');
     const f = s.f && typeof s.f === 'object' ? s.f : {}; s.f = blankF(); VF.forEach(k => { s.f[k] = str(f[k]); });
-    s.vit = (Array.isArray(s.vit) ? s.vit : []).filter(v => v && typeof v === 'object').map(v => { const o = { ts: str(v.ts) }; VF.slice(1).concat('gcsD').forEach(k => { o[k] = str(v[k]); }); return o; });
-    s.rows = (Array.isArray(s.rows) ? s.rows : []).filter(r => r && typeof r === 'object' && ROWG.some(g => g[0] === r.g)).map(r => Object.assign({ g: r.g, name: str(r.name), dose: str(r.dose), route: str(r.route), time: str(r.time), src: str(r.src) }, ABO.indexOf(r.grp) >= 0 ? { grp: r.grp } : {}));
+    s.vit = (Array.isArray(s.vit) ? s.vit : []).filter(v => v && typeof v === 'object').map(v => { const o = { ts: str(v.ts) }; VF.slice(1).concat('gcsD').forEach(k => { o[k] = str(v[k]); }); if (+v.t > 0) o.t = +v.t; return o; }); // t – tikslus laikas (ilgiau nei parą)
+    s.rows = (Array.isArray(s.rows) ? s.rows : []).filter(r => r && typeof r === 'object' && ROWG.some(g => g[0] === r.g)).map(r => Object.assign({ g: r.g, name: str(r.name), dose: str(r.dose), route: str(r.route), time: str(r.time), src: str(r.src) }, +r.t > 0 ? { t: +r.t } : {}, ABO.indexOf(r.grp) >= 0 ? { grp: r.grp } : {}));
     const tq = s.tq && typeof s.tq === 'object' && !Array.isArray(s.tq) ? s.tq : {}; s.tq = {};
-    TQ.forEach(([k]) => { const q = tq[k]; if (q && typeof q === 'object' && q.on) s.tq[k] = { on: true, tm: str(q.tm) }; });
+    TQ.forEach(([k]) => { const q = tq[k]; if (q && typeof q === 'object' && q.on) s.tq[k] = Object.assign({ on: true, tm: str(q.tm) }, +q.t > 0 ? { t: +q.t } : {}); });
     s.resp = [0, 1].map(i => str((Array.isArray(s.resp) ? s.resp : [])[i]));
     // žymės; senos „T“ (turniketas schemoje) → turniketo laukas pagal galūnę
     s.mk = (Array.isArray(s.mk) ? s.mk : []).filter(m => m && (m.s === 'f' || m.s === 'b') && isFinite(m.x) && isFinite(m.y));
@@ -524,15 +524,17 @@ const MC = (() => {
     }
   };
   const gcsEn = d => String(d || '').replace(/\bA(\S+) K(\S+) M(\S+)/, 'E$1 V$2 M$3').replace('GKS-P', 'GCS-P');
+  // Laikas su data, kai įrašas ne šiandienos (PCC – priežiūra ilgiau nei parą)
+  const whenTs = (t, raw) => { if (!(+t > 0)) return raw || ''; const d = new Date(+t), n = new Date(); return (d.toDateString() === n.toDateString() ? '' : String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + ' ') + hm(+t); };
   function vitLine(v, en) {
     const L = en ? { av: 'AVPU', rr: 'RR', spo2: 'SpO₂', hr: 'HR', bp: 'BP', pain: 'pain', gcs: 'GCS', nt: ' (not totalled)' } : { av: 'AVPU', rr: 'KD', spo2: 'SpO₂', hr: 'pulsas', bp: 'AKS', pain: 'skausmas', gcs: 'GKS', nt: ' (suma neskaičiuojama)' };
     const gd = en ? gcsEn(v.gcsD) : v.gcsD;
-    return [v.ts + ' –', v.av ? L.av + ' ' + v.av : '', v.rr ? L.rr + ' ' + v.rr : '', v.spo2 ? L.spo2 + ' ' + v.spo2 + ' %' : '', v.hr ? L.hr + ' ' + v.hr : '', v.bp ? L.bp + ' ' + v.bp : '',
+    return [whenTs(v.t, v.ts) + ' –', v.av ? L.av + ' ' + v.av : '', v.rr ? L.rr + ' ' + v.rr : '', v.spo2 ? L.spo2 + ' ' + v.spo2 + ' %' : '', v.hr ? L.hr + ' ' + v.hr : '', v.bp ? L.bp + ' ' + v.bp : '',
       v.pain !== '' && v.pain != null ? L.pain + ' ' + v.pain + '/10' : '', v.gcs ? (v.gcs === 'NT' ? L.gcs + ' ' + (gd || 'NT') + L.nt : L.gcs + ' ' + v.gcs + (gd ? ' (' + gd + ')' : '')) : '']
       .filter(Boolean).join(', ').replace(' –,', ' –');
   }
   // ── T dalis tekstu ──
-  const rowText = r => [r.name, r.dose, r.route, r.time].map(x => String(x || '').trim()).filter(Boolean).join(' ');
+  const rowText = r => [r.name, r.dose, r.route, whenTs(r.t, r.time)].map(x => String(x || '').trim()).filter(Boolean).join(' ');
   function txParts(s, en, noRows) {
     const on = k => s.tx.indexOf(k) >= 0, nm = k => { const x = txT(k); return en ? x[2] : x[1]; }, out = [];
     const grp = (ids, lt, e) => { const a = ids.filter(on).map(nm); if (a.length) out.push((en ? e : lt) + ' (' + a.join(', ') + ')'); };
@@ -1082,7 +1084,7 @@ const MC = (() => {
       `<button class="mqc${custom ? ' on' : ''}" data-sa="tcust" aria-pressed="${custom}">${custom && SH.tcust ? esc(SH.tcust) : 'Kitas…'}</button></div></div>`;
   };
   function tmTimeStrip(b) {
-    const rel = [[0, 'Dabar'], [5, '−5 min'], [10, '−10 min'], [15, '−15 min'], [30, '−30 min']];
+    const rel = [[0, 'Dabar'], [5, '−5 min'], [10, '−10 min'], [15, '−15 min'], [30, '−30 min'], [60, '−1 val.'], [120, '−2 val.'], [240, '−4 val.'], [360, '−6 val.']];
     const items = rel.map(([m, l]) => ({ v: String(m), l, sa: 'tset', on: b.length === 4 && b === offTm(m).replace(':', '') })).concat(qMarks().map(t => ({ v: t, l: t, sa: 'tsetabs', on: b.length === 4 && b === t.replace(':', '') })));
     return stripH(items, 'tm:t', 'Laikas');
   }
@@ -1220,7 +1222,8 @@ const MC = (() => {
       }
       case 'time': {
         const b = timeBody(SH), tq = SH.field === 'turn';
-        const h = (SH.cur ? `<p class="muted mqhint">Dabar nustatyta: <b>${esc(SH.cur)}</b> – įveskite naują arba išvalykite.</p>` : '') + b.h +
+        const day = tq ? '' : '<div class="mqrow" role="group" aria-label="Diena">' + [[0, 'Šiandien'], [1, 'Vakar'], [2, 'Užvakar']].map(([k, l]) => `<button class="mqc${(SH.day || 0) === k ? ' on' : ''}" data-sa="tday" data-v="${k}" aria-pressed="${(SH.day || 0) === k}">${l}</button>`).join('') + '</div>';
+        const h = (SH.cur ? `<p class="muted mqhint">Dabar nustatyta: <b>${esc(SH.cur)}</b> – įveskite naują arba išvalykite.</p>` : '') + day + b.h +
           (tq ? '<p class="muted mqhint">Turniketų ribos (2 val.) skaičiuojamos nuo pirmojo uždėjimo.</p><div class="mqrow"><button class="mqc" data-sa="totq">Turniketų galūnės ›</button></div>' : '');
         return { title: tq ? 'Turniketo uždėjimo laikas' : 'Traumos laikas', h, foot: SH.cur ? '<div class="mqg2"><button class="btn mqsave" data-sa="tclr">Išvalyti</button>' + b.foot + '</div>' : b.foot };
       }
@@ -1320,9 +1323,11 @@ const MC = (() => {
         const o = SH.sub || SH, b = o.buf || '', t = b.slice(0, 2) + ':' + b.slice(2);
         if (!HM_RE.test(t)) { toast('Laikas: pvz. 14:05'); return; }
         if (SH.sub) { SH.tcust = t; SH.toff = 'c'; SH.sub = null; return shRender(); }
-        if (SH.field === 'turn') return commit(s => { const T = timers(), old = +T.turn ? hm(+T.turn) : ''; T.turn = tsOf(t); LS.set(TCFG.laikai, T); TQ.forEach(([q]) => { const x = s.tq[q]; if (x && x.on && old && x.tm === old) x.tm = t; }); }, 'Turniketo laikas ' + t);
+        if (SH.field === 'turn') return commit(s => { const T = timers(), old = +T.turn ? hm(+T.turn) : ''; T.turn = tsOf(t); LS.set(TCFG.laikai, T); TQ.forEach(([q]) => { const x = s.tq[q]; if (x && x.on && old && x.tm === old) { x.tm = t; x.t = tsOf(t); } }); }, 'Turniketo laikas ' + t);
+        if (SH.day) { const d = new Date(); d.setDate(d.getDate() - SH.day); d.setHours(+t.slice(0, 2), +t.slice(3), 0, 0); return commit(s => { trSet(s, d.getTime()); }, 'Traumos laikas ' + whenTs(d.getTime())); }
         return commit(s => { trSet(s, (s.dt && s.dt !== today() && s.dt !== yday() ? tsDT(s.dt, t) : 0) || tsOf(t)); }, 'Traumos laikas ' + t);
       }
+      case 'tday': SH.day = +v || 0; return shRender();
       case 'tclr': {
         if (SH.field === 'turn') {
           const s = curOf(load()); if (TQ.some(([q]) => s.tq[q] && s.tq[q].on)) { toast('Pažymėtas galūnės turniketas – nuimkite jį „Turniketų galūnės“ lange'); return; }
@@ -1413,7 +1418,7 @@ const MC = (() => {
   const addNote = (s, nm) => { const n = String(SH && SH.note || '').trim(); if (n) { const x = nm + ': ' + n; if (s.txTxt.indexOf(x) < 0) s.txTxt = [s.txTxt.trim(), x].filter(Boolean).join('; '); } };
   // Turniketo laikmatis (priminimams, juostai) = anksčiausias uždėtas galūnės turniketas; nuėmus (removed) – perskaičiuojamas, nuėmus visus – išvalomas
   function tqSync(s, removed) {
-    const T = timers(), on = TQ.map(([k]) => s.tq[k]).filter(q => q && q.on), ts = on.filter(q => HM_RE.test(q.tm)).map(q => tsOf(q.tm));
+    const T = timers(), on = TQ.map(([k]) => s.tq[k]).filter(q => q && q.on), ts = on.filter(q => +q.t > 0 || HM_RE.test(q.tm)).map(q => +q.t || tsOf(q.tm));
     if (ts.length) { const m = Math.min.apply(null, ts); if (!+T.turn || removed || m < +T.turn) T.turn = m; }
     else if (removed && !on.length && s.tx.indexOf('tqj') < 0) delete T.turn;
     LS.set(TCFG.laikai, T);
@@ -1429,7 +1434,7 @@ const MC = (() => {
         let gNote = ''; if (!n3(V.gcs, 3, 15)) { V.gcs = ''; gNote = ' · GKS praleistas (turi būti 3–15)'; } // GKS – nebūtinas: netinkamas neblokuoja įrašymo
         if (!n3(V.pain, 0, 10)) { toast('Skausmas: skaičius 0–10'); return; }
         if (V.bpS && !/^\d{2,3}$/.test(V.bpS) || V.bpD && !/^\d{2,3}$/.test(V.bpD)) { toast('AKS: pvz. 90/60'); SH.fk = 'bp'; return shRender(); }
-        const rec = { ts: t, av: V.av, rr: V.rr, spo2: V.spo2, hr: V.hr, bp: V.bpS ? V.bpS + (V.bpD ? '/' + V.bpD : '') : '', pain: V.pain, gcs: V.gcs };
+        const rec = { ts: t, t: tsOf(t), av: V.av, rr: V.rr, spo2: V.spo2, hr: V.hr, bp: V.bpS ? V.bpS + (V.bpD ? '/' + V.bpD : '') : '', pain: V.pain, gcs: V.gcs };
         if (!rec.av && !['rr', 'spo2', 'hr', 'bp', 'pain', 'gcs'].some(k => rec[k] !== '')) { toast('Įveskite bent vieną požymį'); return; }
         return commit(s => { s.vit.push(rec); s.f = blankF(); }, 'Matavimas įrašytas ' + t + gNote);
       }
@@ -1441,7 +1446,7 @@ const MC = (() => {
             VZ.add({ t: tsOf(t), v: kv.id, a: String(D.a).replace('.', ','), u: D.u, r: D.r, n: String(SH.note || '').trim().slice(0, 120) });
             shClose(false); const y = scrollY; render(); scrollTo(0, y); toast('Įrašyta: ' + lb); return;
           }
-          return commit(s => { s.rows.push({ g: kv && !M.gt ? grpOf(kv) : M.g, name: nm, dose: D ? D.a + ' ' + D.u : '', route: D ? D.r : '', time: t, src: 'mc:' + Date.now().toString(36) }); addNote(s, nm); }, 'Įrašyta: ' + lb);
+          return commit(s => { s.rows.push({ g: kv && !M.gt ? grpOf(kv) : M.g, name: nm, dose: D ? D.a + ' ' + D.u : '', route: D ? D.r : '', time: t, t: tsOf(t), src: 'mc:' + Date.now().toString(36) }); addNote(s, nm); }, 'Įrašyta: ' + lb);
         }
         if (SH.tab === 'rx') {
           const v = (E.vaistai || []).find(x => x.id === SH.drug), D = SH.dose; if (!v || !D) return;
@@ -1449,12 +1454,12 @@ const MC = (() => {
             VZ.add({ t: tsOf(t), v: v.id, a: String(D.a).replace('.', ','), u: D.u, r: D.r, n: String(SH.note || '').trim().slice(0, 120) });
             shClose(false); const y = scrollY; render(); scrollTo(0, y); toast('Įrašyta: ' + dn(v) + ' ' + D.a + ' ' + D.u + ' ' + D.r + ' · ' + t); return;
           }
-          return commit(s => { s.rows.push({ g: grpOf(v), name: dn(v), dose: D.a + ' ' + D.u, route: D.r, time: t, src: 'mc:' + Date.now().toString(36) }); addNote(s, dn(v)); }, 'Įrašyta: ' + dn(v) + ' ' + D.a + ' ' + D.u + ' ' + D.r + ' · ' + t);
+          return commit(s => { s.rows.push({ g: grpOf(v), name: dn(v), dose: D.a + ' ' + D.u, route: D.r, time: t, t: tsOf(t), src: 'mc:' + Date.now().toString(36) }); addNote(s, dn(v)); }, 'Įrašyta: ' + dn(v) + ' ' + D.a + ' ' + D.u + ' ' + D.r + ' · ' + t);
         }
         const F = SH.fl, fn0 = String(F.name || '').trim(); if (!fn0 || !F.amt) return;
         const bl = TCFG.krGrupes && BLP.indexOf(fn0) >= 0, bg = bl ? F.dg : '', fn = bg && ABO.indexOf(bg) >= 0 ? fn0 + ' ' + bg : fn0;
         if (bl && ABO.indexOf(bg) < 0) return;
-        return commit(s => { s.rows.push(Object.assign({ g: F.man ? (F.g === 'bl' ? 'bl' : 'fl') : BLP.indexOf(fn0) >= 0 ? 'bl' : 'fl', name: fn, dose: F.amt, route: F.r, time: t, src: 'mc:' + Date.now().toString(36) }, bl ? { grp: bg } : {})); addNote(s, fn); }, 'Įrašyta: ' + fn + ' ' + F.amt + ' ' + F.r + ' · ' + t);
+        return commit(s => { s.rows.push(Object.assign({ g: F.man ? (F.g === 'bl' ? 'bl' : 'fl') : BLP.indexOf(fn0) >= 0 ? 'bl' : 'fl', name: fn, dose: F.amt, route: F.r, time: t, t: tsOf(t), src: 'mc:' + Date.now().toString(36) }, bl ? { grp: bg } : {})); addNote(s, fn); }, 'Įrašyta: ' + fn + ' ' + F.amt + ' ' + F.r + ' · ' + t);
       }
       case 'mk': {
         const pt = SH.pt; if (!pt) return;
@@ -1464,7 +1469,7 @@ const MC = (() => {
       }
       case 'tq': {
         const k = SH.k; if (!k) return;
-        return commit(s => { s.tq[k] = { on: true, tm: t }; tqSync(s, true); }, 'Turniketas: ' + tqName(k) + ' · ' + t);
+        return commit(s => { s.tq[k] = { on: true, tm: t, t: tsOf(t) }; tqSync(s, true); }, 'Turniketas: ' + tqName(k) + ' · ' + t);
       }
     }
   }
@@ -1484,7 +1489,7 @@ const MC = (() => {
   }
   function setTq(k, tm) {
     if (!TQ.some(q => q[0] === k)) return false;
-    const st = load(), s = curOf(st); s.tq[k] = { on: true, tm: HM_RE.test(tm || '') ? tm : nowHM() }; tqSync(s); save(st); return true;
+    const st = load(), s = curOf(st); s.tq[k] = { on: true, tm: HM_RE.test(tm || '') ? tm : nowHM() }; s.tq[k].t = tsOf(s.tq[k].tm); tqSync(s); save(st); return true;
   }
   // Vaistų žymėjimo įrašas ištrintas → jo C lentelės eilutė (src 'vz:id') taip pat
   function dropSrc(src) { if (!src) return; const st = load(); let ch = false; st.pts.forEach(p => { const n = p.rows.length; p.rows = p.rows.filter(r => r.src !== src); if (p.rows.length !== n) ch = true; }); if (ch) save(st); }
@@ -1739,8 +1744,9 @@ const SC = (() => {
     const q = s.q[cur.qi], pk = cur.pick[cur.qi], ans = pk != null;
     h += `<div class="scprog">${s.q.map((x, i) => `<i class="${i < cur.qi ? 'd' : i === cur.qi ? 'c' : ''}"></i>`).join('')}</div>`;
     h += `<section class="scq"><div class="scn">${cur.qi + 1} klausimas iš ${n}</div><p class="scsit">${esc(q.sit)}</p>`;
+    const GPL = { 'ŠSD': 'Pulsas', 'ŠSD (k./min)': 'Pulsas' }; // terminai kaip MIST kortelėje
     const gp = Object.entries(q.gp || {});
-    if (gp.length) h += '<div class="scgp">' + gp.map(([k, v]) => `<div><small>${esc(k)}</small><b>${esc(v)}</b></div>`).join('') + '</div>';
+    if (gp.length) h += '<div class="scgp">' + gp.map(([k, v]) => `<div><small>${esc(GPL[k] || k)}</small><b>${esc(v)}</b></div>`).join('') + '</div>';
     h += `<b class="sck">${esc(q.klaus)}</b>`;
     h += q.opt.map((o, i) => `<button class="sco${ans ? (o.ok ? ' ok' : i === pk ? ' bad' : ' dim') : ''}" data-act="sc-pick" data-k="${i}"${ans ? ' disabled' : ''}><span class="scl">${ans && o.ok ? '✓' : ans && i === pk ? '✗' : LET[i]}</span><span>${esc(o.t)}</span></button>`).join('');
     if (ans) {
@@ -1851,12 +1857,12 @@ const PT = (() => {
     const la = get(pid, 'laikai') || {};
     put(+la.trauma || MC.trTs(c) || hmTs(c.t0), 'Trauma' + ((c.mech || []).length ? ' – ' + c.mech.join(', ').toLowerCase() : ''));
     const tqs = c.tq && typeof c.tq === 'object' ? Object.keys(c.tq).filter(k => c.tq[k] && c.tq[k].on && hmTs(c.tq[k].tm)) : [];
-    if (tqs.length) tqs.forEach(k => put(hmTs(c.tq[k].tm), 'Turniketas – ' + MC.tqName(k))); else put(+la.turn || hmTs(c.tqT), 'Turniketas');
+    if (tqs.length) tqs.forEach(k => put(+c.tq[k].t || hmTs(c.tq[k].tm), 'Turniketas – ' + MC.tqName(k))); else put(+la.turn || hmTs(c.tqT), 'Turniketas');
     const z = get(pid, 'vz'), ze = z && Array.isArray(z.e) ? z.e : [];
-    const rw = (c.rows || []).filter(r => r && !/^(vz:|kr)/.test(String(r.src || '')) && hmTs(r.time));
-    rw.forEach(r => put(hmTs(r.time), [r.name, r.dose, r.route].map(x => String(x || '').trim()).filter(Boolean).join(' ')));
+    const rw = (c.rows || []).filter(r => r && !/^(vz:|kr)/.test(String(r.src || '')) && (+r.t || hmTs(r.time)));
+    rw.forEach(r => put(+r.t || hmTs(r.time), [r.name, r.dose, r.route].map(x => String(x || '').trim()).filter(Boolean).join(' ')));
     if (c.txaT && !ze.some(e => e && e.v === 'txa') && !rw.some(r => /\btxa\b|tranek/i.test(r.name))) put(hmTs(c.txaT), 'TXA');
-    (c.vit || []).forEach(v => put(hmTs(v.ts), MC.vitLine(v).replace(/^[^–]*–\s*/, '')));
+    (c.vit || []).forEach(v => put(+v.t || hmTs(v.ts), MC.vitLine(v).replace(/^[^–]*–\s*/, '')));
     if (typeof VZ !== 'undefined') ze.forEach(e => { if (e && +e.t && e.v) put(+e.t, VZ.desc(Object.assign({ a: '', u: '', r: '', n: '' }, e))); });
     const w = get(pid, 'wbb');
     if (w && typeof w === 'object') { put(+w.t1, 'Kraujo transfuzija – paėmimas'); put(+w.t2, 'Kraujo transfuzija – perpylimas' + (w.don || w.donG ? ' (donoras ' + [w.don, w.donG].filter(Boolean).join(' ') + ')' : '')); }

@@ -11,7 +11,7 @@ Adresas: https://pcc.1040medkuopa.lt (GitHub Pages iš `main`, failas `CNAME`).
 ## Failai
 - `index.html` – CSS ir apvalkalas; `core.js`, `views.js`, `app.js` – maršrutai ir ekranai (March); `tools.js` – MIST, 9-Line, scenarijai, paciento failas, priminimai, QR; `pacientas.js` – paciento ekranas; `priedai.js` – egzaminas, dozių kortelės, OPSEC, pirštinių režimas, vertinimo lapas; `sitrep.js`; `fb.js` – atsiliepimai (rodoma tik kai `E.atsiliepimai.url`).
 - `pcc.js` – PCC priedai ir `TCFG.hub` (paciento ekrano skiltys).
-- Turinys (March formatu): `sarasai.js`, `igudziai.js`, `scenarijai.js`, `vaistai.js`. Nebūtini laukai: `E.qd` (greitosios dozės), `E.daznVaistai`, `E.greitai`, `E.igudziuGrupes`, `E.vaistaiIntro`, `E.vaistaiPuslapis`, `f.zenklas`, `f.cls`, įgūdžio `irankiai`, sąrašo punkto `rl`.
+- Turinys (March formatu): `sarasai.js`, `igudziai.js`, `scenarijai.js`, `vaistai.js` – tik turinys. Programėlės priedai prie turinio – `pcc-cfg.js` (įkeliamas po duomenų): `E.atsiliepimai`, `E.qd` (greitosios dozės – tik pažodžiui iš vaistai.js teksto), `E.daznVaistai`, `E.evakSarasas`. Kiti nebūtini laukai: `E.greitai`, `E.igudziuGrupes`, `E.vaistaiIntro`, `E.vaistaiPuslapis`, `f.zenklas`, `f.cls`, įgūdžio `irankiai`, sąrašo punkto `rl`.
 
 Šaltiniai: JTS CPG „Prolonged Casualty Care Guidelines“ (ID 91, 2021), „Nursing Interventions, Wound Care, and Splint Management in PCC“ (ID 70, 2025), „Telemedicine Guidance in the Deployed Setting“ (ID 94, 2023), PFC Documentation (2023).
 
