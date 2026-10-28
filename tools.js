@@ -17,6 +17,7 @@ const TCFG = {
   get qd() { return (window.ETC || {}).qd || {}; },
   pt: ['laikai', 'ck', 'svoris'], // šie raktai priklauso dabartiniam pacientui (perjungiami kartu su MIST kortele)
   opKeys: ['pcc'], // OPSEC: PCC duomenys (stebėjimo lapas ir kt.) trinami kartu su sužeistųjų duomenimis
+  txa: false,    // TXA 3 val. riba (MIST priminimas, laikmačiai) PCC nerodoma – TXA aprašyta turinyje
   remTq: false,  // turniketo priminimai – PCC langai (< 2 val., 2–6 val., > 6 val.) pcc.js
   remVit: false, // gyvybinių rodiklių priminimas – priežiūros grafike (pcc.js)
   hub: {}        // paciento ekranas – pcc.js
@@ -1912,7 +1913,7 @@ const REM = (() => {
   const LV = { r: 0, a: 1, i: 2 };
   // „Atidaryti“ → paciento ekranas su atitinkamu langu (sh – MC.sheet rūšis, d – vaistas); TXA – CMC (March „tik CLS“ – nerodoma)
   const GO = '#/pacientas?sh=';
-  const txaOk = () => typeof ok !== 'function' || ok('CMC');
+  const txaOk = () => TCFG.txa !== false && (typeof ok !== 'function' || ok('CMC'));
   function items(only) {
     const L = PT.list(), now = Date.now(), dis = PT.dismissed(), out = [], vitN = +LS.get(VK, 0) || 0;
     L.pts.forEach(p => {

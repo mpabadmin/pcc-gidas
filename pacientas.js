@@ -85,7 +85,7 @@ const HUB = (() => {
   const dur = ms => { const m = Math.max(0, Math.floor(ms / 60000)); return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); };
   const ago = ms => { const m = Math.max(0, Math.floor(ms / 60000)); return m < 1 ? 'ką tik' : 'prieš ' + (m < 60 ? m + ' min' : Math.floor(m / 60) + ' val. ' + String(m % 60).padStart(2, '0') + ' min'); };
   const wOn = () => HCFG().weight !== false;
-  const txaOk = () => typeof ok !== 'function' || ok('CMC'); // March „tik CLS“ – TXA (CMC) nerodomas
+  const txaOk = () => TCFG.txa !== false && (typeof ok !== 'function' || ok('CMC')); // March „tik CLS“ – TXA (CMC) nerodomas
   const CHEV = '<svg class="hbch" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>';
   const CATC = { T1: 'msT1', T2: 'msT2', T3: 'msT3', T4: 'msT4', X: 'msX' };
   const ptTabs = () => PT.bar().replace(/<a class="ptf"[^>]*>[^<]*<\/a>/, '');

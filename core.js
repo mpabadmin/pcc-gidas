@@ -14,7 +14,10 @@ const fmt = x => String(x >= 100 ? Math.round(x) : x >= 1 ? Math.round(x * 10) /
 const isAdv = g => /^(CMC|CPP)/.test(g || '');
 const tikCLS = () => LS.get('pcc-tikcls', false);
 const ok = g => !(tikCLS() && isAdv(g));
-const tag = g => isAdv(g) ? `<span class="tag ${g === 'CPP' ? 'red' : 'amb'}" title="${g === 'CPP' ? 'Kovos paramedikas / gydytojas' : 'Kovos medikas'}">${esc(g)}</span>` : '';
+// Lygiai PCC komandoje: CLS – visa komanda, CMC – kovos medikas, CPP – paramedikas / gydytojas (duomenų kodai kaip March gide)
+const LVN = { CLS: 'Komanda', CMC: 'Medikas', CPP: 'Gydytojas' }, LVT = { CLS: 'Visa PCC komanda (CLS)', CMC: 'Kovos medikas (CMC)', CPP: 'Paramedikas, gydytojas (CPP)' };
+const lvName = g => LVN[g] || g || '';
+const tag = g => isAdv(g) ? `<span class="tag ${g === 'CPP' ? 'red' : 'amb'}" title="${LVT[g] || ''}">${esc(lvName(g))}</span>` : '';
 const row = (href, title, small, extra) => `<a class="row" href="${href}"><div>${esc(title)}${small ? '<small>' + esc(small) + '</small>' : ''}</div>${extra || ''}<span class="ar">›</span></a>`;
 const notFound = () => '<h1>Nerasta</h1><p class="muted">Šio puslapio nėra. Grįžkite į pradžią.</p>';
 const hm = ts => { const d = new Date(ts); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
@@ -130,7 +133,7 @@ function timersHtml() {
     T.turn ? (now > conv ? 'bad' : 'warn') : '');
   const left = txa ? Math.ceil((txa - now) / 60000) : 0;
   if (txaT) h += `<div class="tmc ok"><span class="muted">TXA</span><b>Suleista</b><small>${txaT > 0 ? hm(txaT) : 'pažymėta kortelėje'}</small></div>`;
-  else if (ok('CMC')) h += `<div class="tmc ${txa ? (now > txa ? 'bad' : left <= 60 ? 'warn' : '') : 'dim'}"><span class="muted">TXA iki</span><b>${txa ? (now > txa ? 'Praėjo' : hm(txa)) : '—'}</b><small>${txa ? (now > txa ? 'po 3 val. neskirti' : 'liko ' + tmDur(left)) : ''}</small></div>`;
+  else if (ok('CMC') && TCFG.txa !== false) h += `<div class="tmc ${txa ? (now > txa ? 'bad' : left <= 60 ? 'warn' : '') : 'dim'}"><span class="muted">TXA iki</span><b>${txa ? (now > txa ? 'Praėjo' : hm(txa)) : '—'}</b><small>${txa ? (now > txa ? 'po 3 val. neskirti' : 'liko ' + tmDur(left)) : ''}</small></div>`;
   h += '</div>';
   return h; // keičiama bakstelėjus kortelę – laiko langas (MC.sheet 'time'), kartu su MIST kortele
 }
@@ -141,7 +144,7 @@ function timersMini() {
   const T = LS.get('pcc-laikai', {}) || {}, now = Date.now();
   if (!T.trauma && !T.turn) return '';
   const a = [];
-  if (T.trauma) { const txa = T.trauma + 3 * 3600e3; a.push(`<span>Trauma <b>${hm(T.trauma)}</b></span>`); if (ok('CMC')) a.push(`<span class="${now > txa ? 'x' : txa - now <= 3600e3 ? 'w' : ''}">TXA ${now > txa ? '<b>praėjo</b>' : 'iki <b>' + hm(txa) + '</b>'}</span>`); }
+  if (T.trauma) { const txa = T.trauma + 3 * 3600e3; a.push(`<span>Trauma <b>${hm(T.trauma)}</b></span>`); if (ok('CMC') && TCFG.txa !== false) a.push(`<span class="${now > txa ? 'x' : txa - now <= 3600e3 ? 'w' : ''}">TXA ${now > txa ? '<b>praėjo</b>' : 'iki <b>' + hm(txa) + '</b>'}</span>`); }
   if (T.turn) { const conv = T.turn + 2 * 3600e3; a.push(`<span class="${now > conv ? 'x' : 'w'}">Turniketas <b>${hm(T.turn)}</b> · ${tmAgo(T.turn, now)}</span>`); }
   return `<a class="tmini" href="#/pacientas" aria-label="Laikai – atidaryti paciento faile">${a.join('')}</a>`;
 }

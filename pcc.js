@@ -316,6 +316,17 @@ const PC = (() => {
   const dname = v => v.id === 'txa' ? 'TXA' : String(v.name || v.id).replace(/ \(.*\)$/, '');
   const drugOf = nm => { nm = String(nm || '').trim().toLowerCase(); return nm ? (E.vaistai || []).find(v => [v.id, v.name, dname(v)].some(s => String(s || '').toLowerCase() === nm)) : null; };
   const MGRP = { skausmas: 'an', antibiotikai: 'ab' };
+  // Kartojimo intervalas iš gido dozių teksto („kas 8 val.“, „kas 30 min“, „kartą per parą“) – tik jei sutampa su pasirinkimu; kitaip nekeičiama
+  function ivlOf(v, r) {
+    const L = (v.dozes || []).map(d => (d.k || '') + ' ' + (d.d || '')), pick = r ? L.filter(t => t.indexOf(r) >= 0) : [];
+    for (const t of pick.concat(L)) {
+      const m = t.match(/kas\s+(\d+)(?:\s*[–-]\s*\d+)?\s*(min|val)/i);
+      const mins = m ? +m[1] * (/val/i.test(m[2]) ? 60 : 1) : /kartą per parą/i.test(t) ? 1440 : 0;
+      if (mins) return MIVL.some(x => x[0] === mins) ? mins : -1;
+    }
+    return -1;
+  }
+  const autoIvl = s => { const v = drugOf(s.name), i = v ? ivlOf(v, s.route) : -1; if (i >= 0) s.ivl = i; };
   // MIST kortelės C lentelės eilutės, įvestos ne per žurnalą (pvz. MIST vaisto langu)
   const mistRows = x => (x.c.rows || []).filter(r => r && !/^pcc:/.test(String(r.src || '')) && [r.name, r.dose].some(s => String(s || '').trim()));
   function journal(x) {
@@ -700,8 +711,8 @@ const PC = (() => {
       case 'q': s.ml = v; return draw();
       case 'ml': s.ml = v === 'del' ? String(s.ml || '').slice(0, -1) : v === 'clr' ? '' : (String(s.ml || '') + v).replace(/^0+/, '').slice(0, 5); return draw();
       // vaistai
-      case 'name': s.name = v; { const dv = drugOf(v), q = dv ? ((TCFG.qd || {})[dv.id] || []) : []; if (q.length === 1 && !s.dose) { s.route = q[0][0]; s.dose = q[0][1] + ' ' + q[0][2]; } } return draw();
-      case 'qd': { const [r, a] = v.split('|'); s.route = r; s.dose = a; return draw(); }
+      case 'name': s.name = v; { const dv = drugOf(v), q = dv ? ((TCFG.qd || {})[dv.id] || []) : []; if (q.length === 1 && !s.dose) { s.route = q[0][0]; s.dose = q[0][1] + ' ' + q[0][2]; } } autoIvl(s); return draw();
+      case 'qd': { const [r, a] = v.split('|'); s.route = r; s.dose = a; autoIvl(s); return draw(); }
       case 'route': s.route = s.route === v ? '' : v; return draw();
       case 'ivl': s.ivl = +v || 0; return draw();
       // svoris, laikas

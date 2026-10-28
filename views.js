@@ -68,7 +68,7 @@ const stOf = m => { try { return m().status(); } catch (e) { return ''; } }; // 
 const installRow = () => installed() ? '' : row('#/idiegimas', 'Įdiegti programėlę', 'Veikia be interneto');
 
 // Įgūdžių grupės: E.igudziuGrupes [[raidė, pavadinimas], …] arba – žinomi March grupių pavadinimai / grupės kodas (tvarka – kaip duomenyse)
-const GRUPES0 = { K: 'Principai, apžiūra', M: 'M – masyvus kraujavimas', A: 'A – kvėpavimo takai', R: 'R – kvėpavimas', C: 'C – kraujotaka ir šokas', H: 'H – hipotermija, galva, akys', P: 'P · A – skausmas ir antibiotikai', W: 'W · S – žaizdos, nudegimai, įtvėrimas', E: 'Evakuacija ir perdavimas' };
+const GRUPES0 = { K: 'Principai, stebėjimas, dokumentai', G: 'Gaivinimas ir skysčiai', A: 'Kvėpavimo takai ir ventiliacija', S: 'Skausmas ir sedacija', N: 'Slauga', W: 'Žaizdos, galūnės, infekcija', Y: 'Ypatingos būklės', E: 'Telekonsultacija ir evakuacija' };
 const grupes = () => { if (Array.isArray(E.igudziuGrupes) && E.igudziuGrupes.length) return E.igudziuGrupes.map(g => Array.isArray(g) ? g : [g.id, g.pav]); const o = []; (E.igudziai || []).forEach(s => { if (s.grupe != null && !o.some(g => g[0] === s.grupe)) o.push([s.grupe, GRUPES0[s.grupe] || String(s.grupe)]); }); return o; };
 const grupesPav = g => (grupes().find(x => x[0] === g) || ['', ''])[1];
 const skillOrder = () => { const G = grupes(); return G.reduce((a, [g]) => a.concat((E.igudziai || []).filter(s => s.grupe === g)), []).concat((E.igudziai || []).filter(s => !G.some(g => g[0] === s.grupe))); };
@@ -82,7 +82,7 @@ const skRefs = t => esc(t).replace(/#(\d{1,2})(?![\d])/g, (m, n) => { const k = 
 const toolRows = () => typeof MC === 'undefined' ? '' :
   row('#/pacientas', 'Pacientas', MC.status()) + row('#/9line', '9-Line MEDEVAC', NL.status()) + row('#/sitrep', 'SITREP – padėties pranešimas', SR.status()) + ((E.scenarijai || []).length ? row('#/scenarijai', 'Treniruočių scenarijai', SC.status()) : '') +
   (VL.has() ? row('#/vertinimas', 'Vertinimo lapas', VL.status()) : '') + row('#/korteles', 'Dozių kortelės', FC.status()) + row('#/egzaminas', 'Egzaminuotojo režimas', EX.status());
-const lvTag = s => !s.lygis ? '' : isAdv(s.lygis) ? tag(s.lygis) : `<span class="tag grn">${esc(s.lygis)}</span>`;
+const lvTag = s => !s.lygis ? '' : isAdv(s.lygis) ? tag(s.lygis) : `<span class="tag grn" title="${LVT[s.lygis] || ''}">${esc(lvName(s.lygis))}</span>`;
 const advAny = () => (E.vaistai || []).some(v => isAdv(v.lygis)) || (E.igudziai || []).some(s => isAdv(s.lygis)) || Object.keys(E.sarasai || {}).some(k => ((E.sarasai[k] || {}).items || []).some(it => isAdv(it.g)));
 const pcSt = (f, d) => { try { return typeof PC !== 'undefined' ? f() : d || ''; } catch (e) { return d || ''; } };
 
@@ -106,7 +106,7 @@ const V = {
   // Perdavimas: telekonsultacija, MIST, 9-Line, SITREP, QR
   toolTiles() {
     return '<div class="tools">' +
-      tile('#/telekonsultacija', ICO.tele, 'Telekonsultacija', pcSt(() => PC.st('tc')), 'Telekonsultacija ir ATMISTER') + tile('#/pacientas?t=kortele', ICO.mist, 'MIST', stOf(() => MC), 'MIST kortelė') +
+      tile('#/telekonsultacija', ICO.tele, 'Tele\u00adkonsul\u00adtacija', pcSt(() => PC.st('tc')), 'Telekonsultacija ir ATMISTER') + tile('#/pacientas?t=kortele', ICO.mist, 'MIST', stOf(() => MC), 'MIST kortelė') +
       tile('#/9line', '9', '9-Line', stOf(() => NL), '9-Line MEDEVAC') + tile('#/sitrep', ICO.sitrep, 'SITREP', stOf(() => SR)) +
       tile('#/qr', ICO.qr, 'Perduoti QR', '', 'Perduoti QR kodu') + tile('#/qr-priimti', ICO.qrin, 'Priimti QR', '', 'Priimti pacientą QR kodu') + '</div>';
   },
@@ -175,7 +175,7 @@ const V = {
     const pg = (t.puslapiai || []).filter(x => P[x]);
     if (pg.length) h += '<h2>Mokymosi medžiaga</h2>' + pg.map(x => row('#/p/' + x, P[x].title, P[x].sub)).join('');
     if (sk.length) h += `<h2>Įgūdžiai · įsivertinta ${r} / ${sk.length}</h2>` + progBar(r, sk.length) +
-      sk.map(s => row('#/igudis/' + s.id, s.pav, '#' + s.id + (s.lygis ? ' · ' + s.lygis : '') + ((s.video || []).length ? ' · ▶ ' + s.video.length : ''), rateBadge(R, s.id))).join('');
+      sk.map(s => row('#/igudis/' + s.id, s.pav, '#' + s.id + (s.lygis ? ' · ' + lvName(s.lygis) : '') + ((s.video || []).length ? ' · ▶ ' + s.video.length : ''), rateBadge(R, s.id))).join('');
     const ls = (t.sarasai || []).filter(x => (E.sarasai || {})[x]);
     if (ls.length) h += '<h2>Kontroliniai sąrašai</h2>' + ls.map(listRow).join('');
     const dr = (t.vaistai || []).map(drugById).filter(v => v && ok(v.lygis));
@@ -233,9 +233,9 @@ const V = {
 
   drugs() {
     const D = (E.vaistai || []).filter(v => ok(v.lygis)), w = wCalc(), field = mode === 'field';
-    let h = '<h1>Vaistai</h1><p class="muted">' + esc(E.vaistaiIntro || 'Dozės – pagal kuopos vaistų korteles ir vieneto SOP. Žyma CMC – kovos medikas, CPP – paramedikas ar gydytojas.') + '</p>';
+    let h = '<h1>Vaistai</h1><p class="muted">' + esc(E.vaistaiIntro || 'Dozės – pagal kuopos vaistų korteles ir vieneto SOP. Žyma „Medikas“ – kovos medikas (CMC), „Gydytojas“ – paramedikas ar gydytojas (CPP).') + '</p>';
     if (!field) h += row('#/korteles', 'Dozių kortelės', FC.status());
-    const G = E.vaistuGrupes || [], drow = v => row('#/vaistas/' + v.id, v.name, field ? doseShort(v, w) : v.klase, tag(v.lygis) + (v.ne26 ? '<span class="tag amb">Ne TCCC 2026</span>' : ''));
+    const G = E.vaistuGrupes || [], drow = v => row('#/vaistas/' + v.id, v.name, field ? doseShort(v, w) : v.klase, tag(v.lygis));
     G.forEach(g => {
       const a = D.filter(v => v.grupe === g.id);
       if (!a.length) return;
@@ -254,7 +254,8 @@ const V = {
     const w = wCalc(), learn = mode === 'learn';
     const doseHtml = d => `<div class="dose"><div class="lb">${esc(d.k)}${d.c ? ' · ' + esc(d.d) : ''}</div><div class="big">${esc(d.c ? calc(d.c, w) : d.d)}</div>${d.p ? '<div class="lb">' + br(d.p) + '</div>' : ''}</div>`;
     let h = `<h1>${esc(v.name)}</h1>` + (v.klase ? `<p class="muted">${esc(v.klase)}</p>` : '');
-    h += (v.ne26 ? '<span class="tag amb">Ne TCCC 2026</span>' : '') + lvTag(v);
+    h += (v.tccc26 ? '<span class="tag grn">TCCC 2026</span>' : v.ne26 ? '<span class="tag amb">Ne TCCC 2026</span>' : '') + lvTag(v);
+    if (v.kam) h += `<p class="muted mt0">Kas skiria: ${esc(v.kam)}</p>`;
     if (v.ind) h += `<p class="ind">${esc(v.ind)}</p>`;
     if ((v.dozes || []).some(d => d.c)) h += '<h2>Paciento svoris, kg</h2>' + wChips(wNow());
     if ((v.dozes || []).length) h += '<h2>Dozė</h2>' + v.dozes.map(doseHtml).join('');
@@ -262,13 +263,30 @@ const V = {
     if (iw.length) h += '<div class="warn wl"><b>Įspėjimai</b>' + (iw.length > 1 ? ul(iw) : '<div>' + esc(iw[0]) + '</div>') + '</div>';
     let more = '';
     if (v.kontra) more += `<div class="kv"><b>Kontraindikacijos</b><span>${esc(v.kontra)}</span></div>`;
+    if (v.pradzia) more += `<div class="kv"><b>Veikimo pradžia</b><span>${br(v.pradzia)}</span></div>`;
+    if (v.trukme) more += `<div class="kv"><b>Veikimo trukmė</b><span>${br(v.trukme)}</span></div>`;
     if (v.pakuote) more += `<div class="kv"><b>Pakuotė</b><span>${br(v.pakuote)}</span></div>`;
     if ((v.pastabos || []).length) more += '<h3>Pastabos</h3>' + ul(v.pastabos);
     if (v.saltinis) more += '<p class="muted" style="margin-top:10px">Šaltiniai: ' + esc(v.saltinis) + '</p>';
     if ((v.nuorodos || []).length) more += v.nuorodos.map(([t, u]) => `<a class="row" href="${esc(u)}" target="_blank" rel="noopener"><div>${esc(t)}</div><span class="ar">↗</span></a>`).join('');
     if (more) h += `<details class="alt"${learn ? ' open' : ''}><summary>Kontraindikacijos ir daugiau</summary>${more}</details>`;
-    if ((v.susije || []).length) h += '<h2>Susiję vaistai</h2>' + v.susije.map(s => { const o = drugById(s); return o && ok(o.lygis) ? row('#/vaistas/' + o.id, o.name, o.klase, tag(o.lygis)) : ''; }).join('');
+    h += V.drugLt(v, learn);
+    const alt = (Array.isArray(v.alt) ? v.alt : []).filter(a => a && (!a.id || (drugById(a.id) && ok(drugById(a.id).lygis))));
+    if (alt.length) h += '<h2>Alternatyva</h2>' + alt.map(a => a.id ? row('#/vaistas/' + a.id, drugById(a.id).name, a.t) : `<p class="muted">${esc(a.t)}</p>`).join('');
+    const sus = (v.susije || []).filter(s => !alt.some(a => a.id === s));
+    if (sus.length) h += '<h2>Susiję vaistai</h2>' + sus.map(s => { const o = drugById(s); return o && ok(o.lygis) ? row('#/vaistas/' + o.id, o.name, o.klase, tag(o.lygis)) : ''; }).join('');
     return h;
+  },
+
+  // Lietuvoje registruoti preparatai (VVKT) – kaip ETC gide
+  drugLt(v, learn) {
+    const L = v.lt; if (!L || typeof L !== 'object' || !((L.p || []).length || L.ne || L.pa)) return '';
+    const ST = { T: ['Tiekiamas', 'grn'], L: ['Lygiagretus importas', 'grn'], U: ['Be registracijos numerio', 'amb'], N: ['Netiekiamas', 'red'] };
+    let h = (L.p || []).map(p => { const s = ST[p.s] || ['', '']; return `<div class="ltp"><div class="ltn"><b>${esc(p.n)}</b>${s[0] ? `<span class="tag ${s[1]}">${s[0]}</span>` : ''}</div><div class="ltd">${esc(p.d)}${p.r ? ' · ' + esc(p.r) : ''}</div></div>`; }).join('');
+    if (L.ne) h += `<div class="ltp"><div class="ltn"><span class="tag red">Netiekiami</span></div><div class="ltd">${esc(L.ne)}</div></div>`;
+    if (L.pa) h += `<p class="ltpa">${esc(L.pa)}</p>`;
+    h += '<p class="muted ltsrc">VVKT vaistinių preparatų registras. Tiekimas keičiasi – naudokite tai, kas yra komplekte, ir tikrinkite koncentraciją ant ampulės.</p>';
+    return `<details class="alt"${learn ? ' open' : ''}><summary>Lietuvoje: preparatai ir pakuotės</summary>${h}</details>`;
   },
 
   skills(q) {
@@ -282,7 +300,7 @@ const V = {
     if ((E.scenarijai || []).length) h += row('#/scenarijai', 'Treniruočių scenarijai', SC.status());
     h += '<div class="tabs">' + F.map(([k, l]) => tabBtn(l, '#/igudziai' + (k ? '?f=' + encodeURIComponent(k) : ''), k === f, true)).join('') + '</div>';
     const G = grupes();
-    const sRow = s => row('#/igudis/' + s.id, s.pav, '#' + s.id + (s.lygis ? ' · ' + s.lygis : '') + ((s.vaizdai || []).length ? ' · ▣ ' + s.vaizdai.length : '') + ((s.video || []).length ? ' · ▶ ' + s.video.length : ''), rateBadge(R, s.id));
+    const sRow = s => row('#/igudis/' + s.id, s.pav, '#' + s.id + (s.lygis ? ' · ' + lvName(s.lygis) : '') + ((s.vaizdai || []).length ? ' · ▣ ' + s.vaizdai.length : '') + ((s.video || []).length ? ' · ▶ ' + s.video.length : ''), rateBadge(R, s.id));
     G.forEach(([g, gp]) => {
       const a = S.filter(s => s.grupe === g);
       if (!a.length) return;
@@ -301,7 +319,7 @@ const V = {
     let h = `<h1>${esc(s.pav)}</h1><span class="tag">#${esc(s.id)}</span>${lvTag(s)}` + (s.fazes || []).map(f => { const x = fazeById(f); return `<span class="tag ${phCls(f)}">${esc(x ? phLbl(x) : f)}</span>`; }).join('');
     if (s.aprasas) h += `<p class="lead">${esc(s.aprasas)}</p>`;
     const ulr = a => '<ul>' + a.map(x => '<li>' + skRefs(x) + '</li>').join('') + '</ul>';
-    if (!ok(s.lygis)) h += '<div class="warn">Aukštesnio lygio įgūdis – įjungtas filtras „Rodyti tik CLS“, todėl jo nėra sąrašuose.</div>';
+    if (!ok(s.lygis)) h += '<div class="warn">Mediko ar gydytojo įgūdis – įjungtas filtras „Rodyti tik komandos veiksmus“, todėl jo nėra sąrašuose.</div>';
     if ((s.zingsniai || []).length) h += '<h2>Žingsniai</h2><ol class="steps">' + s.zingsniai.map(x => '<li>' + skRefs(x) + '</li>').join('') + '</ol>';
     if ((s.esme || []).length) h += '<div class="card esme"><b>Svarbu</b>' + ulr(s.esme) + '</div>';
     if ((s.klaidos || []).length) h += '<div class="warn wl"><b>Dažnos klaidos ir pavojai</b>' + ulr(s.klaidos) + '</div>';
@@ -360,7 +378,7 @@ const V = {
   settings() {
     const b = (act, t, s) => `<button class="row" data-act="${act}"><div>${t}<small>${s}</small></div></button>`;
     let h = '<h1>Nustatymai</h1>' + GL.settingRow();
-    if (advAny()) h += `<div class="ck${tikCLS() ? ' on' : ''}" data-act="tikcls" role="checkbox" aria-checked="${tikCLS()}" tabindex="0"><span class="bx">✓</span><div class="t">Rodyti tik CLS veiksmus<div class="muted">Paslepia kovos mediko (CMC) ir paramediko (CPP) veiksmus, vaistus ir įgūdžius.</div></div></div>`;
+    if (advAny()) h += `<div class="ck${tikCLS() ? ' on' : ''}" data-act="tikcls" role="checkbox" aria-checked="${tikCLS()}" tabindex="0"><span class="bx">✓</span><div class="t">Rodyti tik komandos veiksmus<div class="muted">Paslepia mediko (CMC) ir gydytojo / paramediko (CPP) veiksmus, vaistus ir įgūdžius.</div></div></div>`;
     h += '<h2>Aš</h2>' + (typeof MC !== 'undefined' && MC.profileView ? MC.profileView() : '') + pcSt(() => PC.settings());
     h += '<h2>Sužeistasis</h2>' + row('#/pacientas', 'Paciento failas', 'Rodikliai, skysčiai, priežiūra, perdavimas') + b('new-pt', '+ Kitas sužeistasis', 'Ankstesni lieka sąraše') + REM.settings() + pcSt(() => PC.dataSettings()) + OP.settings();
     if (FB.configured() || FB.pending()) {

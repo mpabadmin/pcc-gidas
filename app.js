@@ -251,7 +251,7 @@ app.addEventListener('click', e => {
       toastAct('Žymėjimai išvalyti', 'Atšaukti', () => { const a = ckAll(); a[d.l] = prev; LS.set('pcc-ck', a); const y = scrollY; render(); scrollTo(0, y); });
       break;
     }
-    case 'tikcls': { LS.set('pcc-tikcls', !tikCLS()); IDX = null; render(); const f = app.querySelector('[data-act=tikcls]'); if (f) f.focus(); toast(tikCLS() ? 'Rodomi tik CLS veiksmai' : 'Rodomi visi veiksmai'); break; }
+    case 'tikcls': { LS.set('pcc-tikcls', !tikCLS()); IDX = null; render(); const f = app.querySelector('[data-act=tikcls]'); if (f) f.focus(); toast(tikCLS() ? 'Rodomi tik komandos veiksmai' : 'Rodomi visi veiksmai'); break; }
     case 'reset-ivert': if (confirm('Ištrinti visus įsivertinimus?')) { LS.set('pcc-ivert', {}); render(); } break;
     case 'fb': FB.open(); break;
     case 'fb-flush':
