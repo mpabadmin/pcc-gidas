@@ -1,4 +1,4 @@
-const VERSION = 'pcc-gidas-v2';
+const VERSION = 'pcc-gidas-v2.1';
 const IMG = 'pcc-img-1';
 const EXT = 'pcc-ext-1';
 const FILES = ['./', './index.html', './sarasai.js', './vaistai.js', './igudziai.js', './scenarijai.js', './pcc-cfg.js', './core.js', './views.js', './tools.js', './sitrep.js', './priedai.js', './pacientas.js', './pcc.js', './fb.js', './app.js',
