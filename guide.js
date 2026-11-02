@@ -2,7 +2,7 @@
 // ── Trumpa instrukcija „Kaip naudotis“: rodoma pirmą kartą atidarius pradžios ekraną, vėliau – mygtukas „?“ (pradžioje) ir Nustatymuose ──
 // Bendras visoms 1040 medkuopos programėlėms; turinys – STEPS žemiau. Mygtukai su data-g="open" atidaro instrukciją.
 const GUIDE = (() => {
-  const KEY = 'pcc-guide', VER = 1;
+  const KEY = 'pcc-guide', VER = 2;
   const IC = {
     search: 'M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14Z|M20 20l-4-4', moon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
     chat: 'M20.5 11.5a8.5 8.5 0 0 1-12.3 7.6L3.5 20.5l1.4-4.6a8.5 8.5 0 1 1 15.6-4.4z', refresh: 'M20 11a8 8 0 0 0-14.3-4.9L4 8|M4 3v5h5|M4 13a8 8 0 0 0 14.3 4.9L20 16|M20 21v-5h-5',
@@ -12,6 +12,8 @@ const GUIDE = (() => {
   const svg = (k, c) => `<svg class="${c || 'gdi'}" viewBox="0 0 24 24" aria-hidden="true">${(IC[k] || k).split('|').map(d => `<path d="${d}"/>`).join('')}</svg>`;
   const txt = s => s.replace(/\{(\w+)\}/g, (m, k) => IC[k] ? svg(k, 'gdii') : m);
   const STEPS = [
+  { ic: 'M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z|M12 8v5|M12 16h.01', t: 'Tik pagalbinė priemonė', p: 'PCC gidas primena, ką išmokote. <b>Jis neatstoja oficialių kursų</b>, vieneto SOP, telekonsultacijos ir gydytojo nurodymų. Rekomenduojame išklausyti taktinės medicinos kursą internetu.',
+    x: () => '<a class="gdcourse" href="https://mindaugas-grinevicius-s-school.teachable.com/p/tactical-combat-casualty-care-tccc" target="_blank" rel="noopener"><b>Taktinės medicinos kursas internetu ↗</b><small>TCCC · M. Grinevičius · nemokamas</small></a>' },
   { ic: 'M12 3l7 4v5c0 4.5-3 8-7 9-4-1-7-4.5-7-9V7z|M12 8v6M9 11h6', t: 'PCC gidas', p: 'Ilgalaikė sužeistojo priežiūra lauke, kai evakuacija vėluoja valandas ar paras. Skirta apmokytiems kovos medikams ir paramedikams. Veikia be interneto.' },
   { ic: 'M4 6h16M4 12h16M4 18h10', t: 'Priežiūros etapai', p: 'Pradžioje – penki etapai, kiekviename kontroliniai sąrašai.', x: () => '<ul><li><b>STAB</b> – perėmimas ir stabilizavimas.</li><li><b>VAL</b> – kas valandą: vertinimas, skysčiai, skausmas.</li><li><b>PAROS</b> – slauga, žaizdos, infekcija.</li><li><b>YPAT</b> – galva, nudegimai, suspaudimas, ventiliacija.</li><li><b>EVAK</b> – pakavimas, skrydis, perdavimas.</li></ul>' },
   { ic: 'M22 12h-4l-3 9L9 3l-3 9H2', t: 'Stebėjimo lapas', p: '<b>Sužeistasis</b>: rodikliai, skysčiai, vaistai ir priežiūra įrašomi su laiku, matosi tendencijos. Pradėkite nuo svorio ir pirmų rodiklių.' },

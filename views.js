@@ -379,7 +379,7 @@ const V = {
 
   settings() {
     const b = (act, t, s) => `<button class="row" data-act="${act}"><div>${t}<small>${s}</small></div></button>`;
-    let h = '<h1>Nustatymai</h1>' + '<a class="row" href="#" data-g="open"><div>Kaip naudotis<small>Trumpa instrukcija su pagrindiniais mygtukais</small></div><span class="ar">›</span></a>' + GL.settingRow();
+    let h = '<h1>Nustatymai</h1>' + disclaimer() + '<a class="row" href="#" data-g="open"><div>Kaip naudotis<small>Trumpa instrukcija su pagrindiniais mygtukais</small></div><span class="ar">›</span></a>' + GL.settingRow();
     if (advAny()) h += `<div class="ck${tikCLS() ? ' on' : ''}" data-act="tikcls" role="checkbox" aria-checked="${tikCLS()}" tabindex="0"><span class="bx">✓</span><div class="t">Rodyti tik komandos veiksmus<div class="muted">Paslepia kovos mediko (CMC) ir paramediko ar gydytojo (CPP) veiksmus, vaistus ir įgūdžius.</div></div></div>`;
     h += '<h2>Aš</h2>' + (typeof MC !== 'undefined' && MC.profileView ? MC.profileView() : '') + pcSt(() => PC.settings());
     h += '<h2>Sužeistasis</h2>' + row('#/pacientas', 'Paciento failas', 'Rodikliai, skysčiai, priežiūra, perdavimas') + b('new-pt', '+ Kitas sužeistasis', 'Ankstesni lieka sąraše') + REM.settings() + pcSt(() => PC.dataSettings()) + OP.settings();
@@ -396,10 +396,11 @@ const V = {
     const nImg = allImgs().length, have = LS.get('pcc-img', 0);
     if (nImg) h += b('img-dl', have >= nImg ? 'Iliustracijos išsaugotos telefone ✓' : 'Išsaugoti iliustracijas naudojimui be interneto', have >= nImg ? lt(nImg, ['vaizdas', 'vaizdai', 'vaizdų']) + ' · paspauskite, jei norite atnaujinti' : lt(nImg, ['vaizdas', 'vaizdai', 'vaizdų']) + ' · rekomenduojama per Wi-Fi');
     h += b('upd', 'Atnaujinti turinį', 'Reikia interneto ryšio');
-    const verM = String(E.versija || '').match(/^(\S+)\s+(v\d+)\s*\((.*)\)$/);
+    const verM = String(E.versija || '').match(/^(\S+)\s+(v[\d.]+)\s*\((.*)\)$/);
     h += '<h2>Apie</h2><p class="muted">' + (verM ? 'Versija ' + esc(verM[2]) + ' · ' + esc(verM[1]) : 'Versija ' + esc(E.versija || '—')) + '. Parengė LŠS Vilniaus 1040 medicinos šaulių kuopa pagal JTS PCC gaires (CPG ID 91, 70, 94) ir PFC dokumentavimo rekomendacijas. Atminties priemonė, ne oficiali gairė.</p>' +
       (verM ? '<details class="alt"><summary>Kas naujo</summary><p class="muted">' + esc(verM[3]) + '</p></details>' : '');
     h += pcSt(() => PC.sourceRows());
+    h += '<a class="row" href="' + COURSE + '" target="_blank" rel="noopener"><div>Taktinės medicinos kursas internetu (TCCC)<small>M. Grinevičius · rekomenduojame išklausyti</small></div><span class="ar">↗</span></a>';
     h += '<a class="row" href="https://etc.1040medkuopa.lt" target="_blank" rel="noopener"><div>ETC kišeninis gidas<small>Ligoninės traumos komandai</small></div><span class="ar">↗</span></a>';
     h += '<a class="row" href="https://march.1040medkuopa.lt" target="_blank" rel="noopener"><div>March gidas<small>TCCC: CUF, TFC, TACEVAC</small></div><span class="ar">↗</span></a>';
     return h;

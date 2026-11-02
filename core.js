@@ -160,9 +160,10 @@ function setTm(ts, k) {
   tmEdit = null; updTimers();
 }
 
+const COURSE = 'https://mindaugas-grinevicius-s-school.teachable.com/p/tactical-combat-casualty-care-tccc';
+// Visada matoma juosta: gidas – tik pagalbinė priemonė, nuoroda į taktinės medicinos kursą
 function disclaimer() {
-  if (LS.get('pcc-ok', false)) return '';
-  return '<div class="warn"><b>Atminties priemonė.</b> Skirta apmokytiems kovos medikams ir paramedikams ilgalaikei sužeistojo priežiūrai lauke. Nepakeičia mokymų, vieneto SOP, telekonsultacijos ir gydytojo nurodymų. Vaistai – tik pagal kompetenciją.<div style="margin-top:8px"><button class="btn" data-act="ok">Supratau</button></div></div>';
+  return `<a class="dstrip" href="${COURSE}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6zM12 8v5M12 16h.01"/></svg><span><b>Tik pagalbinė priemonė</b> – neatstoja oficialių kursų</span><em>Kursas ↗</em></a>`;
 }
 
 function videoHtml(v) {

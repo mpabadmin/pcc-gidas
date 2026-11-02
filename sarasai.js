@@ -14,7 +14,7 @@ const E = window.ETC;
 const sk = (n, t) => `<a href="#/igudis/${n}">${t || 'Įgūdis #' + n}</a>`;
 const vs = (id, t) => `<a href="#/vaistas/${id}">${t}</a>`;
 
-E.versija = '2026-10-28 v2 (perkelta į March gido architektūrą: 5 fazės ir 21 kontrolinis sąrašas, 39 įgūdžiai, 30 treniruočių scenarijų, 24 vaistai su viena dozavimo schema, 15 mokymosi puslapių, PCC įsivertinimo lapas; šaltiniai – JTS PCC / PFC gairės ir TCCC 2026)';
+E.versija = '2026-11-02 v2.3 (aiški nuoroda, kad gidas – tik pagalbinė priemonė ir neatstoja oficialių kursų; nuoroda į taktinės medicinos (TCCC) kursą internetu – pradžioje, instrukcijoje ir Nustatymuose)';
 E.programa = 'PCC gidas';
 
 // ───────── FAZĖS ─────────
