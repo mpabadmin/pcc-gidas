@@ -37,7 +37,7 @@ function tocHtml(html) {
   return '<div class="toc">' + hs.map(([id, t]) => `<button data-act="toc" data-t="${id}">${esc(t)}</button>`).join('') + '</div>' + out;
 }
 const videos = a => (a || []).length ? '<h2>Vaizdo įrašai</h2>' + a.map(videoHtml).join('') : '';
-const brand = () => '<div class="brand"><img class="lg-d" src="img/logo-balt.png" alt="LŠS Vilniaus 1040 medicinos šaulių kuopa"><img class="lg-l" src="img/logo-juod.png" alt="LŠS Vilniaus 1040 medicinos šaulių kuopa"><span><b>PCC gidas</b><br>Ilgalaikė sužeistojo priežiūra lauke</span></div>';
+const brand = () => '<div class="brand"><img class="lg-d" src="img/logo-balt.png" alt="LŠS Vilniaus 1040 medicinos šaulių kuopa"><img class="lg-l" src="img/logo-juod.png" alt="LŠS Vilniaus 1040 medicinos šaulių kuopa"><span><b>PCC gidas</b><br>Ilgalaikė sužeistojo priežiūra lauke</span><button class="ghelp" data-g="open" aria-label="Kaip naudotis"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Z"/><path d="M9.5 9.3a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2.3-2.5 3.8"/><path d="M12 17h.01"/></svg><span>Kaip naudotis</span></button></div>';
 const installed = () => matchMedia('(display-mode: standalone)').matches || navigator.standalone;
 // Plytelių piktogramos ir plytelė: paantraštė rodoma tik kai yra būsena (užpildyta, skaičiai) – be pasikartojančių aprašymų
 const ic = d => `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
@@ -379,7 +379,7 @@ const V = {
 
   settings() {
     const b = (act, t, s) => `<button class="row" data-act="${act}"><div>${t}<small>${s}</small></div></button>`;
-    let h = '<h1>Nustatymai</h1>' + GL.settingRow();
+    let h = '<h1>Nustatymai</h1>' + '<a class="row" href="#" data-g="open"><div>Kaip naudotis<small>Trumpa instrukcija su pagrindiniais mygtukais</small></div><span class="ar">›</span></a>' + GL.settingRow();
     if (advAny()) h += `<div class="ck${tikCLS() ? ' on' : ''}" data-act="tikcls" role="checkbox" aria-checked="${tikCLS()}" tabindex="0"><span class="bx">✓</span><div class="t">Rodyti tik komandos veiksmus<div class="muted">Paslepia kovos mediko (CMC) ir paramediko ar gydytojo (CPP) veiksmus, vaistus ir įgūdžius.</div></div></div>`;
     h += '<h2>Aš</h2>' + (typeof MC !== 'undefined' && MC.profileView ? MC.profileView() : '') + pcSt(() => PC.settings());
     h += '<h2>Sužeistasis</h2>' + row('#/pacientas', 'Paciento failas', 'Rodikliai, skysčiai, priežiūra, perdavimas') + b('new-pt', '+ Kitas sužeistasis', 'Ankstesni lieka sąraše') + REM.settings() + pcSt(() => PC.dataSettings()) + OP.settings();
