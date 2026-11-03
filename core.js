@@ -169,12 +169,11 @@ function setTm(ts, k) {
   tmEdit = null; updTimers();
 }
 
-const COURSE = 'https://mindaugas-grinevicius-s-school.teachable.com/p/tactical-combat-casualty-care-tccc';
 // Visada matoma juosta: gidas – tik pagalbinė priemonė, nuoroda į taktinės medicinos kursą
 const infoBtn = key => `<button class="cki" data-act="ckinfo" aria-expanded="false" aria-controls="ix-${esc(key)}" aria-label="Paaiškinimas">i</button>`;
 const infoTxt = (html, key) => `<div class="ckx" id="ix-${esc(key)}" hidden>${html}</div>`;
 function disclaimer() {
-  return `<a class="dstrip" href="${COURSE}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6zM12 8v5M12 16h.01"/></svg><span><b>Tik pagalbinė priemonė</b> – neatstoja oficialių kursų</span><em>Kursas ↗</em></a>`;
+  return `<div class="dstrip" role="note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6zM12 8v5M12 16h.01"/></svg><span><b>Tik pagalbinė priemonė</b> – neatstoja oficialių kursų, vieneto SOP ir gydytojo nurodymų</span></div>`;
 }
 
 function videoHtml(v) {

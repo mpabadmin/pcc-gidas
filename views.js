@@ -146,7 +146,7 @@ const V = {
     return '<div class="tools t3">' +
       cardTile('#/pacientas?t=kortele', 'wr') + scanTile('wr') + tile('#/telekonsultacija', ICO.tele, 'Telekonsult.', pcSt(() => PC.st('tc')), 'Telekonsultacija ir ATMISTER') +
       tile('#/9line', '9', '9-Line', stOf(() => NL), '9-Line MEDEVAC') + tile('#/sitrep', ICO.sitrep, 'SITREP', stOf(() => SR)) +
-      tile('#/qr', ICO.qr, 'Perduoti QR', '', 'Perduoti QR kodu') + tile('#/qr-priimti', ICO.qrin, 'Priimti QR', '', 'Priimti pacientą QR kodu') + '</div>';
+      tile('#/qr-priimti', ICO.qrin, 'Priimti QR', '', 'Priimti pacientą QR kodu') + '</div>';
   },
 
   topicCards() {
@@ -392,7 +392,6 @@ const V = {
     h += '<h2>Apie</h2><p class="muted">' + (verM ? 'Versija ' + esc(verM[2]) + ' · ' + esc(verM[1]) : 'Versija ' + esc(E.versija || '—')) + '. Parengė LŠS Vilniaus 1040 medicinos šaulių kuopa pagal JTS PCC gaires (CPG ID 91, 70, 94) ir PFC dokumentavimo rekomendacijas. Atminties priemonė, ne oficiali gairė.</p>' +
       (verM ? '<details class="alt"><summary>Kas naujo</summary><p class="muted">' + esc(verM[3]) + '</p></details>' : '');
     h += pcSt(() => PC.sourceRows());
-    h += '<a class="row" href="' + COURSE + '" target="_blank" rel="noopener"><div>Taktinės medicinos kursas internetu (TCCC)<small>M. Grinevičius · rekomenduojame išklausyti</small></div><span class="ar">↗</span></a>';
     h += '<a class="row" href="https://etc.1040medkuopa.lt" target="_blank" rel="noopener"><div>ETC kišeninis gidas<small>Ligoninės traumos komandai</small></div><span class="ar">↗</span></a>';
     h += '<a class="row" href="https://march.1040medkuopa.lt" target="_blank" rel="noopener"><div>March gidas<small>TCCC: CUF, TFC, TACEVAC</small></div><span class="ar">↗</span></a>';
     return h;

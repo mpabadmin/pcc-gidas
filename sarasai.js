@@ -14,7 +14,7 @@ const E = window.ETC;
 const sk = (n, t) => `<a href="#/igudis/${n}">${t || 'Įgūdis #' + n}</a>`;
 const vs = (id, t) => `<a href="#/vaistas/${id}">${t}</a>`;
 
-E.versija = '2026-11-03 v3.1 (MIST plytelė pervadinta „Nukentėjusiojo kortelė“ (DD1380); nauja funkcija „Nuskaityti kortelę“ – popierinės DD1380 nuotrauka perkeliama į kortelę, be interneto)';
+E.versija = '2026-11-03 v3.2 (pradžioje nebėra plytelės „Perduoti QR“ – perduodama iš kortelės; pagalbinės priemonės juosta be kurso nuorodos; nuoroda į TCCC kursą pašalinta ir iš instrukcijos bei Nustatymų)';
 E.programa = 'PCC gidas';
 
 // ───────── FAZĖS ─────────
