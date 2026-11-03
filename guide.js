@@ -2,7 +2,7 @@
 // ── Trumpa instrukcija „Kaip naudotis“: rodoma pirmą kartą atidarius pradžios ekraną, vėliau – mygtukas „?“ (pradžioje) ir Nustatymuose ──
 // Bendras visoms 1040 medkuopos programėlėms; turinys – STEPS žemiau. Mygtukai su data-g="open" atidaro instrukciją.
 const GUIDE = (() => {
-  const KEY = 'pcc-guide', VER = 2;
+  const KEY = 'pcc-guide', VER = 3;
   const IC = {
     search: 'M11 4a7 7 0 1 1 0 14 7 7 0 0 1 0-14Z|M20 20l-4-4', moon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
     chat: 'M20.5 11.5a8.5 8.5 0 0 1-12.3 7.6L3.5 20.5l1.4-4.6a8.5 8.5 0 1 1 15.6-4.4z', refresh: 'M20 11a8 8 0 0 0-14.3-4.9L4 8|M4 3v5h5|M4 13a8 8 0 0 0 14.3 4.9L20 16|M20 21v-5h-5',
@@ -19,7 +19,8 @@ const GUIDE = (() => {
   { ic: 'M22 12h-4l-3 9L9 3l-3 9H2', t: 'Stebėjimo lapas', p: '<b>Sužeistasis</b>: rodikliai, skysčiai, vaistai ir priežiūra įrašomi su laiku, matosi tendencijos. Pradėkite nuo svorio ir pirmų rodiklių.' },
   { ic: 'M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18Z|M12 7v5l3 2', t: 'Priminimai', p: 'Įrašius pirmus duomenis, programėlė pati primena: rodiklių matavimą, vaistų kartojimą, turniketų langus (2 ir 6 val.). Apačioje – <b>„Priminimai“</b>, telefonas suvibruoja.' },
   { ic: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4z|M14 14h2v2h-2zM18 18h2v2h-2z', t: 'Perdavimas', p: '<b>Telekonsultacija, MIST, 9-Line, SITREP</b> – paruošti tekstai. <b>Perduoti QR</b> – visas sužeistojo lapas į kitą telefoną, <b>Priimti QR</b> – nuskaityti.' },
-  { ic: 'help', t: 'Režimai ir mygtukai', p: 'Viršuje <b>Taikymas</b> – darbui, <b>Mokymasis</b> – temos, įgūdžiai su video, scenarijai, dozių kortelės. {search} – paieška, {moon} – raudonas naktinis režimas, {chat} – pranešti apie klaidą. Instrukciją vėl atidarysite mygtuku <b>„Kaip naudotis“</b> pradžioje.' }
+  { ic: 'M4 8h12v12H4z|M8 4h12v12|M7 13h6|M7 16h4', t: 'Apatinė juosta ir lygis', p: '<b>Pacientas</b> – stebėjimo lapas, <b>Priminimai</b>, <b>Vaistai</b>, <b>Įgūdžiai</b> su video, <b>Treniruotė</b> – situacijos, dozių patikra, įsivertinimo lapas. Viršuje pasirinkite lygį: <b>CLS</b> – tik komandos veiksmai, <b>CMC</b> – ir kovos mediko, <b>CPP</b> – viskas.' },
+  { ic: 'help', t: 'Mygtukai viršuje', p: '{search} – paieška, {moon} – raudonas naktinis režimas, {chat} – pranešti apie klaidą, <svg class="gdii" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg> – nustatymai. Mygtukas <b>ⓘ</b> prie punkto – paaiškinimas. Instrukciją vėl atidarysite mygtuku <b>„Kaip naudotis“</b> pradžioje.' }
 ];
   let i = 0, el = null, last = null;
   const seen = () => { try { return +JSON.parse(localStorage.getItem(KEY) || '0') >= VER; } catch (e) { return false; } };

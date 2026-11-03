@@ -83,77 +83,66 @@ const skRefs = t => esc(t).replace(/#(\d{1,2})(?![\d])/g, (m, n) => { const k = 
 // Įrankiai (būsena rodoma po pavadinimu)
 const toolRows = () => typeof MC === 'undefined' ? '' :
   row('#/pacientas', 'Pacientas', MC.status()) + row('#/9line', '9-Line MEDEVAC', NL.status()) + row('#/sitrep', 'SITREP – padėties pranešimas', SR.status()) + ((E.scenarijai || []).length ? row('#/scenarijai', 'Treniruočių scenarijai', SC.status()) : '') +
-  (VL.has() ? row('#/vertinimas', 'Vertinimo lapas', VL.status()) : '') + row('#/korteles', 'Dozių kortelės', FC.status()) + row('#/egzaminas', 'Egzaminuotojo režimas', EX.status());
+  (VL.has() ? row('#/vertinimas', 'Vertinimo lapas', VL.status()) : '') + row('#/korteles', 'Dozių kortelės', FC.status());
 const lvTag = s => !s.lygis ? '' : isAdv(s.lygis) ? tag(s.lygis) : `<span class="tag grn" title="${LVT[s.lygis] || ''}">${esc(lvName(s.lygis))}</span>`;
 const advAny = () => (E.vaistai || []).some(v => isAdv(v.lygis)) || (E.igudziai || []).some(s => isAdv(s.lygis)) || Object.keys(E.sarasai || {}).some(k => ((E.sarasai[k] || {}).items || []).some(it => isAdv(it.g)));
 const pcSt = (f, d) => { try { return typeof PC !== 'undefined' ? f() : d || ''; } catch (e) { return d || ''; } };
 
 const V = {
-  home() { return mode === 'field' ? V.homeField() : V.homeLearn(); },
+  // v3: viena pradžia – tik piktogramos (fazės, sužeistasis, perdavimas). Sąrašai, vaistai, nustatymai – apatinėje juostoje ir antraštėje.
+  home() {
+    return brand() + disclaimer() + pcSt(() => PC.homeBanner(), REM.banners()) +
+      ((E.fazes || []).length ? '<h2>Fazė</h2>' + V.phaseTiles() : '') +
+      '<h2>Sužeistasis</h2>' + V.careTiles() +
+      '<h2>Perdavimas</h2>' + V.toolTiles();
+  },
 
-  phaseTiles(field) {
+  phaseTiles() {
     const L = E.fazes || [];
     if (!L.length) return '';
-    return `<div class="phases n${L.length}">` + L.map(f =>
-      `<a class="phase ${phCls(f)}" href="#/f/${esc(f.id)}"><b>${esc(phLbl(f))}</b><span>${esc(f.pav)}</span>${field && f.sub ? '<small>' + esc(f.sub) + '</small>' : ''}</a>`).join('') + '</div>';
+    const PI = {
+      STAB: ['<path d="M3 12h4l2-5 4 10 2-5h6"/>', 'Perėmimas'],
+      VAL: ['<path d="M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18zM12 7v5l3 2"/>', 'Kas valandą'],
+      PAROS: ['<path d="M4 5h16v16H4zM4 10h16M9 3v4M15 3v4"/>', 'Paromis'],
+      YPAT: ['<path d="M12 3l10 18H2zM12 10v5M12 18h.01"/>', 'Ypatingos'],
+      EVAK: ['<path d="M3 4h18M12 4v4M6 12a6 4 0 0 1 6-4h3a4 4 0 0 1 4 4v1a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2zM8 19h12M10 15v4M16 15v4M3 10l3 2"/>', 'Evakuacija ir perdavimas']
+    };
+    return `<div class="phases big n${L.length}">` + L.map(f => { const x = PI[f.id] || ['', f.sub || ''];
+      return `<a class="phase ${phCls(f)}" href="#/f/${esc(f.id)}" aria-label="${esc(phLbl(f) + ' – ' + f.pav)}">${x[0] ? '<svg class="pi" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + x[0] + '</svg>' : ''}<b>${esc(phLbl(f))}</b><span>${esc(x[1])}</span></a>`; }).join('') + '</div>';
+  },
+
+  // Treniruotė: atsitiktinė situacija, dozių patikra, įsivertinimo lapas, situacijos pagal fazę, pažanga, temos
+  train(q) {
+    const S = (E.scenarijai || []).filter(s => s && Array.isArray(s.q) && s.q.length && ok(s.lygis)), f = (q && q.t) || '';
+    const B = LS.get(TCFG.pre + 'scen', {}) || {};
+    const PH = { 'Perėmimas': 'STAB', 'Gaivinimas': 'STAB', 'Kvėpavimas': 'STAB', 'Skausmas': 'VAL', 'Slauga': 'PAROS', 'Žaizdos': 'PAROS', 'Galva': 'YPAT', 'Nudegimai': 'YPAT', 'Suspaudimas': 'YPAT', 'Evakuacija': 'EVAK' };
+    const phOf = s => PH[s.tema] || '', F = (E.fazes || []).filter(x => S.some(s => phOf(s) === x.id));
+    let due = 0; try { const m = String(FC.status()).match(/Laukia kartoti: (\d+)/); due = m ? +m[1] : 0; } catch (e) {}
+    let h = '<h1>Treniruotė</h1><div class="trt">' +
+      (S.length ? `<button class="tra" data-act="sc-rand"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v16H4zM8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01"/></svg><span><b>Atsitiktinė situacija</b><br><small>${lt(S.length, ['situacija', 'situacijos', 'situacijų'])}</small></span></button>` : '') +
+      `<a class="trd" href="#/korteles"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.5 4.5a5 5 0 0 1 7 7l-6 6a5 5 0 0 1-7-7zM8 8l8 8"/></svg>${due ? '<span class="bdg" aria-label="Laukia kartoti: ' + due + '">' + due + '</span>' : ''}<span><b>Dozių patikra</b><br><small>${esc(stOf(() => FC))}</small></span></a>` +
+      (VL.has() ? `<a class="trv" href="#/vertinimas"><span class="ti">${ICO.eval}</span><span class="tx"><b>Įsivertinimo lapas</b><small>Instruktoriui · T / N, K punktai</small></span><span class="ar">›</span></a>` : '') + '</div>';
+    if (F.length) h += '<div class="trf" role="group" aria-label="Fazė">' + `<a href="#/treniruote" data-act="go" data-rep="1" data-r="#/treniruote" class="${f ? '' : 'on'}" aria-current="${f ? 'false' : 'true'}"><b>Visos</b><small>${S.length}</small></a>` +
+      F.map(x => `<a href="#/treniruote?t=${esc(x.id)}" data-act="go" data-rep="1" data-r="#/treniruote?t=${esc(x.id)}" class="${phCls(x)}${f === x.id ? ' on' : ''}" aria-current="${f === x.id}" aria-label="${esc(x.pav)}"><b>${esc(phLbl(x))}</b><small>${S.filter(s => phOf(s) === x.id).length}</small></a>`).join('') + '</div>';
+    h += S.filter(s => !f || phOf(s) === f).map(s => { const b = B[s.id], n = s.q.length;
+      return `<a class="scr" href="#/scenarijai/${esc(s.id)}"><i class="${phOf(s) ? phCls(phOf(s)) : ''}"></i><b>${esc(s.pav)}</b>${b != null ? `<span class="tag ${b === n ? 'grn' : 'amb'}">${b} / ${n}</span>` : ''}${lvTag(s)}</a>`; }).join('');
+    h += '<h2>Mokymasis</h2>' + row('#/igudziai', 'Mano pažanga', 'Įgūdžių įsivertinimas 1–4') + ((E.temos || []).length ? row('#/temos', 'Temos', 'Medžiaga, įgūdžiai, sąrašai ir vaistai pagal temą') : '');
+    return h;
   },
 
   // Sužeistojo įrankiai (PCC): stebėjimo lapas, skysčiai, vaistai, priežiūra, turniketai, evakuacija – dabartiniam pacientui
   careTiles() {
-    return '<div class="tools">' +
+    return '<div class="tools t3">' +
       tile('#/pacientas?t=rod', ICO.vit, 'Rodikliai', pcSt(() => PC.st('rod'))) + tile('#/pacientas?t=sks', ICO.drop, 'Skysčiai', pcSt(() => PC.st('sks'))) +
       tile('#/pacientas?t=vst', ICO.syr, 'Vaistai', pcSt(() => PC.st('vst')), 'Vaistai ir veiksmai') + tile('#/pacientas?t=prz', ICO.care, 'Priežiūra', pcSt(() => PC.st('prz')), 'Priežiūros grafikas') +
       tile('#/turniketai', ICO.tq, 'Turniketai', pcSt(() => PC.st('tq'))) + tile('#/evakuacija', ICO.evac, 'Evakuacija', pcSt(() => PC.st('evac')), 'Pasiruošimas evakuacijai') + '</div>';
   },
   // Perdavimas: telekonsultacija, MIST, 9-Line, SITREP, QR
   toolTiles() {
-    return '<div class="tools">' +
-      tile('#/telekonsultacija', ICO.tele, 'Tele\u00adkonsultacija', pcSt(() => PC.st('tc')), 'Telekonsultacija ir ATMISTER') + tile('#/pacientas?t=kortele', ICO.mist, 'MIST', stOf(() => MC), 'MIST kortelė') +
+    return '<div class="tools t3">' +
+      tile('#/telekonsultacija', ICO.tele, 'Telekonsult.', pcSt(() => PC.st('tc')), 'Telekonsultacija ir ATMISTER') + tile('#/pacientas?t=kortele', ICO.mist, 'MIST', stOf(() => MC), 'MIST kortelė') +
       tile('#/9line', '9', '9-Line', stOf(() => NL), '9-Line MEDEVAC') + tile('#/sitrep', ICO.sitrep, 'SITREP', stOf(() => SR)) +
       tile('#/qr', ICO.qr, 'Perduoti QR', '', 'Perduoti QR kodu') + tile('#/qr-priimti', ICO.qrin, 'Priimti QR', '', 'Priimti pacientą QR kodu') + '</div>';
-  },
-
-  // Mokymosi pradžia: treniruotė ir vertinimas
-  learnTools() {
-    const sc = (E.scenarijai || []).length, vl = typeof VL !== 'undefined' && VL.has();
-    return '<h2>Treniruotė ir vertinimas</h2><div class="tools">' +
-      (sc ? tile('#/scenarijai', ICO.scen, 'Scenarijai', stOf(() => SC)) : '') + (vl ? tile('#/vertinimas', ICO.eval, 'Vertinimas', stOf(() => VL), 'Vertinimo lapas') : '') +
-      tile('#/korteles', ICO.cards, 'Dozių kortelės', stOf(() => FC)) + tile('#/egzaminas', ICO.exam, 'Egzaminas', stOf(() => EX), 'Egzaminuotojo režimas') + '</div>';
-  },
-
-  // Taikymo pradžia: priminimai, fazės, sužeistojo įrankiai, perdavimas, dažni sąrašai, dažniausi vaistai
-  homeField() {
-    const w = wNow();
-    const quick = (TCFG.hub.drugs || []).map(drugById).filter(v => v && ok(v.lygis));
-    const L = typeof LU !== 'undefined' ? LU.top() : (TCFG.hub.listDefaults || []);
-    const lrow = id => { const Ls = (E.sarasai || {})[id]; if (!Ls) return ''; const f = (E.fazes || []).find(x => (x.lists || []).indexOf(id) >= 0), [n, t] = listDone(id);
-      return row(listRoute(id), Ls.title, f ? phLbl(f) + ' · ' + f.pav : '', n ? `<span class="tag ${n === t ? 'grn' : 'amb'}">${n} / ${t}</span>` : ''); };
-    const G = Array.isArray(E.greitai) ? E.greitai.filter(x => Array.isArray(x) && x[0]) : [];
-    return brand() + disclaimer() + pcSt(() => PC.homeBanner(), REM.banners()) +
-      ((E.fazes || []).length ? '<h2>Fazė</h2>' + V.phaseTiles(true) : '') +
-      '<h2>Sužeistasis</h2>' + V.careTiles() +
-      '<h2>Perdavimas</h2>' + V.toolTiles() +
-      (L.length ? `<h2>Dažni sąrašai${typeof LU !== 'undefined' && LU.used() ? ' · pagal naudojimą' : ''}</h2>` + L.map(lrow).join('') : '') +
-      (quick.length ? '<h2>Dažniausi vaistai</h2>' + quick.map(v => row('#/vaistas/' + v.id, v.name, doseShort(v, w || 80), TCFG.hub.drugTag(v))).join('') : '') +
-      ((E.vaistai || []).length ? row('#/vaistai', 'Visi vaistai', lt((E.vaistai || []).filter(v => ok(v.lygis)).length, ['vaistas', 'vaistai', 'vaistų'])) : '') +
-      (G.length ? '<h2>Greitai</h2>' + G.map(x => row(x[0], x[1], x[2])).join('') : '') +
-      installRow() + row('#/nustatymai', 'Nustatymai');
-  },
-
-  homeLearn() {
-    const S = (E.igudziai || []).filter(s => ok(s.lygis)), R = ratings(), n = S.length, rated = S.filter(s => R[s.id]).length, good = S.filter(s => R[s.id] >= 3).length;
-    return brand() + disclaimer() + pcSt(() => PC.homeBanner(), REM.banners()) +
-      '<input type="search" id="q" placeholder="Paieška: vaistas, įgūdis, veiksmas" autocomplete="off" aria-label="Paieška">' +
-      (n ? `<a class="card prog-card" href="#/igudziai"><b>Mano pažanga</b><div class="muted">Įsivertinta: ${rated} iš ${n} · atlieku savarankiškai (3–4): ${good}</div>${progBar(rated, n)}</a>` : '') +
-      V.learnTools() +
-      ((E.temos || []).length ? '<h2>Temos</h2>' + V.topicCards() : '') +
-      ((E.fazes || []).length ? '<h2>Fazės</h2>' + V.phaseTiles(false) : '') +
-      '<h2>Perdavimas</h2>' + V.toolTiles() +
-      '<h2>Viskas vienoje vietoje</h2>' +
-      row('#/igudziai', 'Įgūdžiai', lt(n, ['įgūdis', 'įgūdžiai', 'įgūdžių']) + ': žingsniai, svarbiausi priminimai') +
-      row('#/sarasai', 'Kontroliniai sąrašai', (E.fazes || []).map(phLbl).join(', ')) +
-      row('#/vaistai', 'Vaistai', lt((E.vaistai || []).filter(v => ok(v.lygis)).length, ['vaistas', 'vaistai', 'vaistų'])) +
-      installRow() + row('#/nustatymai', 'Nustatymai');
   },
 
   topicCards() {
@@ -187,7 +176,7 @@ const V = {
 
   lists() {
     let h = '<h1>Kontroliniai sąrašai</h1><p class="muted">Žymėjimai priklauso dabartiniam sužeistajam; išvalyti – sąrašo apačioje.</p>' +
-      (VL.has() ? row('#/vertinimas', 'Vertinimo lapas', VL.status()) : '') + row('#/egzaminas', 'Egzaminuotojo režimas', EX.status());
+      (VL.has() ? row('#/vertinimas', 'Vertinimo lapas', VL.status()) : '');
     const seen = {};
     (E.fazes || []).forEach(f => {
       h += `<h2>${esc(phLbl(f))} – ${esc(f.pav)}</h2>` + (f.lists || []).map(id => { seen[id] = 1; return listRow(id); }).join('');
@@ -207,14 +196,13 @@ const V = {
     const sub = [f.en, lists.length > 1 ? (S[lid] || {}).short || '' : ''].filter(Boolean).join(' · ');
     let h = `<div class="phead ${phCls(f)}"><b>${esc(phLbl(f))}</b><h1 class="pht" data-title="${esc(phLbl(f) + (lists.length > 1 ? ' · ' + ((S[lid] || {}).short || '') : '') + ' – ' + f.pav)}">${esc(f.pav)}${sub ? ' <small>' + esc(sub) + '</small>' : ''}</h1></div>`;
     h += '<div class="tmini-box">' + timersMini() + '</div>';
-    if (mode === 'learn' && f.aprasymas) h += `<p class="muted">${esc(f.aprasymas)}</p>`;
+    if (f.aprasymas) h += `<button class="phib" data-act="ckinfo" aria-expanded="false" aria-controls="ix-f-${esc(f.id)}"><i class="cki" aria-hidden="true">i</i>Apie fazę</button>` + infoTxt(esc(f.aprasymas), 'f-' + f.id);
     if (lists.length > 1) h += '<div class="tabs ph">' + lists.map((l, i) => {
       const [n, tot] = listDone(l);
       return `<button class="${i === t ? 'on' : ''}${n && n === tot ? ' done' : ''}" data-act="go" data-rep="1" data-r="#/f/${esc(id)}?t=${i}" aria-current="${i === t ? 'step' : 'false'}">${esc((S[l] || {}).short || l)}</button>`;
     }).join('') + '</div>';
     if (S[lid] && S[lid].intro) h += '<p class="muted">' + br(S[lid].intro) + '</p>';
     h += renderList(lid);
-    if (mode === 'learn') h += EX.entry(lid);
     const strip0 = x => String(x || '').replace(new RegExp('^' + String(phLbl(f)).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ':\\s*'), '');
     if (t < lists.length - 1) h += `<button class="row nxt" data-act="go" data-rep="1" data-r="#/f/${esc(id)}?t=${t + 1}">Toliau: ${esc(strip0((S[lists[t + 1]] || {}).title))}<span class="ar">›</span></button>`;
     else {
@@ -230,7 +218,7 @@ const V = {
     if (!L) return notFound();
     let h = `<h1>${esc(L.title)}</h1>`;
     if (L.intro) h += '<p class="muted">' + br(L.intro) + '</p>';
-    return h + renderList(id) + (mode === 'learn' ? EX.entry(id) : '');
+    return h + renderList(id);
   },
 
   drugs() {
@@ -380,7 +368,7 @@ const V = {
   settings() {
     const b = (act, t, s) => `<button class="row" data-act="${act}"><div>${t}<small>${s}</small></div></button>`;
     let h = '<h1>Nustatymai</h1>' + disclaimer() + '<a class="row" href="#" data-g="open"><div>Kaip naudotis<small>Trumpa instrukcija su pagrindiniais mygtukais</small></div><span class="ar">›</span></a>' + GL.settingRow();
-    if (advAny()) h += `<div class="ck${tikCLS() ? ' on' : ''}" data-act="tikcls" role="checkbox" aria-checked="${tikCLS()}" tabindex="0"><span class="bx">✓</span><div class="t">Rodyti tik komandos veiksmus<div class="muted">Paslepia kovos mediko (CMC) ir paramediko ar gydytojo (CPP) veiksmus, vaistus ir įgūdžius.</div></div></div>`;
+    if (advAny()) h += '<h2>Mano lygis</h2>' + lvlPick();
     h += '<h2>Aš</h2>' + (typeof MC !== 'undefined' && MC.profileView ? MC.profileView() : '') + pcSt(() => PC.settings());
     h += '<h2>Sužeistasis</h2>' + row('#/pacientas', 'Paciento failas', 'Rodikliai, skysčiai, priežiūra, perdavimas') + b('new-pt', '+ Kitas sužeistasis', 'Ankstesni lieka sąraše') + REM.settings() + pcSt(() => PC.dataSettings()) + OP.settings();
     if (FB.configured() || FB.pending()) {
@@ -388,14 +376,14 @@ const V = {
       const nOut = FB.pending();
       if (nOut) h += b('fb-flush', 'Neišsiųsti pranešimai: ' + nOut, 'Siųsti dabar (reikia interneto)');
     }
-    h += '<h2>Mokymasis</h2>' + (VL.has() ? row('#/vertinimas', 'Vertinimo lapas', VL.status()) : '') + row('#/korteles', 'Dozių kortelės', FC.status()) + row('#/egzaminas', 'Egzaminuotojo režimas', EX.status()) + b('reset-ivert', 'Ištrinti įsivertinimus', 'Visi 1–4 balai bus pašalinti');
+    h += '<h2>Mokymasis</h2>' + (VL.has() ? row('#/vertinimas', 'Vertinimo lapas', VL.status()) : '') + row('#/korteles', 'Dozių kortelės', FC.status()) + ((E.scenarijai || []).length ? row('#/scenarijai', 'Treniruočių scenarijai', SC.status()) : '') + b('reset-ivert', 'Ištrinti įsivertinimus', 'Visi 1–4 balai bus pašalinti');
     h += '<h2>Programėlė</h2>';
     if (installed()) h += '<p class="muted">Programėlė įdiegta ir veikia be interneto (vaizdo įrašams reikia interneto).</p>';
     else if (installEv) h += b('install', 'Įdiegti į telefoną', '');
     else h += row('#/idiegimas', 'Kaip įsidiegti telefone', 'Android, iPhone, QR');
     const nImg = allImgs().length, have = LS.get('pcc-img', 0);
     if (nImg) h += b('img-dl', have >= nImg ? 'Iliustracijos išsaugotos telefone ✓' : 'Išsaugoti iliustracijas naudojimui be interneto', have >= nImg ? lt(nImg, ['vaizdas', 'vaizdai', 'vaizdų']) + ' · paspauskite, jei norite atnaujinti' : lt(nImg, ['vaizdas', 'vaizdai', 'vaizdų']) + ' · rekomenduojama per Wi-Fi');
-    h += b('upd', 'Atnaujinti turinį', 'Reikia interneto ryšio');
+    h += b('upd', 'Tikrinti naujinimus', 'Atsisiunčiama naujausia versija · reikia interneto ryšio');
     const verM = String(E.versija || '').match(/^(\S+)\s+(v[\d.]+)\s*\((.*)\)$/);
     h += '<h2>Apie</h2><p class="muted">' + (verM ? 'Versija ' + esc(verM[2]) + ' · ' + esc(verM[1]) : 'Versija ' + esc(E.versija || '—')) + '. Parengė LŠS Vilniaus 1040 medicinos šaulių kuopa pagal JTS PCC gaires (CPG ID 91, 70, 94) ir PFC dokumentavimo rekomendacijas. Atminties priemonė, ne oficiali gairė.</p>' +
       (verM ? '<details class="alt"><summary>Kas naujo</summary><p class="muted">' + esc(verM[3]) + '</p></details>' : '');

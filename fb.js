@@ -37,7 +37,7 @@ const FB = (() => {
       pazymeta: sel,
       versija: (E.programa || 'PCC gidas') + ' · ' + (E.versija || ''),
       irenginys: device(),
-      rezimas: (mode === 'field' ? 'Taikymas' : 'Mokymasis') + (tikCLS() ? ' · tik CLS' : '')
+      rezimas: lvl()
     };
   }
 

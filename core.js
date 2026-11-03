@@ -4,7 +4,7 @@ const LS = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
 };
-let mode = LS.get('pcc-rezimas', 'field');
+let mode = 'field'; // v3: vienas režimas (paaiškinimai – mygtukas ⓘ)
 let tmEdit = null, installEv = null, IDX = null;
 
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -12,8 +12,13 @@ const br = s => esc(s).replace(/\n/g, '<br>');
 const fmt = x => String(x >= 100 ? Math.round(x) : x >= 1 ? Math.round(x * 10) / 10 : Math.round(x * 100) / 100).replace('.', ',');
 // Lygiai: CLS – kovos gelbėtojas; CMC – kovos medikas; CPP – kovos paramedikas / gydytojas
 const isAdv = g => /^(CMC|CPP)/.test(g || '');
-const tikCLS = () => LS.get('pcc-tikcls', false);
-const ok = g => !(tikCLS() && isAdv(g));
+// Mano lygis: CLS (tik komandos veiksmai), CMC (be CPP), CPP (viskas). Senas nustatymas pcc-tikcls → CLS.
+const lvl = () => { const v = LS.get('pcc-lvl', null); return v === 'CLS' || v === 'CMC' || v === 'CPP' ? v : (LS.get('pcc-tikcls', false) ? 'CLS' : 'CPP'); };
+const tikCLS = () => lvl() === 'CLS';
+const ok = g => { const L = lvl(); return !g || L === 'CPP' || (L === 'CMC' ? !/^CPP/.test(g) : !isAdv(g)); };
+const lvCls = g => /^CPP/.test(g || '') ? 'lv-cpp' : isAdv(g) ? 'lv-cmc' : 'lv-cls';
+const lvlPick = () => { const L = lvl(), B = (k, c, sm) => `<button class="lvb ${c}${L === k ? ' on' : ''}" data-act="lvl" data-k="${k}" aria-pressed="${L === k}"><b>${k}</b><small>${sm}</small></button>`;
+  return '<div class="lvp" role="group" aria-label="Mano lygis">' + B('CLS', 'cls', 'visa komanda') + B('CMC', 'cmc', 'kovos medikas') + B('CPP', 'cpp', 'paramedikas, gydytojas') + '</div>'; };
 // Lygiai PCC komandoje: CLS – visa komanda, CMC – kovos medikas, CPP – paramedikas / gydytojas (duomenų kodai kaip March gide)
 const LVN = { CLS: 'Komanda', CMC: 'CMC', CPP: 'CPP' }, LVT = { CLS: 'Visa PCC komanda (CLS)', CMC: 'Kovos medikas (CMC)', CPP: 'Paramedikas ar gydytojas (CPP)' };
 const lvName = g => LVN[g] || g || '';
@@ -93,21 +98,25 @@ function renderList(id) {
   const L = (E.sarasai || {})[id];
   if (!L) return '<p class="muted">Sąrašas nerastas.</p>';
   const done = ckAll()[id] || [];
-  let n = 0, tot = 0, h = '';
+  let n = 0, tot = 0, h = '', hid = 0, adv = 0;
   (L.items || []).forEach((it, i) => {
     if (it.h) { h += '<h3 class="clh">' + esc(it.h) + '</h3>'; return; }
-    if (!ok(it.g)) return;
+    if (isAdv(it.g)) adv++;
+    if (!ok(it.g)) { hid++; return; }
     tot++;
     const on = done.indexOf(i) >= 0; if (on) n++;
     const sub = (it.s || []).length ? '<ul>' + it.s.map(x => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '';
-    const info = mode === 'learn' && it.i ? '<div class="muted">' + it.i + '</div>' : '';
+    const ik = id + '-' + i, infoB = it.i ? infoBtn(ik) : '', info = it.i ? infoTxt(it.i, ik) : '';
     const T = it.tm ? (LS.get('pcc-laikai', {}) || {}) : null;
     const links = (it.tm ? `<button class="sk tmk" data-act="tm-mark" data-k="${it.tm}">⏱ ${T[it.tm] ? hm(T[it.tm]) : 'Dabar'}</button>` : '') + (it.sk ? `<a class="sk" href="#/igudis/${it.sk}" data-act="go" data-r="#/igudis/${it.sk}" aria-label="Įgūdis ${it.sk}">#${it.sk}</a>` : '') +
       (it.r ? `<a class="sk" href="${esc(it.r)}" data-act="go" data-r="${esc(it.r)}">${esc(it.rl || rLabel(it.r))}</a>` : '');
-    h += `<div class="ck${on ? ' on' : ''}${it.k ? ' key' : ''}" data-act="ck" data-l="${esc(id)}" data-i="${i}" role="checkbox" aria-checked="${on}" tabindex="0"><span class="bx">✓</span><div class="t"><span class="tt">${esc(it.t)}</span> ${tag(it.g)}${sub}${info}</div>${links ? '<div class="lk">' + links + '</div>' : ''}</div>`;
+    h += `<div class="ck ${lvCls(it.g)}${on ? ' on' : ''}${it.k ? ' key' : ''}" data-act="ck" data-l="${esc(id)}" data-i="${i}" role="checkbox" aria-checked="${on}" tabindex="0"><span class="bx">✓</span><div class="t"><span class="tt">${esc(it.t)}</span> ${tag(it.g)}${infoB}${sub}${info}</div>${links ? '<div class="lk">' + links + '</div>' : ''}</div>`;
   });
   const pct = tot ? Math.round(n / tot * 100) : 0;
-  return `<div class="cl"><div class="muted cnt">${n} / ${tot}</div><div class="prog"><i style="width:${pct}%"></i></div>${h}</div>`;
+  const LN = { CLS: 'CLS – visa komanda', CMC: 'CMC – kovos medikas' };
+  const lv = !adv ? '' : hid ? `<div class="lvbar"><span><b>${LN[lvl()] || lvl()}</b>: aukštesnio lygio veiksmų paslėpta – ${hid}</span><button class="lvsw" data-act="lvl" data-k="CPP">Rodyti viską</button></div>`
+    : '<div class="lvbar"><span><i class="lvk cls">CLS</i> komanda <i class="lvk cmc">CMC</i> medikas <i class="lvk cpp">CPP</i> paramedikas</span></div>';
+  return lv + `<div class="cl"><div class="muted cnt">${n} / ${tot}</div><div class="prog"><i style="width:${pct}%"></i></div>${h}</div>`;
 }
 
 function updCount(box) {
@@ -162,6 +171,8 @@ function setTm(ts, k) {
 
 const COURSE = 'https://mindaugas-grinevicius-s-school.teachable.com/p/tactical-combat-casualty-care-tccc';
 // Visada matoma juosta: gidas – tik pagalbinė priemonė, nuoroda į taktinės medicinos kursą
+const infoBtn = key => `<button class="cki" data-act="ckinfo" aria-expanded="false" aria-controls="ix-${esc(key)}" aria-label="Paaiškinimas">i</button>`;
+const infoTxt = (html, key) => `<div class="ckx" id="ix-${esc(key)}" hidden>${html}</div>`;
 function disclaimer() {
   return `<a class="dstrip" href="${COURSE}" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6zM12 8v5M12 16h.01"/></svg><span><b>Tik pagalbinė priemonė</b> – neatstoja oficialių kursų</span><em>Kursas ↗</em></a>`;
 }
@@ -206,7 +217,6 @@ function buildIdx() {
   add('Įrankiai', 'Perduoti QR kodu', 'Paciento duomenys kitam telefonui be interneto', 'qr kodas perduoti priimti nuskaityti telefonas', '#/qr');
   if ((E.scenarijai || []).length) add('Įrankiai', 'Treniruočių scenarijai', 'Klinikiniai atvejai su klausimais ir paaiškinimais', 'scenarijai scenarijus treniruotė viktorina testas klausimai', '#/scenarijai');
   add('Įrankiai', 'Dozių kortelės', 'Kasdien 5 kortelės: vaistas ir kelias – prisiminkite dozę', 'dozių kortelės korteles flashcards kartojimas dozės atmintis testas', '#/korteles');
-  add('Įrankiai', 'Egzaminuotojo režimas', 'Kontrolinio sąrašo vertinimas su laiku ir kritiniais punktais', 'egzaminas egzaminuotojas vertinimas instruktorius laikmatis kritiniai punktai', '#/egzaminas');
   if ((E.vertinimai || []).length) add('Įrankiai', 'Vertinimo lapas', 'Instruktoriui: T / N kiekvienam punktui, K punktai, pastabos', 'vertinimo lapas vertinimas egzaminas instruktorius įskaita k punktai', '#/vertinimas');
   return I;
 }
