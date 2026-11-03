@@ -9,8 +9,8 @@ const TCFG = {
   laikai: 'pcc-laikai', // laikmačiai { trauma, turn } – dabartiniam pacientui
   app: 'pcc',           // QR kodo žymė
   // nuorodos puslapių apačioje: [adresas, pavadinimas, paantraštė]
-  nl: () => [['#/pacientas?t=kortele', 'MIST kortelė', MC.status()], ['#/pacientas?t=perduoti', 'Perduoti', 'Telekonsultacija, ATMISTER, QR'], ['#/sitrep', 'SITREP', SR.status()]],
-  mc: () => [['#/pacientas', 'Pacientas', 'Rodikliai, skysčiai, priežiūra, perdavimas'], ['#/qr-priimti', 'Priimti pacientą QR kodu', 'Nuskaityti kito telefono kodą'], ['#/9line', '9-Line MEDEVAC', NL.status()], ['#/sitrep', 'SITREP', SR.status()]],
+  nl: () => [['#/pacientas?t=kortele', 'Nukentėjusiojo kortelė (DD1380)', MC.status()], ['#/pacientas?t=perduoti', 'Perduoti', 'Telekonsultacija, ATMISTER, QR'], ['#/sitrep', 'SITREP', SR.status()]],
+  mc: () => [['#/skenuoti', 'Nuskaityti popierinę kortelę', 'DD1380 nuotrauka → kortelė, be interneto'], ['#/pacientas', 'Pacientas', 'Rodikliai, skysčiai, priežiūra, perdavimas'], ['#/qr-priimti', 'Priimti pacientą QR kodu', 'Nuskaityti kito telefono kodą'], ['#/9line', '9-Line MEDEVAC', NL.status()], ['#/sitrep', 'SITREP', SR.status()]],
   occl: 'Okliuzinis tvarstis',
   krGrupes: true, // kraujo produktai: gavėjo ir donoro ABO grupės (šviežias pilnas kraujas lauke)
   // MIST vaisto lango greitosios dozės [būdas, kiekis, vienetai] – tik iš duomenų (vaistai.js: E.qd = { vaisto id: [[…], …] }); PCC kode dozių nėra
@@ -698,7 +698,7 @@ const MC = (() => {
     if (learn && !emb) h += '<p class="muted">M – mechanizmas, I – sužalojimai, S – būklė, T – pagalba, E – evakuacija. Retai pildomi laukai – „+“. Per radiją – tik ID / šaukinys.</p>';
     if (!emb) h += tabs(st);
     h += `<article class="mc mq" aria-label="MIST kortelė – sužeistasis ${n}">`;
-    h += `<div class="mch"><b>MIST</b><span>Nukentėjusiojo kortelė · ${esc(s.dt || today())}${tot > 1 ? ' · ' + n + ' / ' + tot : ''}</span></div>`;
+    h += `<div class="mch"><b>DD1380</b><span>Nukentėjusiojo kortelė · ${esc(s.dt || today())}${tot > 1 ? ' · ' + n + ' / ' + tot : ''}</span></div>`;
     // A – asmuo
     h += '<div class="mqa">' +
       `<div class="mqg2"><label class="mqf">Pavardė, vardas<input class="inp" data-mc="name" value="${esc(s.name)}" autocomplete="off"></label><label class="mqf">ID / šaukinys<input class="inp mqid" data-mc="id" value="${esc(s.id)}" autocomplete="off" placeholder="pvz. Vilkas 2"></label></div>` +
@@ -1698,7 +1698,7 @@ const SC = (() => {
   const best = () => { const b = LS.get(KEY, {}); return b && typeof b === 'object' && !Array.isArray(b) ? b : {}; };
   const byId = id => all().find(s => s.id === id);
   const LET = ['A', 'B', 'C', 'D'];
-  const TOOLS = { '#/tst': '10s triažas', '#/9line': '9-Line MEDEVAC', '#/mist': 'MIST kortelė', '#/sitrep': 'SITREP', '#/gks': 'GKS skaičiuoklė', '#/zymejimas': 'Vaistų žymėjimas', '#/nudegimai': 'Nudegimai ir nušalimai' };
+  const TOOLS = { '#/tst': '10s triažas', '#/9line': '9-Line MEDEVAC', '#/mist': 'Nukentėjusiojo kortelė (DD1380)', '#/sitrep': 'SITREP', '#/gks': 'GKS skaičiuoklė', '#/zymejimas': 'Vaistų žymėjimas', '#/nudegimai': 'Nudegimai ir nušalimai' };
   function refLabel(r) {
     let m;
     if ((m = r.match(/^#\/igudis\/(\d+)$/))) { const s = (E.igudziai || []).find(x => String(x.id) === m[1]); return s ? ['Įgūdis #' + m[1], s.pav] : null; }
@@ -1888,13 +1888,13 @@ const PT = (() => {
     let h = bar().replace(/<a class="ptf"[^>]*>[^<]*<\/a>/, '') + `<h1>${esc(p.label)}</h1><p class="muted">Pacientas #${p.i + 1}${la.trauma ? ' · sužeistas ' + hm(la.trauma) + ' (prieš ' + Math.max(0, Math.round((Date.now() - la.trauma) / 60000)) + ' min)' : ''}${p.cat ? ' · ' + p.cat : ''}</p>`;
     h += typeof REM !== 'undefined' ? REM.banners(p.pid) : '';
     const tile = (r, t, s) => `<a class="ptt" href="${r}"><small>${esc(t)}</small><b>${esc(s)}</b></a>`;
-    h += '<div class="pttiles">' + tile('#/mist', 'MIST', MC.status()) +
+    h += '<div class="pttiles">' + tile('#/mist', 'Nukentėjusiojo kortelė · DD1380', MC.status()) +
       (typeof VZ !== 'undefined' ? tile('#/zymejimas', 'Vaistai', VZ.status()) : tile('#/9line', '9-Line', NL.status())) +
       (typeof NB !== 'undefined' ? tile('#/nudegimai', 'Nudegimai ir nušalimai', NB.status()) : '') +
       (typeof KR !== 'undefined' ? tile('#/pilnas-kraujas', 'Kraujo transfuzija', KR.status()) : '') + '</div>';
     h += '<h2>Įvykių eiga</h2>' + (ev.length ? '<div class="ptev">' + ev.map(([t, x]) => `<div><b>${hm(t)}</b><span>${esc(x)}</span></div>`).join('') + '</div>' : '<p class="muted">Įvykių dar nėra: pažymėkite laikus (Pradžia → Laikai), MIST požymius' + (typeof VZ !== 'undefined' ? ', suleistus vaistus' : '') + '.</p>');
     h += '<div class="acts"><button class="btn pri" data-act="go" data-r="#/qr">Perduoti QR kodu</button><button class="btn" data-act="pt-read">Skaityti perduodant</button><button class="btn" data-act="pt-copy">Kopijuoti viską</button></div>';
-    h += row('#/qr-priimti', 'Priimti pacientą QR kodu', 'Nuskaityti kito telefono kodą') + row('#/mist', 'MIST kortelė', 'Sužeistųjų tvarkymas, šalinimas');
+    h += row('#/qr-priimti', 'Priimti pacientą QR kodu', 'Nuskaityti kito telefono kodą') + row('#/mist', 'Nukentėjusiojo kortelė (DD1380)', 'Sužeistųjų tvarkymas, šalinimas');
     if (mode === 'learn') h += '<p class="muted">Viršuje – pacientų juosta: pasirinktas pacientas galioja visiems įrankiams (MIST, laikai, sąrašų žymėjimai' + (typeof VZ !== 'undefined' ? ', vaistai, nudegimai, šviežias kraujas' : '') + '). „+“ – naujas pacientas, ankstesni lieka sąraše.</p>';
     if (typeof OP !== 'undefined') h += '<button class="btn dng" data-act="op-wipe" style="width:100%;margin-top:14px">Ištrinti visų sužeistųjų duomenis</button>';
     return h;

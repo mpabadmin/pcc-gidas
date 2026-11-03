@@ -42,6 +42,7 @@ const installed = () => matchMedia('(display-mode: standalone)').matches || navi
 // Plytelių piktogramos ir plytelė: paantraštė rodoma tik kai yra būsena (užpildyta, skaičiai) – be pasikartojančių aprašymų
 const ic = d => `<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 const ICO = {
+  scan: ic('<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M8 9h8M8 12h8M8 15h5"/>'),
   mist: ic('<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M6 16c.6-1.4 1.5-2 2.5-2s1.9.6 2.5 2M14 10h4M14 14h3"/>'),
   sitrep: ic('<path d="M9 3h6v3H9z"/><path d="M8 4.5H6a1 1 0 0 0-1 1V20a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V5.5a1 1 0 0 0-1-1h-2M9 11h6M9 15h4"/>'),
   contrep: ic('<circle cx="12" cy="12" r="7"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/>'),
@@ -65,6 +66,9 @@ const ICO = {
   qr: ic('<rect x="4" y="4" width="6" height="6"/><rect x="14" y="4" width="6" height="6"/><rect x="4" y="14" width="6" height="6"/><path d="M14 14h2v2h-2zM18 18h2v2h-2zM14 18h2M18 14h2"/>'),
   qrin: ic('<path d="M4 8V4h4M16 4h4v4M20 16v4h-4M8 20H4v-4M8 12h8"/>')
 };
+// Nukentėjusiojo kortelė (DD1380) ir popierinės kortelės nuskaitymas – atskiros plytelės
+const cardTile = (href, cls) => { const st = stOf(() => MC); return tile(href, ICO.mist, 'Nukentėju\u00adsiojo kortelė', 'DD1380' + (st ? ' · ' + st : ''), 'Nukentėjusiojo kortelė DD1380', cls || 'wr'); };
+const scanTile = cls => tile('#/skenuoti', ICO.scan, 'Nuskaityti kortelę', 'popierinė DD1380', 'Nuskaityti popierinę kortelę DD1380', cls || 'wr');
 const tile = (href, ti, b, sm, lb, cls) => `<a class="tool${cls ? ' ' + cls : ''}" href="${href}" aria-label="${esc((lb || b) + (sm ? ': ' + sm : ''))}"><span class="ti">${ti}</span><b>${esc(b)}</b>${sm ? '<small>' + esc(sm) + '</small>' : ''}</a>`;
 const stOf = m => { try { return m().status(); } catch (e) { return ''; } }; // tools.js gali būti neįkeltas
 const installRow = () => installed() ? '' : row('#/idiegimas', 'Įdiegti programėlę', 'Veikia be interneto');
@@ -140,7 +144,7 @@ const V = {
   // Perdavimas: telekonsultacija, MIST, 9-Line, SITREP, QR
   toolTiles() {
     return '<div class="tools t3">' +
-      tile('#/telekonsultacija', ICO.tele, 'Telekonsult.', pcSt(() => PC.st('tc')), 'Telekonsultacija ir ATMISTER') + tile('#/pacientas?t=kortele', ICO.mist, 'MIST', stOf(() => MC), 'MIST kortelė') +
+      cardTile('#/pacientas?t=kortele', 'wr') + scanTile('wr') + tile('#/telekonsultacija', ICO.tele, 'Telekonsult.', pcSt(() => PC.st('tc')), 'Telekonsultacija ir ATMISTER') +
       tile('#/9line', '9', '9-Line', stOf(() => NL), '9-Line MEDEVAC') + tile('#/sitrep', ICO.sitrep, 'SITREP', stOf(() => SR)) +
       tile('#/qr', ICO.qr, 'Perduoti QR', '', 'Perduoti QR kodu') + tile('#/qr-priimti', ICO.qrin, 'Priimti QR', '', 'Priimti pacientą QR kodu') + '</div>';
   },

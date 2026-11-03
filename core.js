@@ -93,7 +93,7 @@ function ckToggle(id, i) {
 }
 
 // Sąrašo punkto nuorodos (r) užrašas: it.rl arba pagal maršrutą
-const rLabel = r => /9line/.test(r) ? '9-Line' : /kortele|mist/.test(r) ? 'MIST' : /vaistas/.test(r) ? 'Dozė' : /t=rod/.test(r) ? 'Rodikliai' : /t=sks/.test(r) ? 'Skysčiai' : /t=prz/.test(r) ? 'Priežiūra' : /t=perduoti|telekons/.test(r) ? 'Perduoti' : /pacientas/.test(r) ? 'Pacientas' : /sitrep/.test(r) ? 'SITREP' : /igudis/.test(r) ? 'Įgūdis' : 'Atidaryti';
+const rLabel = r => /9line/.test(r) ? '9-Line' : /kortele|mist/.test(r) ? 'Kortelė' : /vaistas/.test(r) ? 'Dozė' : /t=rod/.test(r) ? 'Rodikliai' : /t=sks/.test(r) ? 'Skysčiai' : /t=prz/.test(r) ? 'Priežiūra' : /t=perduoti|telekons/.test(r) ? 'Perduoti' : /pacientas/.test(r) ? 'Pacientas' : /sitrep/.test(r) ? 'SITREP' : /igudis/.test(r) ? 'Įgūdis' : 'Atidaryti';
 function renderList(id) {
   const L = (E.sarasai || {})[id];
   if (!L) return '<p class="muted">Sąrašas nerastas.</p>';
@@ -212,7 +212,8 @@ function buildIdx() {
   Object.keys(E.puslapiai || {}).forEach(id => { const p = E.puslapiai[id]; add('Mokymosi temos', p.title, p.sub, strip(p.html), '#/p/' + id); });
   (typeof PC !== 'undefined' ? PC.searchTools() : []).forEach(x => add('Įrankiai', x[1], x[2], x[3], x[0]));
   add('Įrankiai', '9 eilučių MEDEVAC prašymas', '9-Line forma su kodais', 'medevac evakuacija koordinatės skubumas urgent priority routine radijas', '#/9line');
-  add('Įrankiai', 'MIST kortelė', 'Sužeistojo kortelė: mechanizmas, sužalojimai kūno schemoje, požymiai, gydymas', 'mist handover perdavimas sužeistasis keli sužeistieji kortelė kūno schema žaizda turniketas', '#/pacientas?t=kortele');
+  add('Įrankiai', 'Nuskaityti popierinę kortelę', 'DD 1380 nuotrauka → MIST: langeliai, žymės, iškarpos', 'skenuoti nuskaityti nuotrauka fotografuoti popierinė kortelė dd1380 tccc card ocr atpažinimas', '#/skenuoti');
+  add('Įrankiai', 'Nukentėjusiojo kortelė (DD1380)', 'Sužeistojo kortelė: mechanizmas, sužalojimai kūno schemoje, požymiai, gydymas', 'mist handover perdavimas sužeistasis keli sužeistieji kortelė kūno schema žaizda turniketas', '#/pacientas?t=kortele');
   add('Įrankiai', 'SITREP – padėties pranešimas', 'Pranešimas vadui: vieta, padėtis, nuostoliai, logistika, prašymai', 'sitrep situacija padėtis pranešimas raportas vadui nuostoliai logistika dtg', '#/sitrep');
   add('Įrankiai', 'Perduoti QR kodu', 'Paciento duomenys kitam telefonui be interneto', 'qr kodas perduoti priimti nuskaityti telefonas', '#/qr');
   if ((E.scenarijai || []).length) add('Įrankiai', 'Treniruočių scenarijai', 'Klinikiniai atvejai su klausimais ir paaiškinimais', 'scenarijai scenarijus treniruotė viktorina testas klausimai', '#/scenarijai');

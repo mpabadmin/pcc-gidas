@@ -1,7 +1,7 @@
-const VERSION = 'pcc-gidas-v3.0';
+const VERSION = 'pcc-gidas-v3.1';
 const IMG = 'pcc-img-1';
 const EXT = 'pcc-ext-1';
-const FILES = ['./', './index.html', './sarasai.js', './vaistai.js', './igudziai.js', './scenarijai.js', './pcc-cfg.js', './core.js', './views.js', './tools.js', './sitrep.js', './priedai.js', './pacientas.js', './pcc.js', './fb.js', './app.js', './guide.js',
+const FILES = ['./', './index.html', './sarasai.js', './vaistai.js', './igudziai.js', './scenarijai.js', './pcc-cfg.js', './core.js', './views.js', './tools.js', './sitrep.js', './priedai.js', './skenas.js', './pacientas.js', './img/skenas/dd1380-f.png', './img/skenas/dd1380-b.png', './pcc.js', './fb.js', './app.js', './guide.js',
   './vendor/html2canvas.min.js', './vendor/qrcode.min.js', './vendor/jsqr.min.js', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './favicon-32.png', './favicon-64.png', './apple-touch-icon.png',
   './img/logo-balt.png', './img/logo-juod.png', './img/qr.svg'];
 

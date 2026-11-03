@@ -369,7 +369,7 @@ const PC = (() => {
   const mistRows = x => (x.c.rows || []).filter(r => r && !/^pcc:/.test(String(r.src || '')) && [r.name, r.dose].some(s => String(s || '').trim()));
   function journal(x) {
     const own = x.r.meds.map(m => ({ t: m.t, h: `<div class="pcli"><span class="tm">${dhm(m.t)}</span><div class="x">${m.kind === 'int' ? '✚ ' : ''}${esc(m.name)}<small>${esc([m.dose, m.route, m.ivl ? 'kas ' + ivlTxt(m.ivl) : '', m.note].filter(Boolean).join(' · '))}</small></div><button class="del" data-act="pc-mdel" data-k="${esc(m.id)}" aria-label="Ištrinti">×</button></div>` }));
-    const mc = mistRows(x).map(r => ({ t: +r.t || PT.hmTs(r.time) || 0, h: `<div class="pcli"><span class="tm">${esc(r.t ? dhm(r.t) : r.time || '—')}</span><div class="x">${esc(r.name)}<small>${esc([r.dose, r.route, 'MIST kortelė'].filter(Boolean).join(' · '))}</small></div></div>` }));
+    const mc = mistRows(x).map(r => ({ t: +r.t || PT.hmTs(r.time) || 0, h: `<div class="pcli"><span class="tm">${esc(r.t ? dhm(r.t) : r.time || '—')}</span><div class="x">${esc(r.name)}<small>${esc([r.dose, r.route, 'Nukentėjusiojo kortelė (DD1380)'].filter(Boolean).join(' · '))}</small></div></div>` }));
     return own.concat(mc).sort((a, b) => b.t - a.t).map(o => o.h).join('');
   }
   function treatTxt(x) {
@@ -1002,7 +1002,7 @@ TCFG.hub = {
   weight: true, // svoris – diurezei (ml/kg/val.) ir dozių skaičiuoklei
   get drugs() { return Array.isArray(E.daznVaistai) ? E.daznVaistai : (E.vaistai || []).slice(0, 6).map(v => v.id); },
   drugOk: v => ok(v.lygis), drugTag: v => isAdv(v.lygis) ? tag(v.lygis) : '',
-  noBar: ['pacientas', 'mist', 'qr-priimti', 'egzaminas', 'vertinimas', 'telekonsultacija', 'turniketai', 'evakuacija'],
+  noBar: ['pacientas', 'mist', 'skenuoti', 'qr-priimti', 'egzaminas', 'vertinimas', 'telekonsultacija', 'turniketai', 'evakuacija'],
   quick: [['pv', '+ Rodikliai', 1], ['pin', '+ Įvesta', 1], ['pout', '+ Išskirta', 1], ['pmed', '+ Vaistas', 1], ['tq', '+ Turniketas'], ['mk', '+ Žymė schemoje']],
   sheetQuick: [['pv', '+ Rodikliai', 1], ['pmed', '+ Vaistas', 1], ['pin', '+ Įvesta'], ['pout', '+ Išskirta'], ['prz', 'Priežiūra'], ['perduoti', 'Perduoti']],
   quickKeys: ['pv', 'pin', 'pout', 'pmed', 'pint'],
@@ -1010,7 +1010,7 @@ TCFG.hub = {
   go: { prz: '#/pacientas?t=prz', rod: '#/pacientas?t=rod', sks: '#/pacientas?t=sks', vst: '#/pacientas?t=vst' },
   handoff: () => [],
   timers: () => PC.timers(),
-  tabs: [['apz', 'Apžvalga'], ['rod', 'Rodikliai'], ['sks', 'Skysčiai'], ['vst', 'Vaistai'], ['prz', 'Priežiūra'], ['kortele', 'MIST'], ['perduoti', 'Perduoti']],
+  tabs: [['apz', 'Apžvalga'], ['rod', 'Rodikliai'], ['sks', 'Skysčiai'], ['vst', 'Vaistai'], ['prz', 'Priežiūra'], ['kortele', 'Kortelė'], ['perduoti', 'Perduoti']],
   overview: (x, H) => PC.sec('apz', x, H),
   sections: { rod: (x, H) => PC.sec('rod', x, H), sks: (x, H) => PC.sec('sks', x, H), vst: (x, H) => PC.sec('vst', x, H), prz: (x, H) => PC.sec('prz', x, H), perduoti: (x, H) => PC.sec('perduoti', x, H) },
   barExtra: x => PC.barExtra(x)

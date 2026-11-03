@@ -14,7 +14,7 @@ const E = window.ETC;
 const sk = (n, t) => `<a href="#/igudis/${n}">${t || 'Įgūdis #' + n}</a>`;
 const vs = (id, t) => `<a href="#/vaistas/${id}">${t}</a>`;
 
-E.versija = '2026-11-03 v3.0 (vienas režimas: lygis CLS / CMC / CPP antraštėje, nustatymų mygtukas; pradžia – tik piktogramos; apačioje Treniruotė (situacijos pagal fazę, dozių patikra, įsivertinimo lapas); sąrašuose lygių spalvos ir ⓘ paaiškinimai; egzaminuotojo režimas panaikintas)';
+E.versija = '2026-11-03 v3.1 (MIST plytelė pervadinta „Nukentėjusiojo kortelė“ (DD1380); nauja funkcija „Nuskaityti kortelę“ – popierinės DD1380 nuotrauka perkeliama į kortelę, be interneto)';
 E.programa = 'PCC gidas';
 
 // ───────── FAZĖS ─────────

@@ -977,6 +977,29 @@ body.gdon{overflow:hidden}
 .scr i.fSTAB{background:#7A1F1F}.scr i.fVAL{background:#6E4A0A}.scr i.fPAR{background:#1D3F6E}.scr i.fYPAT{background:#4B2A6B}.scr i.fEVAC{background:#1F5132}
 .scr b{flex:1;font-size:15px;font-weight:600;min-width:0}
 .scr .tag{flex:none}
+
+/* kortelės nuskaitymas */
+.skst{position:relative;touch-action:none;margin:8px 0;border-radius:10px;overflow:hidden;background:#000;user-select:none;-webkit-user-select:none}
+#skcv{display:block;width:100%}
+.skh{position:absolute;width:38px;height:38px;margin:-19px 0 0 -19px;border-radius:50%;border:3px solid #18C964;background:rgba(24,201,100,.22);touch-action:none;cursor:grab}
+.skh::after{content:'';position:absolute;left:50%;top:50%;width:5px;height:5px;margin:-2.5px;border-radius:50%;background:#18C964}
+.sksides{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.sksides .card{display:flex;flex-direction:column;gap:6px;margin:0;min-width:0}
+.sksides label.btn{text-align:center;cursor:pointer;display:block}
+.skthumb{width:100%;border-radius:6px;border:1px solid var(--line)}
+.skc{display:block;max-width:100%;height:auto;margin:6px 0 2px;border-radius:6px;border:1px solid var(--line);background:#fff}
+.skbody{width:100%}
+.skr{margin:10px 0}.skr>b{display:block;margin-bottom:4px}
+.skrow{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0}
+.skrow>button{border:1px solid var(--line);background:var(--card);color:var(--tx);border-radius:18px;padding:8px 12px;font:inherit;font-size:14px;min-height:40px}
+.skrow>button.on{background:var(--tx);color:var(--bg);border-color:var(--tx);font-weight:600}
+.skcw{flex:1 1 100%;min-width:0}.skcw .skc{width:auto;max-width:100%}.skcw .skbody{width:100%}.skrow .inp{flex:1 1 120px;margin:0}
+.sku{outline:2px solid var(--red);outline-offset:1px}
+.skv{border-top:1px solid var(--line);padding:8px 0}
+.skvg{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px}.skvg label{font-size:13px;color:var(--tx2);min-width:0}.skvg .inp{margin:2px 0 0;min-width:0;width:100%}
+.skcol{max-height:280px;width:auto}
+.sksel{min-height:44px}
+.tools.t3 .tool.wr b{white-space:normal;font-size:12.5px;line-height:1.15}
 </style>
 </head>
 <body class="field">
@@ -1008,6 +1031,7 @@ body.gdon{overflow:hidden}
 <script src="tools.js"></script>
 <script src="sitrep.js"></script>
 <script src="priedai.js"></script>
+<script src="skenas.js"></script>
 <script src="pacientas.js"></script>
 <script src="pcc.js"></script>
 <script src="fb.js"></script>

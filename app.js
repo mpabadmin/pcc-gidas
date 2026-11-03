@@ -74,6 +74,7 @@ function view(p, q) {
     case 'nustatymai': return V.settings();
     case 'idiegimas': return V.install();
     case 'treniruote': return V.train(q);
+    case 'skenuoti': return SK.view();
     case 'korteles': return FC.view();
     case 'vertinimas': return VL.view(p[1]);
     default: return notFound();
@@ -99,7 +100,7 @@ function render() {
   app.querySelectorAll('.pcvt').forEach(x => { x.scrollLeft = x.scrollWidth; }); // stebėjimo lapas: naujausi matavimai dešinėje
   const h1 = app.querySelector('h1');
   document.title = h1 && p.length ? (h1.dataset.title || (h1.childNodes[0] || h1).textContent.trim()) + ' · PCC gidas' : 'PCC gidas';
-  try { QR.after(p[0]); DICT.enhance(app); } catch (e) { console.error(e); }
+  try { QR.after(p[0]); DICT.enhance(app); SK.after(p[0]); } catch (e) { console.error(e); }
   if (p[0] === 'paieska') { const i = document.getElementById('qs'); if (i) { i.focus(); try { i.setSelectionRange(i.value.length, i.value.length); } catch (e) {} } }
 }
 
@@ -183,6 +184,7 @@ app.addEventListener('click', e => {
   if (/^rem-/.test(d.act)) { REM.act(el); return; }
   if (/^qr-/.test(d.act)) { QR.act(el); return; }
   if (/^ex-/.test(d.act)) { EX.act(el); return; }
+  if (/^sk-/.test(d.act)) { SK.act(el); return; }
   if (/^vl-/.test(d.act)) { VL.act(el); return; }
   if (/^fc-/.test(d.act)) { FC.act(el); return; }
   if (/^op-/.test(d.act)) { OP.act(el); return; }
@@ -283,6 +285,7 @@ app.addEventListener('keydown', e => {
 function toolInput(t) {
   const d = t.dataset || {};
   if (d.nl) { NL.onInput(t); return true; }
+  if (d.sk != null) { SK.onInput(t); return true; }
   if (d.mc || d.mcf || d.mcm != null || d.mctq || d.mcp != null || d.mcr || d.mcas) { MC.onInput(t); return true; }
   if (d.sr) { SR.onInput(t); return true; }
   if (d.pc) { PC.onInput(t); return true; }
