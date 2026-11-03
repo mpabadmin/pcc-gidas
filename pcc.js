@@ -593,6 +593,25 @@ const PC = (() => {
   const kpad = (sa, left, right) => '<div class="mqkp" role="group" aria-label="Skaičių klaviatūra">' + ['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(d => `<button data-pa="${sa}" data-v="${d}">${d}</button>`).join('') +
     left + `<button data-pa="${sa}" data-v="0">0</button>` + right + '</div>';
   const kDel = sa => `<button data-pa="${sa}" data-v="del" aria-label="Ištrinti">⌫</button>`;
+  // Slankiojamos vertės (kaip ETC / March požymių lange): standartinė vertė pažymėta brūkšniu, pirštu paslinkus – pasirenkama centre esanti
+  const rngS = (a, b, st, dec) => { const r = []; for (let i = 0; a + i * st <= b + 1e-9; i++) { const x = a + i * st; r.push(dec ? x.toFixed(1).replace('.', ',') : String(Math.round(x))); } return r; };
+  const VRNG = { hr: () => rngS(30, 200, 1), sys: () => rngS(60, 240, 5), dia: () => rngS(30, 150, 5), rr: () => rngS(4, 40, 1), spo2: () => rngS(70, 100, 1), temp: () => rngS(34, 41, 0.1, 1), gcs: () => rngS(3, 15, 1) };
+  const VDEF = { hr: '80', sys: '120', dia: '80', rr: '16', spo2: '98', temp: '36,6', gcs: '15' };
+  const VLB = { hr: 'Pulsas', sys: 'AKS sistolinis', dia: 'AKS diastolinis', rr: 'KD', spo2: 'SpO₂', temp: 'Temperatūra', gcs: 'GKS' };
+  function vStrip(key, cur) {
+    const on = cur === undefined || cur === null ? '' : String(cur);
+    return `<div class="mqstrip" role="listbox" aria-label="${esc(VLB[key])}" data-key="vit:${key}">` + VRNG[key]().map(x =>
+      `<button class="mqc mqsi${x === on ? ' on' : ''}${!on && x === VDEF[key] ? ' mqdef' : ''}" role="option" aria-selected="${x === on}" data-pa="qv" data-v="${x}">${x}</button>`).join('') + '</div>';
+  }
+  function centerStrip(st) { const t = st.querySelector('.mqsi.on') || st.querySelector('.mqdef'); st.scrollLeft = t ? t.offsetLeft - (st.clientWidth - t.offsetWidth) / 2 : 0; }
+  const vKey = () => SH.fk === 'bp' ? (SH.bpd ? 'dia' : 'sys') : SH.fk;
+  let stripT = 0;
+  function stripSettle(st) {
+    if (!SH || SH.kind !== 'vit' || !st.isConnected || st.dataset.key !== 'vit:' + vKey()) return;
+    const c = st.getBoundingClientRect(), cx = c.left + c.width / 2; let best = null, bd = 1e9;
+    st.querySelectorAll('.mqsi').forEach(b => { const r = b.getBoundingClientRect(), dd = Math.abs(r.left + r.width / 2 - cx); if (dd < bd) { bd = dd; best = b; } });
+    if (best && !best.classList.contains('on')) { SH.v[vKey()] = best.dataset.v; draw(); }
+  }
   const VFS = [['hr', 'Pulsas', '/min'], ['bp', 'AKS', 'mm Hg'], ['rr', 'KD', '/min'], ['spo2', 'SpO₂', '%'], ['temp', 'T', '°C'], ['gcs', 'GKS', '3–15'], ['pain', 'Skausm.', '0–10']];
   function body() {
     const s = SH, x = X(s.pid);
@@ -606,10 +625,10 @@ const PC = (() => {
         let h = tRow() + '<div class="mqavpu" role="radiogroup" aria-label="Sąmonė (AVPU)">' + AVPU.map(([k, t]) => `<button role="radio" aria-checked="${V.avpu === k}" class="${V.avpu === k ? 'on' : ''}" data-pa="av" data-v="${k}"><b>${k}</b><small>${t}</small></button>`).join('') + '</div>' +
           '<div class="mqvf n7" role="tablist" aria-label="Rodiklis">' + VFS.map(([k, lb]) => `<button role="tab" aria-selected="${s.fk === k}" class="${s.fk === k ? 'on' : ''}${ab(k) ? ' ab' : ''}" data-pa="fk" data-v="${k}"><span>${lb}</span><b>${esc(shown(k))}</b>${prevOf(k) ? `<small class="mqpv">anksčiau ${esc(prevOf(k))}</small>` : ''}</button>`).join('') + '</div>';
         const f = VFS.find(y => y[0] === s.fk);
-        if (s.fk === 'bp') h += `<div class="mqdisp"><button class="mqbp${s.bpd ? '' : ' cur'}" data-pa="bpd" data-v="0" aria-label="Sistolinis">${esc(V.sys || '—')}</button><span>/</span><button class="mqbp${s.bpd ? ' cur' : ''}" data-pa="bpd" data-v="1" aria-label="Diastolinis">${esc(V.dia || '—')}</button><small>mm Hg · ${s.bpd ? 'diastolinis' : 'sistolinis'}</small></div>` + kpad('kp', kDel('kp'), '<button data-pa="kp" data-v="next" class="nx">Toliau ›</button>');
+        if (s.fk === 'bp') h += `<div class="mqdisp"><button class="mqbp${s.bpd ? '' : ' cur'}" data-pa="bpd" data-v="0" aria-label="Sistolinis">${esc(V.sys || '—')}</button><span>/</span><button class="mqbp${s.bpd ? ' cur' : ''}" data-pa="bpd" data-v="1" aria-label="Diastolinis">${esc(V.dia || '—')}</button><small>mm Hg · ${s.bpd ? 'diastolinis' : 'sistolinis'}</small></div>` + vStrip(s.bpd ? 'dia' : 'sys', s.bpd ? V.dia : V.sys) + kpad('kp', kDel('kp'), '<button data-pa="kp" data-v="next" class="nx">Toliau ›</button>');
         else if (s.fk === 'pain') h += `<div class="mqdisp"><b class="cur">${esc(has(V.pain) ? V.pain : '—')}</b><small>skausmas 0–10</small></div><div class="mqpain" role="radiogroup" aria-label="Skausmo skalė">` + Array.from({ length: 11 }, (_, i) => `<button role="radio" aria-checked="${V.pain === String(i)}" class="${V.pain === String(i) ? 'on' : ''}" data-pa="pain" data-v="${i}">${i}</button>`).join('') + '</div>';
         else h += `<div class="mqdisp"><b class="cur${ab(s.fk) ? ' ab' : ''}">${esc(has(V[s.fk]) && V[s.fk] !== '' ? V[s.fk] : '—')}</b><small>${esc(f[2])}</small></div>` +
-          (s.fk === 'temp' ? kpad('kp', '<button data-pa="kp" data-v=",">,</button>', kDel('kp')) + '<div class="mqrow"><button class="mqc" data-pa="kp" data-v="next">Toliau ›</button></div>' : kpad('kp', kDel('kp'), '<button data-pa="kp" data-v="next" class="nx">Toliau ›</button>'));
+          vStrip(s.fk, V[s.fk]) + (s.fk === 'temp' ? kpad('kp', '<button data-pa="kp" data-v=",">,</button>', kDel('kp')) + '<div class="mqrow"><button class="mqc" data-pa="kp" data-v="next">Toliau ›</button></div>' : kpad('kp', kDel('kp'), '<button data-pa="kp" data-v="next" class="nx">Toliau ›</button>'));
         h += '<div class="mqlab">Kapiliarų prisipildymas</div><div class="mqrow">' + CRT.map(([k, t]) => `<button class="mqc${V.crt === k ? ' on' : ''}" data-pa="crt" data-v="${esc(k)}" aria-pressed="${V.crt === k}">${t}</button>`).join('') + '</div>';
         return { title: 'Rodikliai', h, foot: `<button class="btn pri mqsave" data-pa="save">Įrašyti ${hm(shTs())} matavimą</button>` };
       }
@@ -672,7 +691,7 @@ const PC = (() => {
   function draw(first) {
     if (!SH || !shEl) return;
     const sb = shEl.querySelector('.mqshb'), y = sb ? sb.scrollTop : 0, a = document.activeElement, key = a && shEl.contains(a) && a.dataset ? [a.dataset.pa, a.dataset.v, a.dataset.si].join('|') : '';
-    const B = body();
+    const B = body(), sl = Array.from(shEl.querySelectorAll('.mqstrip')).map(z => [z.dataset.key, z.scrollLeft]);
     shEl.innerHTML = '<div class="mqbg" data-pa="close" aria-hidden="true"></div>' +
       `<section class="mqsh" role="dialog" aria-modal="true" aria-labelledby="pcsht" tabindex="-1"><div class="mqshh">${SH.back ? '<button class="x" data-pa="back" aria-label="Atgal">‹</button>' : ''}<b id="pcsht">${esc(B.title)}</b><button class="x" data-pa="close" aria-label="Uždaryti">×</button></div>` +
       `<div class="mqshb">${B.h}</div><div class="mqshf">${B.foot}</div></section>`;
@@ -680,6 +699,7 @@ const PC = (() => {
     [document.querySelector('body > header'), app, document.getElementById('nav'), document.getElementById('glback')].forEach(e => { if (e && !e.hasAttribute('inert')) { e.setAttribute('inert', ''); shInert.push(e); } });
     try { if (typeof DICT !== 'undefined') DICT.enhance(shEl); } catch (e) {}
     const nb = shEl.querySelector('.mqshb'); if (nb && !first) nb.scrollTop = y;
+    shEl.querySelectorAll('.mqstrip').forEach(z => { const q = sl.find(w => w[0] === z.dataset.key); if (q && !first) z.scrollLeft = q[1]; else centerStrip(z); });
     let f = key ? Array.from(shEl.querySelectorAll('[data-pa],[data-si]')).find(el => [el.dataset.pa, el.dataset.v, el.dataset.si].join('|') === key && !el.disabled) : null;
     if (!f) f = shEl.querySelector('.mqsh');
     try { f.focus({ preventScroll: true }); } catch (e) {}
@@ -692,6 +712,9 @@ const PC = (() => {
       shEl = document.createElement('div'); shEl.id = 'pcsh';
       shEl.addEventListener('click', e => { const el = e.target.closest('[data-pa]'); if (el && shEl.contains(el)) { e.preventDefault(); sact(el); } });
       shEl.addEventListener('input', e => sinput(e.target));
+      shEl.addEventListener('pointerdown', e => { const z = e.target.closest && e.target.closest('.mqstrip'); if (z) z.dataset.u = '1'; }, true);
+      shEl.addEventListener('wheel', e => { const z = e.target.closest && e.target.closest('.mqstrip'); if (z) z.dataset.u = '1'; }, { capture: true, passive: true });
+      shEl.addEventListener('scroll', e => { const z = e.target; if (!z || !z.classList || !z.classList.contains('mqstrip') || !z.dataset.u) return; clearTimeout(stripT); stripT = setTimeout(() => { z.dataset.u = ''; stripSettle(z); }, 140); }, true);
       document.body.appendChild(shEl);
     }
     if (!o.swap) {
@@ -735,6 +758,7 @@ const PC = (() => {
       case 'bpd': s.bpd = +v; return draw();
       case 'crt': s.v.crt = s.v.crt === v ? '' : v; return draw();
       case 'pain': s.v.pain = s.v.pain === v ? '' : v; vNext(); return draw();
+      case 'qv': s.v[vKey()] = v; vNext(); return draw();
       case 'kp': {
         if (v === 'next') { vNext(); return draw(); }
         const k = s.fk === 'bp' ? (s.bpd ? 'dia' : 'sys') : s.fk, cur = String(s.v[k] || '');
