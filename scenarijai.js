@@ -2490,7 +2490,7 @@ window.ETC.scenarijai = [
     "klaus": "Ką perduodate?",
     "opt": [
      {
-      "t": "DD 1380 ir stebėjimo lapą kartu su sužeistuoju",
+      "t": "DD1380 ir stebėjimo lapą kartu su sužeistuoju",
       "ok": true
      },
      {
@@ -2498,11 +2498,11 @@ window.ETC.scenarijai = [
       "ok": false
      },
      {
-      "t": "Tik DD 1380 – stebėjimo lapas vidinis",
+      "t": "Tik DD1380 – stebėjimo lapas vidinis",
       "ok": false
      }
     ],
-    "why": "Kortelė DD 1380 ir stebėjimo lapas keliauja kartu su sužeistuoju; žodinis perdavimas be laikų – informacijos praradimas.",
+    "why": "Kortelė DD1380 ir stebėjimo lapas keliauja kartu su sužeistuoju; žodinis perdavimas be laikų – informacijos praradimas.",
     "ref": [
      "#/igudis/38",
      "#/igudis/3"

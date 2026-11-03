@@ -59,6 +59,7 @@ body.field mark{color:#fff}
 .row small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;color:var(--tx2);font-size:13px}
 .row .ar{margin-left:auto;color:var(--tx2);font-size:20px;flex:none}
 .row .tag{flex:none;margin:0}
+.row.apr{min-height:48px;padding:8px 14px}.row .api{flex:none;width:24px;height:24px;color:var(--acc)}
 .row.nxt{background:var(--accbg);color:var(--acc);border-color:var(--accbg);font-weight:600;margin-top:14px}
 .row.nxt .ar{color:var(--acc)}
 .card{padding:12px 14px;margin-bottom:8px;border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:var(--sh)}
@@ -339,6 +340,7 @@ section.nl .lgr+.inp{margin-top:10px}
 .gres{position:sticky;bottom:calc(66px + env(safe-area-inset-bottom));z-index:3;border-radius:14px;padding:10px 14px;margin:12px 0 4px;background:var(--tx);color:var(--bg);box-shadow:0 4px 18px rgba(0,0,0,.28)}
 .gres .gt{font-size:25px;font-weight:800;line-height:1.2}.gres .gt small{font-size:16px;font-weight:600;opacity:.8}
 .gres .gsv{font-size:14px;margin-top:2px}
+body.hasbar .gres{bottom:calc(126px + env(safe-area-inset-bottom))} /* virš paciento juostos */
 .gres.sev1{background:#18794E;color:#fff}.gres.sev2{background:#9A4A00;color:#fff}.gres.sev3{background:#B42318;color:#fff}
 /* ── atnaujinimo mygtukas (antraštėje, pradžios ekrane) ── */
 #upd{position:relative}#upd svg{width:21px;height:21px}
@@ -383,6 +385,7 @@ section.nl .lgr+.inp{margin-top:10px}
 .rem-r{background:var(--redbg);border-color:var(--redbg);color:var(--red)}
 .rem-a{background:var(--ambbg);border-color:var(--ambbg);color:var(--amb)}
 .remb{flex:none;min-height:44px;padding:0 10px;border:1px solid currentColor;border-radius:10px;background:none;color:inherit;font:inherit;font-size:14px;font-weight:700}
+.remz{flex:none;min-height:44px;min-width:44px;padding:0 6px;border:0;border-radius:10px;background:rgba(127,127,127,.18);color:inherit;font:inherit;font-size:11px;font-weight:700;line-height:1.15}
 .remx{flex:none;width:44px;height:44px;border:0;border-radius:10px;background:rgba(127,127,127,.18);color:inherit;font-size:20px;font-weight:800}
 @media(max-width:360px){.remb{display:none}}
 /* ── QR perdavimas ── */
@@ -627,7 +630,7 @@ html.mqopen,html.mqopen body{overflow:hidden}
 .mqavpu button.on{background:var(--tx);color:var(--bg);border-color:var(--tx)}
 .mqvf{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;margin-top:8px}
 .mqvf button{min-height:52px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--tx);font:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2px;line-height:1.1;overflow:hidden;min-width:0}
-.mqvf span{font-size:11px;color:var(--tx2)}.mqvf b{font-size:15px;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.mqvf span{font-size:11px;color:var(--tx2);text-align:center;line-height:1.05}.mqvf b{font-size:15px;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .mqvf button.on{border:2px solid var(--acc);background:var(--accbg)}
 .mqvf button.ab b{color:var(--abn)}
 .mqdisp{display:flex;align-items:baseline;justify-content:center;gap:8px;margin:10px 0 2px;min-height:52px}
@@ -643,6 +646,7 @@ html.mqopen,html.mqopen body{overflow:hidden}
 .mqpain{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:8px}
 .mqpain button{min-height:50px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--tx);font:inherit;font-size:18px;font-weight:700}
 .mqpain button.on{background:var(--acc);color:var(--bg);border-color:var(--acc)}
+.mqcrt{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:8px}.mqcrt button{min-height:54px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--tx);font:inherit;font-size:18px;font-weight:700}.mqcrt button.on{background:var(--acc);color:var(--bg);border-color:var(--acc)}
 .mqpan{margin-top:10px;padding:10px;border:1px solid var(--line);border-radius:12px;background:var(--bg)}
 .mqph{display:flex;align-items:baseline;gap:8px}.mqph b{flex:1;font-size:17px}.mqph small{color:var(--tx2);font-size:12px}
 .mqwarn{margin:8px 0 0;padding:8px 10px;border-radius:10px;background:var(--redbg);color:var(--red);font-weight:700;font-size:14px}
@@ -912,6 +916,7 @@ body.gdon{overflow:hidden}
 .gdopt button.on{border-color:var(--acc);background:var(--accbg)}
 .ghelp{margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:6px;background:none;border:1px solid var(--line);color:var(--tx);font:inherit;font-size:14px;font-weight:600;padding:7px 12px;border-radius:999px;cursor:pointer}
 .ghelp svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+@media(max-width:360px){.ghelp{padding:12px}.ghelp span{display:none}} /* 320 px: be horizontalaus slinkimo (tik piktograma, aria-label lieka) */
 
 /* v2.3: pagalbinės priemonės juosta ir kurso nuoroda instrukcijoje */
 .dstrip{display:flex;align-items:center;gap:10px;padding:10px 12px;margin:4px 0 8px;border-radius:14px;background:var(--ambbg);border:1px solid var(--amb);color:var(--tx);text-decoration:none}
@@ -940,6 +945,7 @@ body.gdon{overflow:hidden}
 .tools.t3 .tool small{font-size:11.5px;line-height:1.2;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .cki{flex:none;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;margin-left:4px;vertical-align:middle;border-radius:50%;border:0;padding:0;background:var(--ambbg);color:var(--amb);font:italic 800 14px Georgia,serif;cursor:pointer}
 .cki[aria-expanded=true]{background:#F9CF7E;color:#2A1A00}
+.cki{position:relative}.cki::after{content:'';position:absolute;inset:-9px;border-radius:50%} /* paspaudimo plotas 44×44 (pirštinės), eilutė nepažymima */
 .ckx{margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--bg);font-size:14px;line-height:1.45;color:var(--tx2)}
 .ckx[hidden]{display:none}
 .phib{display:inline-flex;align-items:center;gap:8px;margin:6px 0 2px;padding:4px 12px 4px 4px;border:1px solid var(--line);border-radius:999px;background:none;color:var(--tx2);font:inherit;font-size:14px;cursor:pointer}.phib .cki{margin:0}.phib[aria-expanded=true] .cki{background:#F9CF7E;color:#2A1A00}
@@ -972,6 +978,7 @@ body.gdon{overflow:hidden}
 .trf a b{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;padding:0 1px;letter-spacing:-.2px}.trf a small{font-size:12px;opacity:.85}
 .trf a.on{border-color:var(--acc)}
 .trf a.fSTAB{background:#7A1F1F;color:#FFDCD7}.trf a.fVAL{background:#6E4A0A;color:#FCE0A6}.trf a.fPAR{background:#1D3F6E;color:#CFE3FA}.trf a.fYPAT{background:#4B2A6B;color:#E6D3F7}.trf a.fEVAC{background:#1F5132;color:#BDEBCB}
+@media(max-width:360px){.trf{grid-template-columns:repeat(3,minmax(0,1fr))}} /* 320 px: fazių pavadinimai neapkerpami */
 .scr{display:flex;align-items:center;gap:12px;padding:12px 14px;margin:0 0 8px;border-radius:14px;background:var(--card);color:var(--tx);text-decoration:none}
 .scr i{flex:none;width:8px;height:34px;border-radius:4px;background:var(--line)}
 .scr i.fSTAB{background:#7A1F1F}.scr i.fVAL{background:#6E4A0A}.scr i.fPAR{background:#1D3F6E}.scr i.fYPAT{background:#4B2A6B}.scr i.fEVAC{background:#1F5132}

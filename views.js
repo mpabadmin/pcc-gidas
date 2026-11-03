@@ -139,7 +139,7 @@ const V = {
     return '<div class="tools t3">' +
       tile('#/pacientas?t=rod', ICO.vit, 'Rodikliai', pcSt(() => PC.st('rod'))) + tile('#/pacientas?t=sks', ICO.drop, 'Skysčiai', pcSt(() => PC.st('sks'))) +
       tile('#/pacientas?t=vst', ICO.syr, 'Vaistai', pcSt(() => PC.st('vst')), 'Vaistai ir veiksmai') + tile('#/pacientas?t=prz', ICO.care, 'Priežiūra', pcSt(() => PC.st('prz')), 'Priežiūros grafikas') +
-      tile('#/turniketai', ICO.tq, 'Turniketai', pcSt(() => PC.st('tq'))) + tile('#/evakuacija', ICO.evac, 'Evakuacija', pcSt(() => PC.st('evac')), 'Pasiruošimas evakuacijai') + '</div>';
+      tile('#/gks', ICO.gks, 'GKS', stOf(() => GK).replace(/^Paskutinė: /, ''), 'GKS skaičiuoklė') + tile('#/turniketai', ICO.tq, 'Turniketai', pcSt(() => PC.st('tq'))) + tile('#/evakuacija', ICO.evac, 'Evakuacija', pcSt(() => PC.st('evac')), 'Pasiruošimas evakuacijai') + '</div>';
   },
   // Perdavimas: telekonsultacija, MIST, 9-Line, SITREP, QR
   toolTiles() {
@@ -226,10 +226,9 @@ const V = {
   },
 
   drugs() {
-    const D = (E.vaistai || []).filter(v => ok(v.lygis)), w = wCalc(), field = mode === 'field';
+    const D = (E.vaistai || []).filter(v => ok(v.lygis)), w = wCalc();
     let h = '<h1>Vaistai</h1><p class="muted">' + esc(E.vaistaiIntro || 'Dozės – pagal kuopos vaistų korteles ir vieneto SOP. CMC – kovos medikas, CPP – paramedikas ar gydytojas.') + '</p>';
-    if (!field) h += row('#/korteles', 'Dozių kortelės', FC.status());
-    const G = E.vaistuGrupes || [], drow = v => row('#/vaistas/' + v.id, v.name, field ? doseShort(v, w) : v.klase, tag(v.lygis));
+    const G = E.vaistuGrupes || [], drow = v => row('#/vaistas/' + v.id, v.name, doseShort(v, w), tag(v.lygis));
     G.forEach(g => {
       const a = D.filter(v => v.grupe === g.id);
       if (!a.length) return;
@@ -245,7 +244,7 @@ const V = {
   drug(id) {
     const v = drugById(id);
     if (!v) return notFound();
-    const w = wCalc(), learn = mode === 'learn';
+    const w = wCalc();
     const doseHtml = d => `<div class="dose"><div class="lb">${esc(d.k)}${d.c ? ' · ' + esc(d.d) : ''}</div><div class="big">${esc(d.c ? calcD(d, w) : d.d)}</div>${d.p ? '<div class="lb">' + br(d.p) + '</div>' : ''}</div>`;
     let h = `<h1>${esc(v.name)}</h1>` + (v.klase ? `<p class="muted">${esc(v.klase)}</p>` : '');
     h += (v.tccc26 ? '<span class="tag grn">TCCC 2026</span>' : v.ne26 ? '<span class="tag amb">Ne TCCC 2026</span>' : '') + lvTag(v);
@@ -263,8 +262,8 @@ const V = {
     if ((v.pastabos || []).length) more += '<h3>Pastabos</h3>' + ul(v.pastabos);
     if (v.saltinis) more += '<p class="muted" style="margin-top:10px">Šaltiniai: ' + esc(v.saltinis) + '</p>';
     if ((v.nuorodos || []).length) more += v.nuorodos.map(([t, u]) => `<a class="row" href="${esc(u)}" target="_blank" rel="noopener"><div>${esc(t)}</div><span class="ar">↗</span></a>`).join('');
-    if (more) h += `<details class="alt"${learn ? ' open' : ''}><summary>Kontraindikacijos ir daugiau</summary>${more}</details>`;
-    h += V.drugLt(v, learn);
+    if (more) h += `<details class="alt"><summary>Kontraindikacijos ir daugiau</summary>${more}</details>`;
+    h += V.drugLt(v);
     const alt = (Array.isArray(v.alt) ? v.alt : []).filter(a => a && (!a.id || (drugById(a.id) && ok(drugById(a.id).lygis))));
     if (alt.length) h += '<h2>Alternatyva</h2>' + alt.map(a => a.id ? row('#/vaistas/' + a.id, drugById(a.id).name, a.t) : `<p class="muted">${esc(a.t)}</p>`).join('');
     const sus = (v.susije || []).filter(s => !alt.some(a => a.id === s));
@@ -273,14 +272,14 @@ const V = {
   },
 
   // Lietuvoje registruoti preparatai (VVKT) – kaip ETC gide
-  drugLt(v, learn) {
+  drugLt(v) {
     const L = v.lt; if (!L || typeof L !== 'object' || !((L.p || []).length || L.ne || L.pa)) return '';
     const ST = { T: ['Tiekiamas', 'grn'], L: ['Lygiagretus importas', 'grn'], U: ['Be registracijos numerio', 'amb'], N: ['Netiekiamas', 'red'] };
     let h = (L.p || []).map(p => { const s = ST[p.s] || ['', '']; return `<div class="ltp"><div class="ltn"><b>${esc(p.n)}</b>${s[0] ? `<span class="tag ${s[1]}">${s[0]}</span>` : ''}</div><div class="ltd">${esc(p.d)}${p.r ? ' · ' + esc(p.r) : ''}</div></div>`; }).join('');
     if (L.ne) h += `<div class="ltp"><div class="ltn"><span class="tag red">Netiekiami</span></div><div class="ltd">${esc(L.ne)}</div></div>`;
     if (L.pa) h += `<p class="ltpa">${esc(L.pa)}</p>`;
     h += '<p class="muted ltsrc">VVKT vaistinių preparatų registras. Tiekimas keičiasi – naudokite tai, kas yra komplekte, ir tikrinkite koncentraciją ant ampulės.</p>';
-    return `<details class="alt"${learn ? ' open' : ''}><summary>Lietuvoje: preparatai ir pakuotės</summary>${h}</details>`;
+    return `<details class="alt"><summary>Lietuvoje: preparatai ir pakuotės</summary>${h}</details>`;
   },
 
   skills(q) {
@@ -392,8 +391,13 @@ const V = {
     h += '<h2>Apie</h2><p class="muted">' + (verM ? 'Versija ' + esc(verM[2]) + ' · ' + esc(verM[1]) : 'Versija ' + esc(E.versija || '—')) + '. Parengė LŠS Vilniaus 1040 medicinos šaulių kuopa pagal JTS PCC gaires (CPG ID 91, 70, 94) ir PFC dokumentavimo rekomendacijas. Atminties priemonė, ne oficiali gairė.</p>' +
       (verM ? '<details class="alt"><summary>Kas naujo</summary><p class="muted">' + esc(verM[3]) + '</p></details>' : '');
     h += pcSt(() => PC.sourceRows());
-    h += '<a class="row" href="https://etc.1040medkuopa.lt" target="_blank" rel="noopener"><div>ETC kišeninis gidas<small>Ligoninės traumos komandai</small></div><span class="ar">↗</span></a>';
-    h += '<a class="row" href="https://march.1040medkuopa.lt" target="_blank" rel="noopener"><div>March gidas<small>TCCC: CUF, TFC, TACEVAC</small></div><span class="ar">↗</span></a>';
+    // Kitos 1040 med. kuopos programėlės
+    const app = (u, p, t, s) => `<a class="row apr" href="${u}" target="_blank" rel="noopener"><svg class="api" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${p}"/></svg><div>${t}<small>${s}</small></div><span class="ar">↗</span></a>`;
+    h += '<h2>Kitos programėlės</h2>' +
+      app('https://sim.1040medkuopa.lt', 'M3 5h18v12H3zM8 21h8M12 17v4M5 11h3l2-3 2 6 2-3h5', 'SIM', 'Paciento monitoriaus simuliatorius treniruotėms') +
+      app('https://etc.1040medkuopa.lt', 'M9 3h6v6h6v6h-6v6H9v-6H3V9h6z', 'ETC gidas', 'Ligoninės traumos komandai') +
+      app('https://march.1040medkuopa.lt', 'M12 3l8 3v6c0 4.5-3.4 8-8 9-4.6-1-8-4.5-8-9V6z', 'March gidas', 'TCCC: CUF, TFC, TACEVAC') +
+      app('https://apps.1040medkuopa.lt', 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z', 'Visos programėlės', 'apps.1040medkuopa.lt – aprašymai ir įdiegimas');
     return h;
   }
 };

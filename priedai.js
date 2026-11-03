@@ -175,7 +175,7 @@ const FC = (() => {
     if (!q) build();
     const C = counts();
     let h = '<h1>Dozių kortelės</h1>';
-    if (mode === 'learn') h += '<p class="muted">Kasdien 5 kortelės iš vaistų skilties: vaistas ir kelias – prisiminkite dozę, tada atverskite. „Žinojau“ – kortelė grįš vis rečiau (po 1, 2, 4, 8, 16 d.), „Nežinojau“ – rytoj ir dar kartą šiandien. Dozės – tos pačios kaip skiltyje Vaistai.</p>';
+    h += '<details class="alt"><summary>Paaiškinimas</summary><p class="muted">Kasdien 5 kortelės iš vaistų skilties: vaistas ir kelias – prisiminkite dozę, tada atverskite. „Žinojau“ – kortelė grįš vis rečiau (po 1, 2, 4, 8, 16 d.), „Nežinojau“ – rytoj ir dar kartą šiandien. Dozės – tos pačios kaip skiltyje Vaistai.</p></details>';
     if (!C.all) return h + '<p class="muted">Vaistų skiltyje kortelių nėra.</p>';
     if (!q.length) return h + `<div class="exres"><div class="big">Viskas ✓</div><div class="muted">Šiandien kartoti nebėra. Išmokta ${C.learned} / ${C.all}.</div></div>` + row('#/vaistai', 'Vaistai', 'Visa skiltis');
     if (i >= q.length) {
@@ -242,7 +242,7 @@ const OP = (() => {
       '<button class="btn dng" data-act="op-wipe" style="width:100%">Ištrinti visų sužeistųjų duomenis</button>' +
       '<p class="muted">Automatiškai ištrinti, jei programėlė nenaudojama:</p><div class="seg2" role="group" aria-label="Automatinis ištrynimas">' +
       [[0, 'Išjungta'], [12, '12 val.'], [24, '24 val.'], [72, '3 d.']].map(([k, t]) => `<button class="${h === k ? 'on' : ''}" data-act="op-auto" data-k="${k}" aria-pressed="${h === k}">${t}</button>`).join('') + '</div>' +
-      '<details class="alt"><summary>Kas ištrinama</summary><p class="muted">MIST kortelės, paciento failas' + (typeof PC !== 'undefined' ? ' (stebėjimo lapas, skysčiai, vaistai, priežiūra, telekonsultacija)' : '') + ', laikai, sąrašų žymėjimai, 9-Line' + (typeof MS !== 'undefined' ? ', Mascal' : '') + (typeof VZ !== 'undefined' ? ', vaistų žymėjimas, nudegimai, šviežias kraujas' : '') + (typeof SR !== 'undefined' ? ', SITREP' : '') + '. Lieka: nustatymai, įsivertinimai, vertinimai ir dozių kortelės.</p></details>';
+      '<details class="alt"><summary>Kas ištrinama</summary><p class="muted">Nukentėjusiųjų kortelės, paciento failas' + (typeof PC !== 'undefined' ? ' (stebėjimo lapas, skysčiai, vaistai, priežiūra, telekonsultacija)' : '') + ', laikai, sąrašų žymėjimai, 9-Line' + (typeof MS !== 'undefined' ? ', Mascal' : '') + (typeof VZ !== 'undefined' ? ', vaistų žymėjimas, nudegimai, šviežias kraujas' : '') + (typeof SR !== 'undefined' ? ', SITREP' : '') + '. Lieka: nustatymai, įsivertinimai, vertinimai ir dozių kortelės.</p></details>';
   }
   function act(el) {
     const d = el.dataset;

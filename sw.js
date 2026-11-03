@@ -1,4 +1,4 @@
-const VERSION = 'pcc-gidas-v3.3';
+const VERSION = 'pcc-gidas-v3.4';
 const IMG = 'pcc-img-1';
 const EXT = 'pcc-ext-1';
 const FILES = ['./', './index.html', './sarasai.js', './vaistai.js', './igudziai.js', './scenarijai.js', './pcc-cfg.js', './core.js', './views.js', './tools.js', './sitrep.js', './priedai.js', './skenas.js', './pacientas.js', './img/skenas/dd1380-f.png', './img/skenas/dd1380-b.png', './pcc.js', './fb.js', './app.js', './guide.js',
@@ -36,7 +36,8 @@ self.addEventListener('fetch', e => {
   if (url.origin !== self.location.origin) return;
   // Turinio iliustracijos (img/<aplankas>/…) – atskira talpykla, išlieka atnaujinant versiją
   if (/\/img\/[^/]+\/[^/]+$/.test(url.pathname)) {
-    e.respondWith(caches.open(IMG).then(c => c.match(req, { ignoreSearch: true }).then(hit => hit || fetch(req).then(res => {
+    // pirmiausia – visos talpyklos (DD1380 šablonai img/skenas/ įrašomi diegiant į VERSION talpyklą), tada IMG, tada tinklas
+    e.respondWith(caches.match(req, { ignoreSearch: true }).then(hit => hit || caches.open(IMG).then(c => fetch(req).then(res => {
       if (res && res.ok) c.put(req, res.clone());
       return res;
     }))));

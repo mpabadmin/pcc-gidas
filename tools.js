@@ -10,6 +10,7 @@ const TCFG = {
   app: 'pcc',           // QR kodo žymė
   // nuorodos puslapių apačioje: [adresas, pavadinimas, paantraštė]
   nl: () => [['#/pacientas?t=kortele', 'Nukentėjusiojo kortelė (DD1380)', MC.status()], ['#/pacientas?t=perduoti', 'Perduoti', 'Telekonsultacija, ATMISTER, QR'], ['#/sitrep', 'SITREP', SR.status()]],
+  gk: () => [['#/pacientas?t=rod', 'Stebėjimo lapas – rodikliai', 'GKS ir kiti rodikliai su laiku'], ['#/pacientas?t=kortele', 'Nukentėjusiojo kortelė (DD1380)', MC.status()], ['#/igudis/32', 'Galvos smegenų trauma PCC metu', 'Įgūdis #32']],
   mc: () => [['#/skenuoti', 'Nuskaityti popierinę kortelę', 'DD1380 nuotrauka → kortelė, be interneto'], ['#/pacientas', 'Pacientas', 'Rodikliai, skysčiai, priežiūra, perdavimas'], ['#/qr-priimti', 'Priimti pacientą QR kodu', 'Nuskaityti kito telefono kodą'], ['#/9line', '9-Line MEDEVAC', NL.status()], ['#/sitrep', 'SITREP', SR.status()]],
   occl: 'Okliuzinis tvarstis',
   krGrupes: true, // kraujo produktai: gavėjo ir donoro ABO grupės (šviežias pilnas kraujas lauke)
@@ -219,7 +220,7 @@ const NL = (() => {
     '<tr><td><b>D – įprastinė evakuacija</b> (Routine)</td><td>&lt; 24 val.</td><td>Nubrozdinimai, smulkūs lūžiai, nušalimai</td></tr>' +
     '<tr><td><b>E – evakuojami pagal galimybes</b> (Convenience)</td><td>Mediciniškai nebūtina</td><td>Administracinis perkėlimas</td></tr></table></div>' +
     '<p class="muted">LK formos išnaša: A – ' + PREC_FN.A + '; B – ' + PREC_FN.B + '; C – ' + PREC_FN.C + '.</p>' +
-    '<p class="muted">MIST kortelės evakuacija → 3 eilutė: neatidėliotina – A (chirurginė – B), skubi – C, įprastinė – D.</p>' +
+    '<p class="muted">Nukentėjusiojo kortelės evakuacija → 3 eilutė: neatidėliotina – A (chirurginė – B), skubi – C, įprastinė – D.</p>' +
     '<p class="muted">Terminai priklauso nuo doktrinos ir SOP: LK ir JTS CLS (2020) nurodo &lt; 2 val. (A, B) ir &lt; 4 val. (C), kai kurios JAV ir NATO procedūros neatidėliotinai kategorijai numato 1 val. ar 90 min. Vadovaukitės savo vieneto SOP.</p></details>';
   // Iš sužeistųjų MIST kortelių: 3 eilutė – evakuacijos kategorija (neatidėliotina → A, skubi → C, įprastinė → D), 5 eilutė – transportavimo padėtis (gulint, pakeltomis kojomis, pusiau sėdint, ant šono → L; sėdint, gali eiti → A)
   function fromCards() {
@@ -234,7 +235,7 @@ const NL = (() => {
   function view() {
     const s = get(), L = lines(s), req = L.slice(0, 5).filter(Boolean).length;
     let h = '<h1>9 eilučių MEDEVAC prašymas</h1>';
-    if (mode === 'learn') h += '<p class="muted">9 eilučių prašymas (9-Line MEDEVAC) – standartinis radijo pranešimas evakuacijos priemonei iškviesti. Pirmų 5 eilučių pakanka priemonei išsiųsti; 6–9 eilutes galima perduoti jai jau judant.</p>';
+    h += '<details class="alt"><summary>Paaiškinimas</summary><p class="muted">9 eilučių prašymas (9-Line MEDEVAC) – standartinis radijo pranešimas evakuacijos priemonei iškviesti. Pirmų 5 eilučių pakanka priemonei išsiųsti; 6–9 eilutes galima perduoti jai jau judant.</p></details>';
     h += `<div class="seg2" role="group" aria-label="Situacija">${chip('nl-peace', '0', !s.peace, 'Karo metu')}${chip('nl-peace', '1', s.peace, 'Taikos metu')}</div>`;
     h += `<div class="nlprog"><div class="prog"><i style="width:${req * 20}%"></i></div><small class="muted">Būtinos 1–5 eilutės: ${req} / 5. Prieš kviesdami surinkite visą informaciją; kodus ir ryšio saugumą – pagal SOP.</small></div>`;
     h += `<section class="nl nlhd"><div class="nlh"><b>Padalinio siunčiančio 9liner šaukinys</b><small class="muted">pranešimo DTG – ${esc(dtg())}</small></div><input class="inp" data-nl="snd" value="${esc(s.snd)}" placeholder="pvz. Vilkas 1" autocomplete="off" aria-label="Padalinio siunčiančio 9liner šaukinys"></section>`;
@@ -249,7 +250,7 @@ const NL = (() => {
     h += card(8, s, NAT.map(([k, t]) => stepper('nl-nat', k, s.nat[k], k + ' – ' + t, NAT_EN[k])).join(''), 'LK forma; angliškame tekste – NATO (koalicijos) reikšmės. Vadovaukitės vieneto SOP.');
     h += s.peace ? card(9, s, `<textarea class="inp" data-nl="terrain" rows="2" placeholder="pvz. lygus laukas, šiaurėje elektros linija" aria-label="Vietovės aprašymas">${esc(s.terrain)}</textarea>`)
       : card(9, s, '<div class="opts">' + CBRN.map(([k, t]) => chip('nl-cbrn', k, s.cbrn.indexOf(k) >= 0, (k === '-' ? '' : k + ' – ') + t)).join('') + '</div>' +
-        (mode === 'learn' ? '<p class="muted">LK formoje radiologinio užterštumo kodo nėra – jį patikslinkite žodžiu pagal SOP. Angliškame tekste raidės – NATO (N branduolinis, B biologinis, C cheminis).</p>' : ''));
+        ('<details class="alt"><summary>Paaiškinimas</summary><p class="muted">LK formoje radiologinio užterštumo kodo nėra – jį patikslinkite žodžiu pagal SOP. Angliškame tekste raidės – NATO (N branduolinis, B biologinis, C cheminis).</p></details>'));
     h += `<section class="outp"><div class="nlh"><b>Perduoti</b></div>${langSeg('nl-lang')}<pre id="nl-out">${esc(text(s, outEn()))}</pre>` +
       '<div class="acts"><button class="btn pri" data-act="nl-read">Skaityti per radiją</button><button class="btn" data-act="nl-copy">Kopijuoti</button><button class="btn" data-act="nl-share">Bendrinti</button><button class="btn" data-act="nl-clear">Išvalyti</button></div></section>';
     h += tcfgRows(TCFG.nl());
@@ -620,7 +621,7 @@ const MC = (() => {
   }
   function profileView() {
     const p = prof();
-    return '<div class="mqprof"><b>Aš – pagalbos teikėjas</b><p class="muted mt0">Įrašoma į naujas MIST korteles: pagalbos teikėjas ir dalinys.</p>' +
+    return '<div class="mqprof"><b>Aš – pagalbos teikėjas</b><p class="muted mt0">Įrašoma į naujas nukentėjusiųjų korteles: pagalbos teikėjas ir dalinys.</p>' +
       `<div class="mqg2"><label class="mqf">Pavardė, vardas<input class="inp" data-mcas="name" value="${esc(p.name)}" autocomplete="off"></label><label class="mqf">ID<input class="inp" data-mcas="id" value="${esc(p.id)}" autocomplete="off"></label></div>` +
       `<label class="mqf">Dalinys<input class="inp" data-mcas="unit" value="${esc(p.unit)}" autocomplete="off" placeholder="pvz. 1040 kuopa"></label></div>`;
   }
@@ -693,11 +694,11 @@ const MC = (() => {
   // o.embed – be antraštės ir skirtukų (paciento ekrano skiltis „Kortelė“)
   function view(o) {
     const emb = !!(o && o.embed);
-    const st = load(), s = curOf(st), n = st.cur + 1, tot = st.pts.length, learn = mode === 'learn', T = timers();
-    let h = emb ? '' : '<h1>MIST kortelė</h1>';
-    if (learn && !emb) h += '<p class="muted">M – mechanizmas, I – sužalojimai, S – būklė, T – pagalba, E – evakuacija. Retai pildomi laukai – „+“. Per radiją – tik ID / šaukinys.</p>';
+    const st = load(), s = curOf(st), n = st.cur + 1, tot = st.pts.length, T = timers();
+    let h = emb ? '' : '<h1>Nukentėjusiojo kortelė</h1>';
+    if (!emb) h += '<details class="alt"><summary>Paaiškinimas</summary><p class="muted">M – mechanizmas, I – sužalojimai, S – būklė, T – pagalba, E – evakuacija. Retai pildomi laukai – „+“. Per radiją – tik ID / šaukinys.</p></details>';
     if (!emb) h += tabs(st);
-    h += `<article class="mc mq" aria-label="MIST kortelė – sužeistasis ${n}">`;
+    h += `<article class="mc mq" aria-label="Nukentėjusiojo kortelė – sužeistasis ${n}">`;
     h += `<div class="mch"><b>DD1380</b><span>Nukentėjusiojo kortelė · ${esc(s.dt || today())}${tot > 1 ? ' · ' + n + ' / ' + tot : ''}</span></div>`;
     // A – asmuo
     h += '<div class="mqa">' +
@@ -1637,7 +1638,7 @@ const MC = (() => {
     y += 62; lab('PAGALBOS TEIKĖJO PAVARDĖ, VARDAS, ID', 'Responder last name, first name, ID', P + 40, y);
     [0, 1].forEach(i => { y += 46; tx(String(i + 1), P + 40, y, 18, true); dots(P + 66, W - P, y + 2); val(s.resp[i], P + 72, y - 2, IW - 60); });
     y += 40; c.fillStyle = '#222'; c.fillRect(P, y, IW, 2); y += 24;
-    tx('Sugeneruota ' + new Date().toLocaleDateString('lt-LT') + ' ' + nowHM() + ' iš skaitmeninės MIST kortelės – patikrinkite prie sužeistojo. LŠS Vilniaus 1040 medicinos šaulių kuopa.', P, y, 13, false, '#555');
+    tx('Sugeneruota ' + new Date().toLocaleDateString('lt-LT') + ' ' + nowHM() + ' iš skaitmeninės nukentėjusiojo kortelės – patikrinkite prie sužeistojo. LŠS Vilniaus 1040 medicinos šaulių kuopa.', P, y, 13, false, '#555');
     y += P;
     const out = document.createElement('canvas'); out.width = W; out.height = Math.min(H0, Math.ceil(y));
     out.getContext('2d').drawImage(cv, 0, 0);
@@ -1895,7 +1896,7 @@ const PT = (() => {
     h += '<h2>Įvykių eiga</h2>' + (ev.length ? '<div class="ptev">' + ev.map(([t, x]) => `<div><b>${hm(t)}</b><span>${esc(x)}</span></div>`).join('') + '</div>' : '<p class="muted">Įvykių dar nėra: pažymėkite laikus (Pradžia → Laikai), MIST požymius' + (typeof VZ !== 'undefined' ? ', suleistus vaistus' : '') + '.</p>');
     h += '<div class="acts"><button class="btn pri" data-act="go" data-r="#/qr">Perduoti QR kodu</button><button class="btn" data-act="pt-read">Skaityti perduodant</button><button class="btn" data-act="pt-copy">Kopijuoti viską</button></div>';
     h += row('#/qr-priimti', 'Priimti pacientą QR kodu', 'Nuskaityti kito telefono kodą') + row('#/mist', 'Nukentėjusiojo kortelė (DD1380)', 'Sužeistųjų tvarkymas, šalinimas');
-    if (mode === 'learn') h += '<p class="muted">Viršuje – pacientų juosta: pasirinktas pacientas galioja visiems įrankiams (MIST, laikai, sąrašų žymėjimai' + (typeof VZ !== 'undefined' ? ', vaistai, nudegimai, šviežias kraujas' : '') + '). „+“ – naujas pacientas, ankstesni lieka sąraše.</p>';
+    h += '<details class="alt"><summary>Paaiškinimas</summary><p class="muted">Viršuje – pacientų juosta: pasirinktas pacientas galioja visiems įrankiams (MIST, laikai, sąrašų žymėjimai' + (typeof VZ !== 'undefined' ? ', vaistai, nudegimai, šviežias kraujas' : '') + '). „+“ – naujas pacientas, ankstesni lieka sąraše.</p></details>';
     if (typeof OP !== 'undefined') h += '<button class="btn dng" data-act="op-wipe" style="width:100%;margin-top:14px">Ištrinti visų sužeistųjų duomenis</button>';
     return h;
   }
@@ -1913,7 +1914,8 @@ const PT = (() => {
 
 // ───────── Priminimai (REM): turniketo peržiūra, TXA riba, kartotinės dozės, gyvybės požymiai ─────────
 const REM = (() => {
-  const VK = TCFG.pre + 'remvit', NK = TCFG.pre + 'rem-n';
+  const VK = TCFG.pre + 'remvit', NK = TCFG.pre + 'rem-n', ZK = TCFG.pre + 'rem-z'; // ZK – atidėti priminimai { raktas: iki }
+  const snz = () => { const o = LS.get(ZK, {}); return o && typeof o === 'object' && !Array.isArray(o) ? o : {}; };
   const mm = ms => Math.round(ms / 60000);
   const dur = m => m >= 60 ? Math.floor(m / 60) + ' val. ' + String(m % 60).padStart(2, '0') + ' min' : m + ' min';
   const LV = { r: 0, a: 1, i: 2 };
@@ -1921,11 +1923,11 @@ const REM = (() => {
   const GO = '#/pacientas?sh=';
   const txaOk = () => TCFG.txa !== false && (typeof ok !== 'function' || ok('CMC'));
   function items(only) {
-    const L = PT.list(), now = Date.now(), dis = PT.dismissed(), out = [], vitN = +LS.get(VK, 0) || 0;
+    const L = PT.list(), now = Date.now(), dis = PT.dismissed(), zz = snz(), out = [], vitN = +LS.get(VK, 0) || 0;
     L.pts.forEach(p => {
       if (only && p.pid !== only) return;
       const c = p.card, la = PT.get(p.pid, 'laikai') || {}, who = L.pts.length > 1 && !only ? p.label + ' · ' : '';
-      const push = (key, lvl, title, sub, go) => { if (!dis[key]) out.push({ key, lvl, title, sub: who + sub, go, pid: p.pid }); };
+      const push = (key, lvl, title, sub, go) => { if (!dis[key] && !(+zz[key] > now)) out.push({ key, lvl, title, sub: who + sub, go, pid: p.pid }); };
       const tq = +la.turn || PT.hmTs(c.tqT) || 0;
       if (tq && TCFG.remTq !== false) { const left = mm(tq + 2 * 3600e3 - now); if (left <= 15) push('tq:' + p.pid + ':' + tq, left <= 0 ? 'r' : 'a', 'Turniketas – peržiūra', 'uždėtas ' + hm(tq) + ' · ' + (left <= 0 ? 'prieš ' + dur(mm(now - tq)) : 'liko ' + left + ' min'), GO + 'tq'); }
       const z = PT.get(p.pid, 'vz'), ze = z && Array.isArray(z.e) ? z.e : [];
@@ -1945,7 +1947,14 @@ const REM = (() => {
   const CLOCK = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>';
   function banners(only) {
     let it; try { it = items(only); } catch (e) { return ''; }
-    return it.map(x => `<div class="rem rem-${x.lvl}" role="status">${CLOCK}<div class="remt"><b>${esc(x.title)}</b><small>${esc(x.sub)}</small></div><button class="remb" data-act="rem-go" data-k="${esc(x.pid)}" data-r="${esc(x.go)}">Atidaryti</button><button class="remx" data-act="rem-x" data-k="${esc(x.key)}" aria-label="Atlikta – paslėpti">✓</button></div>`).join('');
+    return it.map(row).join('');
+  }
+  // ✓ – atlikta (programėlė gali įrašyti ar atverti langą – TCFG.remDone); „Atidėti“ – paslepia 15 min, paskui primena vėl
+  const row = x => `<div class="rem rem-${x.lvl}" role="status">${CLOCK}<div class="remt"><b>${esc(x.title)}</b><small>${esc(x.sub)}</small></div><button class="remb" data-act="rem-go" data-k="${esc(x.pid)}" data-r="${esc(x.go)}">Atidaryti</button><button class="remz" data-act="rem-z" data-k="${esc(x.key)}" aria-label="Atidėti 15 min">Atidėti<br>15 min</button><button class="remx" data-act="rem-x" data-k="${esc(x.key)}" aria-label="Atlikta">✓</button></div>`;
+  function snooze(k) {
+    const t = Date.now(), o = snz(), n = {}; Object.keys(o).forEach(q => { if (+o[q] > t) n[q] = o[q]; }); n[k] = t + 15 * 60000; LS.set(ZK, n);
+    LS.set(NK, (LS.get(NK, []) || []).filter(q => q.indexOf(k + ':') !== 0)); // po 15 min – vėl vibracija ir pranešimas
+    toast('Atidėta iki ' + hm(n[k]));
   }
   function settings() {
     const v = +LS.get(VK, 0) || 0;
@@ -1958,6 +1967,7 @@ const REM = (() => {
     const d = el.dataset;
     switch (d.act) {
       case 'rem-x': if (typeof TCFG.remDone === 'function' && TCFG.remDone(d.k)) { const y = scrollY; render(); scrollTo(0, y); return; } PT.dismiss(d.k); { const y = scrollY; render(); scrollTo(0, y); } return;
+      case 'rem-z': snooze(d.k); { const y = scrollY; render(); scrollTo(0, y); } return;
       case 'rem-go': PT.selectPid(d.k); if (location.hash === d.r) { render(); if (typeof HUB !== 'undefined' && HUB.after) HUB.after(); } else location.hash = d.r; return;
       case 'rem-vit': LS.set(VK, +d.k || 0); { const y = scrollY; render(); scrollTo(0, y); } return;
     }
@@ -1974,7 +1984,105 @@ const REM = (() => {
     const r = route().p[0], ae = document.activeElement;
     if ((r === undefined || r === 'pacientas') && !(ae && /INPUT|TEXTAREA/.test(ae.tagName)) && !tmEdit) { const y = scrollY; render(); scrollTo(0, y); }
   }
-  return { items, banners, settings, act, tick };
+  return { items, banners, row, settings, act, tick };
+})();
+
+// ───────── GKS (Glasgow) skaičiuoklė – GCS at 40 ─────────
+const GK = (() => {
+  const KEY = TCFG.pre + 'gks';
+  const G = [
+    { k: 'e', lb: 'Akys', ab: 'A', o: [['4', 'Atsimerkia savaime'], ['3', 'Atsimerkia į garsą', 'kalbinamas'], ['2', 'Atsimerkia į spaudimą'], ['1', 'Neatsimerkia'], ['NT', 'Neįvertinama', 'pvz., uždarytos akys dėl patinimo']] },
+    { k: 'v', lb: 'Kalba', ab: 'K', o: [['5', 'Orientuotas'], ['4', 'Sumišęs'], ['3', 'Pavieniai žodžiai'], ['2', 'Tik garsai'], ['1', 'Nėra'], ['NT', 'Neįvertinama', 'intubuotas']] },
+    { k: 'm', lb: 'Motorika', ab: 'M', o: [['6', 'Vykdo komandas'], ['5', 'Lokalizuoja skausmą (spaudimą)'], ['4', 'Normali fleksija', 'atitraukia'], ['3', 'Patologinė fleksija'], ['2', 'Ekstenzija'], ['1', 'Nėra'], ['NT', 'Neįvertinama', 'pvz., paralyžius ar kitas trukdis']] }
+  ];
+  const PUP = [['0', 'Abu reaguoja'], ['1', 'Vienas nereaguoja'], ['2', 'Abu nereaguoja']];
+  const def = () => ({ e: '', v: '', m: '', p: '', h: [] });
+  const okv = (k, v) => v === '' || (G.find(g => g.k === k) || { o: [] }).o.some(o => o[0] === v);
+  function get() {
+    const raw = LS.get(KEY, null), s = Object.assign(def(), raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {});
+    ['e', 'v', 'm', 'p'].forEach(k => { s[k] = s[k] == null ? '' : String(s[k]); });
+    ['e', 'v', 'm'].forEach(k => { if (!okv(k, s[k])) s[k] = ''; });
+    if (['', '0', '1', '2'].indexOf(s.p) < 0) s.p = '';
+    s.h = Array.isArray(s.h) ? s.h.filter(x => x && typeof x === 'object').map(x => { const o = { ts: x.ts == null ? '' : String(x.ts), at: +x.at || 0 }; ['e', 'v', 'm', 'p'].forEach(k => { o[k] = x[k] == null ? '' : String(x[k]); }); return o; }) : [];
+    return s;
+  }
+  const save = s => LS.set(KEY, s);
+  function calc(s) {
+    const comp = 'A' + (s.e || '–') + ' K' + (s.v || '–') + ' M' + (s.m || '–');
+    if (!s.e || !s.v || !s.m) return { done: false, comp };
+    if ([s.e, s.v, s.m].indexOf('NT') >= 0) return { done: true, nt: true, comp };
+    const tot = +s.e + +s.v + +s.m;
+    return { done: true, tot, comp, gp: s.p !== '' ? tot - +s.p : null, sev: tot >= 13 ? 1 : tot >= 9 ? 2 : 3 };
+  }
+  const SEV = ['', 'Lengva (13–15)', 'Vidutinė (9–12)', 'Sunki (3–8) – ≤ 8: apsaugokite kvėpavimo takus'];
+  const label = c => c.nt ? c.comp : !c.done ? c.comp + ' (dalinis)' : 'GKS ' + c.tot + ' (' + c.comp + ')';
+  const anyC = s => !!(s.e || s.v || s.m); // GKS nebūtinas: galima įrašyti ir dalinį (be sumos)
+  const histLine = x => { const c = calc(x); return x.ts + ' – ' + label(c) + (c.gp != null ? ' · GKS-P ' + c.gp : ''); };
+  function status() {
+    const s = get(), x = s.h[0];
+    return x ? 'Paskutinė: ' + histLine(x) : '';
+  }
+  function resBox(s) {
+    const c = calc(s);
+    let h = `<div class="gres${c.done && !c.nt ? ' sev' + c.sev : ''}" id="gres" aria-live="polite">`;
+    if (!c.done) h += `<div class="gt">GKS – <small>${esc(c.comp)}</small></div><div class="gsv">${anyC(s) ? 'Dalinis vertinimas – sumos nėra; galima įrašyti komponentus' : 'Pasirinkite akių, kalbos ir motorikos atsaką'}</div>`;
+    else if (c.nt) h += `<div class="gt">${esc(c.comp)}</div><div class="gsv">Bendros sumos skaičiuoti negalima – perduokite komponentus</div>`;
+    else h += `<div class="gt">${esc(label(c))}</div><div class="gsv">${esc(SEV[c.sev])}</div>` + (c.gp != null ? `<div class="gsv"><b>GKS-P ${c.gp}</b> (GKS ${c.tot} − vyzdžiai ${s.p})</div>` : '');
+    return h + '</div>';
+  }
+  function view() {
+    const s = get(), who = MC.current();
+    let h = '<h1>GKS skaičiuoklė</h1><p class="muted">Glasgow komos skalė (GCS at 40). Vertinkite geriausią atsaką; perduokite ir komponentus, ne vien sumą.</p>';
+    G.forEach(g => {
+      h += `<section class="nl gsec" role="radiogroup" aria-label="${g.lb}"><div class="nlh"><span class="nn">${g.ab}</span><b>${g.lb}</b><small class="gsel">${s[g.k] ? g.ab + s[g.k] : ''}</small></div>` +
+        g.o.map(([v, t, sub]) => `<button class="gopt${s[g.k] === v ? ' on' : ''}${v === 'NT' ? ' nt' : ''}" data-act="gk-set" data-g="${g.k}" data-k="${v}" role="radio" aria-checked="${s[g.k] === v}"><span class="gs">${v}</span><span>${esc(t)}${sub ? '<small>' + esc(sub) + '</small>' : ''}</span></button>`).join('') + '</section>';
+    });
+    const c = calc(s);
+    h += '<section class="nl"><div class="nlh"><span class="nn">P</span><b>Vyzdžių reakcija</b><small class="muted">nebūtina</small></div>' +
+      '<div class="opts">' + PUP.map(([k, t]) => chip('gk-p', k, s.p === k, esc(t) + ` <small>${k === '0' ? '0' : '−' + k}</small>`)).join('') + '</div>' +
+      `<p class="muted">GKS-P = GKS − nereaguojančių vyzdžių skaičius (0–2)${c.done && !c.nt ? '' : '; rodoma, kai įvertinti visi trys komponentai'}.</p></section>`;
+    h += resBox(s);
+    h += '<div class="acts"><button class="btn pri" data-act="gk-save">Išsaugoti su laiku</button><button class="btn" data-act="gk-mist">Į kortelę</button><button class="btn" data-act="gk-clr">Išvalyti</button></div>';
+    if (who.tot > 1) h += `<p class="muted">„Į kortelę“ – į sužeistojo ${who.n} kortelę (iš ${who.tot}). Kitą sužeistąjį pasirinkite Nukentėjusiojo kortelėje.</p>`;
+    if (s.h.length) h += '<h2>Istorija</h2><div class="vlist">' + s.h.map((x, i) => `<div class="vr"><span>${esc(histLine(x))}</span><button class="x" data-act="gk-hdel" data-k="${i}" aria-label="Ištrinti įrašą ${esc(x.ts)}">×</button></div>`).join('') + '</div>';
+    h += '<details class="alt"><summary>Kaip vertinti ir šaltiniai</summary>' + ('<div class="card esme"><ul>' +
+      '<li><b>Patikrinkite</b> trukdžius: klausa, kalbos barjeras, intubacija, patinimas, sedacija, paralyžius.</li>' +
+      '<li><b>Stebėkite</b>, ką pacientas daro savaime, tada <b>stimuliuokite</b>: pirmiausia garsas (kalbinkite, jei reikia – garsiai šaukite), tik tada fizinis stimulas.</li>' +
+      '<li><b>Spaudimo stimulas</b> (iki 10 s, palaipsniui didinant jėgą): periferinis – <b>nago guolio</b> (piršto galiuko) spaudimas; centriniai – <b>trapecinio raumens</b> suspaudimas tarp nykščio ir pirštų arba <b>antakio – supraorbitalinės įdubos</b> spaudimas. Akims ir fleksijai vertinti – periferinis, lokalizacijai – centrinis stimulas.</li>' +
+      '<li><b>Lokalizuoja</b> – ranka pakyla virš raktikaulio link stimulo galvoje ar kakle. <b>Normali fleksija</b> – greitas sulenkimas per alkūnę; <b>patologinė</b> – lėtas, stereotipinis, dilbis prie krūtinės, kumštis sugniaužtas.</li>' +
+      '<li>Registruokite komponentus (pvz., A3 K4 M5); neįvertinamą komponentą žymėkite NT ir sumos neskaičiuokite.</li></ul></div>' +
+      '<p class="muted">Šaltinis: Teasdale G. et al. The Glasgow Coma Scale at 40 years: standing the test of time. Lancet Neurol 2014; GKS-P – Brennan P. M. et al., J Neurosurg 2018.</p>' +
+      '<a class="row" href="https://www.glasgowcomascale.org/" target="_blank" rel="noopener"><div>Glasgow Coma Scale<small>glasgowcomascale.org</small></div><span class="ar">↗</span></a>') + '</details>';
+    h += tcfgRows(TCFG.gk());
+    return h;
+  }
+  function act(el) {
+    const s = get(), d = el.dataset, k = d.k;
+    switch (d.act) {
+      case 'gk-set': if (!okv(d.g, k)) return; s[d.g] = s[d.g] === k ? '' : k; break;
+      case 'gk-p': s.p = s.p === k ? '' : k; break;
+      case 'gk-clr': s.e = s.v = s.m = s.p = ''; break;
+      case 'gk-save': {
+        if (!anyC(s)) { toast('Pasirinkite bent vieną komponentą'); return; }
+        s.h.unshift({ ts: nowHM(), at: Date.now(), e: s.e, v: s.v, m: s.m, p: s.p }); s.h = s.h.slice(0, 12);
+        toast('Išsaugota ' + s.h[0].ts); break;
+      }
+      case 'gk-hdel': { const i = +k; if (i >= 0 && i < s.h.length) s.h.splice(i, 1); break; }
+      case 'gk-mist': {
+        const c = calc(s), x = s.h[0];
+        if (anyC(s) && !(x && x.e === s.e && x.v === s.v && x.m === s.m && x.p === s.p)) { s.h.unshift({ ts: nowHM(), at: Date.now(), e: s.e, v: s.v, m: s.m, p: s.p }); s.h = s.h.slice(0, 12); }
+        const y = s.h[0];
+        if (!y) { toast('Pasirinkite bent vieną komponentą'); return; }
+        const cy = calc(y); // dalinis – kaip NT: perduodami komponentai, suma neskaičiuojama
+        const who = MC.addGcs({ ts: y.ts, v: cy.nt || !cy.done ? 'NT' : String(cy.tot), d: cy.comp + (cy.gp != null ? ', GKS-P ' + cy.gp : '') });
+        toast('Į kortelę' + (who ? ' (' + who + ')' : '') + ' įrašyta: ' + histLine(y)); break;
+      }
+      default: return;
+    }
+    save(s);
+    const y = scrollY; render(); scrollTo(0, y);
+  }
+  return { view, act, status, calc };
 })();
 
 // ───────── Perdavimas QR kodu (QR): siųsti ir priimti be interneto ─────────
@@ -1992,13 +2100,14 @@ const QR = (() => {
   };
   function payload() {
     PT.sync(); const st = MC.state(), c = Object.assign({}, st.pts[st.cur]); delete c.pid;
+    delete c.name; delete c.dob; delete c.resp; delete c.respP; // tapatybės duomenys neperduodami – tik ID / šaukinys ir dalinys
     const L = PT.list(), me = L.pts[L.cur], o = { v: 1, a: APP, t: Date.now() };
     if (sel.m) { o.m = c; const la = LS.get(TCFG.laikai, null); if (la && (la.trauma || la.turn)) o.lk = { trauma: +la.trauma || 0, turn: +la.turn || 0 }; if (me && me.cat) o.c = me.cat; const kg = +LS.get(TCFG.pre + 'svoris', 0); if (kg > 0) o.kg = kg; }
     if (sel.z && typeof VZ !== 'undefined') o.z = VZ.get().e.map(e => ({ id: e.id, t: e.t, v: e.v, a: e.a, u: e.u, r: e.r, n: e.n }));
     if (sel.n) o.n = LS.get(TCFG.pre + 'nb', null);
     if (sel.w) o.w = LS.get(TCFG.pre + 'wbb', null);
     if (sel['9']) o['9'] = LS.get(TCFG.pre + '9line', null);
-    if (sel.p && typeof PC !== 'undefined') o.p = PC.exportRec(me ? me.pid : '');
+    if (sel.p && typeof PC !== 'undefined') { o.p = PC.exportRec(me ? me.pid : ''); if (o.p && o.p.tc) { o.p.tc = Object.assign({}, o.p.tc); delete o.p.tc.cb; } } // be siuntėjo ryšio duomenų
     return o;
   }
   const b64 = u8 => { let s = ''; for (let i = 0; i < u8.length; i += 8192) s += String.fromCharCode.apply(null, u8.subarray(i, i + 8192)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
@@ -2038,7 +2147,7 @@ const QR = (() => {
     h += `<p class="muted">${esc(p ? p.label : '')}${p && p.cat ? ' · ' + esc(p.cat) : ''} · be interneto</p>`;
     h += '<div class="opts">' + PARTS().map(([k, t]) => chip('qr-p', k, !!sel[k], (sel[k] ? '✓ ' : '') + esc(t)) + '').join('') + '</div>';
     h += '<div class="qrbox" id="qrbox" aria-label="QR kodas"><p class="muted">Ruošiama…</p></div><div class="qrn" id="qrn"></div>';
-    h += '<section class="krc"><b>Kaip priimti</b><p class="muted" style="margin:4px 0 0">Kitame telefone atidarykite PCC gidą → Pacientas → Perduoti → <b>Priimti pacientą QR kodu</b> ir nukreipkite kamerą. Jei kodų keli – jie keičiasi patys, laikykite kamerą, kol bus nuskaityti visi. Padidinkite šio ekrano ryškumą.</p></section>';
+    h += '<section class="krc"><b>Kaip priimti</b><p class="muted" style="margin:4px 0 0">Kitame telefone atidarykite ETC, March ar PCC gidą → Pacientas → <b>Priimti pacientą QR kodu</b> ir nukreipkite kamerą. Jei kodų keli – jie keičiasi patys, laikykite kamerą, kol bus nuskaityti visi. Padidinkite šio ekrano ryškumą.</p></section>';
     h += '<div class="acts"><button class="btn" data-act="pt-read">Skaityti vietoje</button><button class="btn" data-act="pt-copy">Kopijuoti tekstą</button></div>';
     h += '<p class="muted">Kode – tik tai, kas pažymėta. Vardo, pavardės ar asmens kodo nėra – tik šaukinys / ID, jei įrašytas.</p>';
     return h;

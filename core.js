@@ -169,7 +169,7 @@ function setTm(ts, k) {
   tmEdit = null; updTimers();
 }
 
-// Visada matoma juosta: gidas – tik pagalbinė priemonė, nuoroda į taktinės medicinos kursą
+// Visada matoma juosta: gidas – tik pagalbinė priemonė
 const infoBtn = key => `<button class="cki" data-act="ckinfo" aria-expanded="false" aria-controls="ix-${esc(key)}" aria-label="Paaiškinimas">i</button>`;
 const infoTxt = (html, key) => `<div class="ckx" id="ix-${esc(key)}" hidden>${html}</div>`;
 function disclaimer() {
@@ -210,8 +210,9 @@ function buildIdx() {
   });
   Object.keys(E.puslapiai || {}).forEach(id => { const p = E.puslapiai[id]; add('Mokymosi temos', p.title, p.sub, strip(p.html), '#/p/' + id); });
   (typeof PC !== 'undefined' ? PC.searchTools() : []).forEach(x => add('Įrankiai', x[1], x[2], x[3], x[0]));
+  add('Įrankiai', 'GKS skaičiuoklė', 'Glasgow komos skalė (GCS at 40), GKS-P', 'gks glasgow gcs koma sąmonė akys kalba motorika vyzdžiai', '#/gks');
   add('Įrankiai', '9 eilučių MEDEVAC prašymas', '9-Line forma su kodais', 'medevac evakuacija koordinatės skubumas urgent priority routine radijas', '#/9line');
-  add('Įrankiai', 'Nuskaityti popierinę kortelę', 'DD 1380 nuotrauka → MIST: langeliai, žymės, iškarpos', 'skenuoti nuskaityti nuotrauka fotografuoti popierinė kortelė dd1380 tccc card ocr atpažinimas', '#/skenuoti');
+  add('Įrankiai', 'Nuskaityti popierinę kortelę', 'DD1380 nuotrauka → kortelė: langeliai, žymės, iškarpos', 'skenuoti nuskaityti nuotrauka fotografuoti popierinė kortelė dd1380 tccc card ocr atpažinimas', '#/skenuoti');
   add('Įrankiai', 'Nukentėjusiojo kortelė (DD1380)', 'Sužeistojo kortelė: mechanizmas, sužalojimai kūno schemoje, požymiai, gydymas', 'mist handover perdavimas sužeistasis keli sužeistieji kortelė kūno schema žaizda turniketas', '#/pacientas?t=kortele');
   add('Įrankiai', 'SITREP – padėties pranešimas', 'Pranešimas vadui: vieta, padėtis, nuostoliai, logistika, prašymai', 'sitrep situacija padėtis pranešimas raportas vadui nuostoliai logistika dtg', '#/sitrep');
   add('Įrankiai', 'Perduoti QR kodu', 'Paciento duomenys kitam telefonui be interneto', 'qr kodas perduoti priimti nuskaityti telefonas', '#/qr');

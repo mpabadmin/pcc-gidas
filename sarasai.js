@@ -14,20 +14,20 @@ const E = window.ETC;
 const sk = (n, t) => `<a href="#/igudis/${n}">${t || 'Įgūdis #' + n}</a>`;
 const vs = (id, t) => `<a href="#/vaistas/${id}">${t}</a>`;
 
-E.versija = '2026-11-03 v3.3 (rodiklių įvedimas kaip ETC: standartinės vertės ir slenkamos verčių juostos – pulsas, AKS, KD, SpO₂, T, GKS; bakstelėjus vertę pereinama prie kito rodiklio)';
+E.versija = '2026-11-03 v3.4 (QR kode nebėra vardo, gimimo datos ir pagalbos teikėjų; rodiklių lange klaviatūra pakeičia juostos vertę, kapiliarų prisipildymas – skirtukas, temperatūra nuo 30 °C; priminimų ✓ – atlikta, „Atidėti 15 min“ atskirai; vaistai pagal poreikį nevėluoja; diurezė „nematuota“; priemonių pasirinkimas priežiūros grafike; GKS skaičiuoklė; „Nuskaityti kortelę“ be interneto; kitos programėlės nustatymuose)';
 E.programa = 'PCC gidas';
 
 // ───────── FAZĖS ─────────
 E.fazes = [
-  { id: 'STAB', cls: 'fSTAB', pav: 'Perėmimas ir stabilizavimas', en: 'Transition to PCC · 0–2 val.', sub: 'MARCH-PAWS iš naujo, gaivinimas, planas', lists: ['st-perimti', 'st-gaivinimas', 'st-kvepavimas', 'st-planas', 'st-gebejimai'],
+  { id: 'STAB', cls: 'fSTAB', pav: 'Perėmimas ir stabilizavimas', en: 'Perėjimas į PCC · 0–2 val.', sub: 'MARCH-PAWS iš naujo, gaivinimas, planas', lists: ['st-perimti', 'st-gaivinimas', 'st-kvepavimas', 'st-planas', 'st-gebejimai'],
     aprasymas: 'Evakuacija vėluoja – TCCC pereina į ilgalaikę priežiūrą. Pirmiausia iš naujo patikrinkite visas atliktas intervencijas, užbaikite gaivinimą, paskirstykite vaidmenis ir iš karto prašykite evakuacijos bei telekonsultacijos.' },
-  { id: 'VAL', cls: 'fVAL', pav: 'Valandinė priežiūra', en: 'Hourly care · 2–24 val.', sub: 'Pakartotinis vertinimas, skysčiai, skausmas', lists: ['v-kasval', 'v-skysciai', 'v-skausmas', 'v-galunes', 'v-hipotermija', 'v-tele'],
+  { id: 'VAL', cls: 'fVAL', pav: 'Valandinė priežiūra', en: 'Kas valandą · 2–24 val.', sub: 'Pakartotinis vertinimas, skysčiai, skausmas', lists: ['v-kasval', 'v-skysciai', 'v-skausmas', 'v-galunes', 'v-hipotermija', 'v-tele'],
     aprasymas: 'Stebėjimas ir pakartotinis vertinimas pagal grafiką: rodiklių tendencijos, diurezė, skausmas ir sedacija, turniketai ir įtvarai, šiluma. Telekonsultacija – anksti ir dažnai.' },
-  { id: 'PAROS', cls: 'fPAR', pav: 'Paromis', en: 'Prolonged care · > 24 val.', sub: 'Slauga, žaizdos, infekcija', lists: ['p-slauga', 'p-zaizdos', 'p-infekcija', 'p-komfortas'],
+  { id: 'PAROS', cls: 'fPAR', pav: 'Paromis', en: 'Ilgalaikė priežiūra · > 24 val.', sub: 'Slauga, žaizdos, infekcija', lists: ['p-slauga', 'p-zaizdos', 'p-infekcija', 'p-komfortas'],
     aprasymas: 'Kai evakuacija vėluoja paromis, komplikacijų prevencija tampa tokia pat svarbi kaip gaivinimas: pragulos, pneumonija, trombozė, infekcija, dehidratacija, mityba ir psichologinė būklė.' },
-  { id: 'YPAT', cls: 'fYPAT', pav: 'Ypatingos būklės', en: 'Special conditions', sub: 'Galva, nudegimai, suspaudimas, ventiliacija', lists: ['y-galva', 'y-nudegimai', 'y-crush', 'y-dpv'],
+  { id: 'YPAT', cls: 'fYPAT', pav: 'Ypatingos būklės', en: 'Specialios sąlygos', sub: 'Galva, nudegimai, suspaudimas, ventiliacija', lists: ['y-galva', 'y-nudegimai', 'y-crush', 'y-dpv'],
     aprasymas: 'Būklės, kurioms PCC metu reikia atskiro plano: galvos smegenų trauma, nudegimai, suspaudimo sindromas ir hiperkalemija, ventiliuojamas ar intubuotas sužeistasis.' },
-  { id: 'EVAK', cls: 'fEVAC', pav: 'Evakuacija ir perdavimas', en: 'Prepare for evacuation · handover', sub: 'Pakavimas, skrydis, perdavimas', lists: ['e-pasiruosimas', 'e-perdavimas'],
+  { id: 'EVAK', cls: 'fEVAC', pav: 'Evakuacija ir perdavimas', en: 'Pasiruošimas evakuacijai · perdavimas', sub: 'Pakavimas, skrydis, perdavimas', lists: ['e-pasiruosimas', 'e-perdavimas'],
     aprasymas: 'Evakuacija prasideda dar prieš ją: sužeistasis paruošiamas ilgesnei nei planuota kelionei, dokumentai keliauja kartu, perdavimas – struktūruotas.' }
 ];
 
@@ -38,7 +38,7 @@ E.sarasai = {
     intro: '„Padarei – patikrink dar kartą.“ PCC nepakeičia TCCC, o jį tęsia.',
     items: [
       { t: 'Saugi, šilta, apšviesta vieta; izoliacija nuo žemės', k: true },
-      { t: 'Perimkite MIST ir kortelę (DD 1380); traumos laikas', tm: 'trauma', sk: 1 },
+      { t: 'Perimkite MIST ir kortelę (DD1380); traumos laikas', tm: 'trauma', sk: 1 },
       { t: 'M: kiekvienas turniketas ir tvarstis – ar kraujavimas sustojęs, ar nepasislinko', k: true, sk: 27, tm: 'turn' },
       { t: 'A: kvėpavimo takai laisvi; priemonė (NPA, krikotiroidotomija) veikia', k: true, sk: 11 },
       { t: 'R: lipdukai laikosi, įtampos pneumotorakso požymių nėra; SpO₂ ≥ 92 %', k: true, sk: 12 },
@@ -337,7 +337,7 @@ E.sarasai = {
       { t: 'Pirmiausia kas tęstina: turniketų laikai, paskutinės dozės, infuzijos ir greičiai, alergijos', k: true, sk: 38 },
       { t: 'Tendencijos: rodikliai, GKS, diurezė, skysčių balansas per 24 val.' },
       { t: 'Problemų sąrašas, telekonsultacijų rekomendacijos, neatlikti darbai', sk: 38 },
-      { t: 'DD 1380 ir stebėjimo lapas – kartu su sužeistuoju', k: true, sk: 3 },
+      { t: 'DD1380 ir stebėjimo lapas – kartu su sužeistuoju', k: true, sk: 3 },
       { t: 'Atsakyti į klausimus prieš išvykstant' },
       { t: 'Perpylus šviežią kraują – donoras ir gavėjas registruoti pagal SOP', g: 'CMC' },
       { t: 'Po užduoties – AAR ir priemonių papildymas' }
@@ -394,7 +394,7 @@ E.puslapiai = {
       '<tr><td>Nekritinė</td><td>Kas 12 val.</td><td>Per dieną, suma kas 24 val.</td></tr></table></div>' +
       '<p>Po gaivinimo – kas 15 min; stabiliai ilgiau nei 2 val. – kas 30–60 min. Galvos trauma – GKS ir vyzdžiai ne rečiau kaip kas valandą.</p>' +
       '<h3>Ką matuoti</h3><p>Nuo ankstyviausių šoko požymių: sąmonė, KD, pulsas, periferinis pulsas, AKS; taip pat SpO₂, temperatūra, diurezė, skausmas, sedatuotam – RASS.</p>' +
-      '<h3>Dokumentavimo lygiai</h3><ul><li><b>Minimum</b> – kortelė DD 1380.</li><li><b>Geriau</b> – PCC stebėjimo lapas (kai kortelės laukeliai užpildyti, o evakuacija negreit).</li><li><b>Geriausia</b> – stebėjimo lapas ir slaugos grafikas; po perdavimo – AAR.</li></ul>' +
+      '<h3>Dokumentavimo lygiai</h3><ul><li><b>Minimum</b> – kortelė DD1380.</li><li><b>Geriau</b> – PCC stebėjimo lapas (kai kortelės laukeliai užpildyti, o evakuacija negreit).</li><li><b>Geriausia</b> – stebėjimo lapas ir slaugos grafikas; po perdavimo – AAR.</li></ul>' +
       '<p>„Jeigu informacija liko tik mano galvoje – ji gali būti prarasta kartu su manimi.“</p>',
     saltinis: 'JTS CPG ID 70 (2025); JTS CPG ID 91 (2021); JTS CPG „Damage Control Resuscitation in PFC“ (ID 73); kuopos paskaita „Slauga taktinėje aplinkoje (PCC)“'
   },
@@ -523,10 +523,10 @@ E.puslapiai = {
     title: 'Pasiruošimas evakuacijai ir perdavimas', sub: 'Pakavimas, skrydis, struktūruotas perdavimas',
     html:
       '<p>Evakuacijos prašymas teikiamas perimant sužeistąjį, o skubumas peržiūrimas keičiantis būklei. Ruoškitės ilgesnei nei planuota kelionei.</p>' +
-      '<h3>Prieš išvykimą</h3><ul><li>Pilnas pakartotinis vertinimas; turniketai, tvarsčiai, linijos, vamzdeliai, kateteris – pritvirtinti.</li><li>Vaistai, skysčiai, kraujas, deguonis, baterijos – su atsarga vėlavimui.</li><li>Hipotermijos apsauga; neštuvų diržai ne ant lūžių; akių ir ausų apsauga.</li><li>Dokumentai kartu: DD 1380, stebėjimo lapas.</li></ul>' +
+      '<h3>Prieš išvykimą</h3><ul><li>Pilnas pakartotinis vertinimas; turniketai, tvarsčiai, linijos, vamzdeliai, kateteris – pritvirtinti.</li><li>Vaistai, skysčiai, kraujas, deguonis, baterijos – su atsarga vėlavimui.</li><li>Hipotermijos apsauga; neštuvų diržai ne ant lūžių; akių ir ausų apsauga.</li><li>Dokumentai kartu: DD1380, stebėjimo lapas.</li></ul>' +
       '<h3>Skrydis</h3><p>Krentant slėgiui plečiasi dujos (pneumotoraksas, manžetės, balionėliai) ir didėja hipoksija; vibracija, triukšmas ir šaltis apsunkina stebėjimą.</p>' +
       '<h3>Perdavimas</h3><p>Tiesiogiai priimančiam medikui: MIST (ar ATMIST) – mechanizmas ir laikas, sužalojimai, požymiai ir jų tendencijos, gydymas. Pirmiausia – kas tęstina: turniketų laikai, paskutinės dozės, infuzijos ir greičiai, alergijos. Skysčių balansas, problemų sąrašas, telekonsultacijų rekomendacijos. Atsakykite į klausimus prieš išvykdami.</p>' +
-      '<p>Dokumentavimo lygiai: DD 1380 (minimum) → stebėjimo lapas (geriau) → AAR po perdavimo (geriausia).</p>',
+      '<p>Dokumentavimo lygiai: DD1380 (minimum) → stebėjimo lapas (geriau) → AAR po perdavimo (geriausia).</p>',
     saltinis: 'JTS CPG ID 91 (2021); PFC WG 10 gebėjimų (2015); kuopos paskaita „Slauga taktinėje aplinkoje (PCC)“; TCCC gairės 2026-05-01'
   },
   vaistaiPCC: {
@@ -571,7 +571,7 @@ window.ETC.vertinimai = [{
   src: 'Sudaryta pagal JTS CPG „Prolonged Casualty Care Guidelines“ (ID 91), „Nursing Interventions… in PCC“ (ID 70), „Telemedicine… Deployed Setting“ (ID 94) ir JTS PFC gaires; kuopos gydytojo nepatvirtinta',
   items: [
     { n: '1', t: 'Perėmė sužeistąjį ir pakartotinai įvertino MARCH-PAWS', k: true, s: [
-      { n: 'a', t: 'Perėmė MIST ir kortelę DD 1380; užrašė traumos ir turniketų laikus', k: true },
+      { n: 'a', t: 'Perėmė MIST ir kortelę DD1380; užrašė traumos ir turniketų laikus', k: true },
       { n: 'b', t: 'Patikrino kiekvieną turniketą ir tvarstį', k: true },
       { n: 'c', t: 'Įvertino kvėpavimo takus, kvėpavimą, kraujotaką, hipotermiją ir galvos traumą' },
       { n: 'd', t: 'Atliko išsamią apžiūrą ir sudarė problemų sąrašą' }] },
@@ -614,6 +614,6 @@ window.ETC.vertinimai = [{
     { n: '12', t: 'Paruošė evakuacijai ir perdavė', k: true, s: [
       { n: 'a', t: 'Pritvirtino linijas, vamzdelius, kateterį; paruošė atsargas kelionei' },
       { n: 'b', t: 'Perdavė struktūruotai: kas tęstina, tendencijos, problemų sąrašas', k: true },
-      { n: 'c', t: 'Perdavė DD 1380 ir stebėjimo lapą' }] }
+      { n: 'c', t: 'Perdavė DD1380 ir stebėjimo lapą' }] }
   ]
 }];
