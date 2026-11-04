@@ -14,7 +14,7 @@ const E = window.ETC;
 const sk = (n, t) => `<a href="#/igudis/${n}">${t || 'Įgūdis #' + n}</a>`;
 const vs = (id, t) => `<a href="#/vaistas/${id}">${t}</a>`;
 
-E.versija = '2026-11-03 v3.4 (QR kode nebėra vardo, gimimo datos ir pagalbos teikėjų; rodiklių lange klaviatūra pakeičia juostos vertę, kapiliarų prisipildymas – skirtukas, temperatūra nuo 30 °C; priminimų ✓ – atlikta, „Atidėti 15 min“ atskirai; vaistai pagal poreikį nevėluoja; diurezė „nematuota“; priemonių pasirinkimas priežiūros grafike; GKS skaičiuoklė; „Nuskaityti kortelę“ be interneto; kitos programėlės nustatymuose)';
+E.versija = '2026-11-04 v3.5 (turinys suvienodintas su ETC, March ir SIM: naloksonas – IV 40 mcg titruoti, IM 0,4 mg, IN 1,8 mg; ketamino infuzija – JTS PFC; noradrenalino skiedimo pavyzdys 80 mcg/ml; AKS tikslai – ≈ 100 (90–110) gaivinant krauju, 80–90 be kraujo, galvos trauma ≥ 110)';
 E.programa = 'PCC gidas';
 
 // ───────── FAZĖS ─────────
@@ -57,7 +57,7 @@ E.sarasai = {
       { t: 'Kraujas: pilnas kraujas → 1 : 1 : 1 → 1 : 1 → plazma ar eritrocitai; kristaloidai – paskutinė išeitis', g: 'CMC', k: true, sk: 7,
         s: ['Grupei tapatus – tik patvirtinus Eldon kortele; kariniu ženkleliu nesiremti', 'Pilti per šildytuvą; kraujo ir vaistų viena linija neleisti'] },
       { t: 'Kalcis po pirmo vieneto, toliau po kas 4 vienetų', g: 'CMC', r: '#/vaistas/kalcis' },
-      { t: 'Tikslas: radialinis pulsas ar gerėjanti sąmonė → sAKS > 90 → sAKS 100–110 mm Hg', k: true, s: ['Galvos trauma – sAKS > 110 mm Hg (JTS TBI PFC)', 'Pasiekus tikslą – gaivinimą nutraukti'],
+      { t: 'Tikslas: radialinis pulsas ar gerėjanti sąmonė → sAKS ≈ 100 mm Hg (90–110), kai gaivinama krauju; 80–90 mm Hg, jei kraujo nėra (JTS DCR)', k: true, s: ['Galvos trauma – sAKS ≥ 110 mm Hg (JTS DCR); lauke (TCCC 2026, March gidas) – > 100 mm Hg', 'Pasiekus tikslą – gaivinimą nutraukti'],
         i: 'Minimum – geriau – geriausia (JTS PCC). Nepasiekus tikslo ar vėl blogėjant – telekonsultacija (' + sk(36) + ').' },
       { t: 'Diurezė > 0,5 ml/kg/val. – kateteris ar graduotas indas', g: 'CMC', sk: 10 },
       { t: 'Pagerėjo ir vėl blogėja – praleistas kraujavimas, hipotermija, acidozė', s: ['Nereaguoja – abipusė dekompresija, tamponada; telekonsultacija'] },
@@ -259,7 +259,7 @@ E.sarasai = {
     items: [
       { t: 'GKS ir vyzdžiai – ne rečiau kaip kas valandą', k: true, sk: 32 },
       { t: 'Galvūgalis 30–60° (jei nėra šoko), kaklas tiesiai', k: true },
-      { t: 'SpO₂ ≥ 92 % (ventiliuojamam > 95 %); sAKS > 110 mm Hg; EtCO₂ 35–40 mm Hg', k: true, sk: 32, i: 'JTS TBI PFC (2023): SpO₂ > 90 % (ventiliuojamam > 95 %), sAKS > 110. Gide SpO₂ riba – TCCC 2026 (≥ 92 %); TCCC 2026 sAKS – > 100 mm Hg.' },
+      { t: 'SpO₂ ≥ 92 % (ventiliuojamam > 95 %); sAKS ≥ 110 mm Hg (JTS DCR); EtCO₂ 35–40 mm Hg', k: true, sk: 32, i: 'Lauke (TCCC 2026, March gidas) – > 100 mm Hg. JTS TBI PFC (2023): SpO₂ > 90 % (ventiliuojamam > 95 %); gide SpO₂ riba – TCCC 2026 (≥ 92 %).' },
       { t: 'Temperatūra 35,6–37,5 °C; gliukozė ~10 mmol/l (< 5,6 – gydyti)', g: 'CMC', r: '#/vaistas/gliukoze' },
       { t: 'Išvaržos požymiai – hipertoninis NaCl, skubi telekonsultacija', g: 'CMC', k: true, r: '#/vaistas/nacl-hipert', s: ['Laikinai EtCO₂ 30 mm Hg ≤ 20 min'] },
       { t: 'Traukuliai – midazolamas 5 mg kas 5 min; toliau levetiracetamas', g: 'CPP', r: '#/vaistas/midazolamas' },
@@ -405,8 +405,8 @@ E.puslapiai = {
       '<h3>Produktų eilė</h3><ol><li>Pilnas kraujas (mažo titro O; šviežias – iš ištirtų donorų)</li><li>Plazma : eritrocitai : trombocitai 1 : 1 : 1</li><li>Plazma : eritrocitai 1 : 1</li><li>Plazma ar eritrocitai</li><li>Kristaloidai – paskutinė išeitis: blogina koaguliopatiją</li></ol>' +
       '<p>Liofilizuota plazma tinka pradėti gaivinimą, kol ruošiamas kraujas. Grupei tapatus kraujas – tik patvirtinus grupę Eldon kortele; karinio ženklelio duomenys klaidingi ~4 % atvejų.</p>' +
       '<h3>Vaistai</h3><ul><li>' + vs('txa', 'TXA') + ' – 2 g IV / IO, ne vėliau kaip per 3 val. (TCCC 2026).</li><li>' + vs('kalcis', 'Kalcis') + ' – po pirmo vieneto, toliau po kas 4 vienetų.</li></ul>' +
-      '<h3>Tikslai</h3><div class="tw"><table><tr><th>Minimum</th><th>Geriau</th><th>Geriausia</th></tr><tr><td>Čiuopiamas radialinis pulsas ar gerėjanti sąmonė</td><td>sAKS > 90 mm Hg</td><td>sAKS 100–110 mm Hg</td></tr></table></div>' +
-      '<p>Galvos trauma – sAKS > 110 mm Hg (JTS TBI PFC). Diurezė > 0,5 ml/kg/val. Pasiekus tikslą – gaivinimą nutraukite ir pereikite prie palaikomųjų skysčių ar gėrimo (diurezė 0,3–0,5 ml/kg/val.).</p>' +
+      '<h3>Tikslai</h3><div class="tw"><table><tr><th>Minimum</th><th>Geriau</th><th>Geriausia</th></tr><tr><td>Čiuopiamas radialinis pulsas ar gerėjanti sąmonė</td><td>sAKS > 90 mm Hg</td><td>sAKS ≈ 100 mm Hg (90–110), kai gaivinama krauju</td></tr></table></div>' +
+      '<p>Kraujo nėra – sAKS 80–90 mm Hg (JTS DCR). Galvos trauma – sAKS ≥ 110 mm Hg (JTS DCR); lauke (TCCC 2026, March gidas) – > 100 mm Hg. Diurezė > 0,5 ml/kg/val. Pasiekus tikslą – gaivinimą nutraukite ir pereikite prie palaikomųjų skysčių ar gėrimo (diurezė 0,3–0,5 ml/kg/val.).</p>' +
       '<h3>Atsakas į gaivinimą</h3><ul><li><b>Reaguoja</b> – rodikliai gerėja ir išlieka.</li><li><b>Reaguoja trumpam</b> – pagerėja ir vėl blogėja: ieškokite praleisto kraujavimo, hipotermijos, acidozės, kartokite gaivinimą.</li><li><b>Nereaguoja</b> – prieš tai patikrinkite kraujavimo kontrolę, abipusę krūtinės dekompresiją, tamponadą. Ar tęsti – spręskite su telekonsultacija.</li></ul>' +
       '<p>Hipotenzija išlieka po kraujo ir kraujavimo kontrolės – ' + vs('noradrenalinas', 'vazopresorius') + ' tik pagal protokolą ar telekonsultaciją.</p>',
     saltinis: 'JTS CPG „Damage Control Resuscitation in PFC“ (ID 73, 2018); JTS CPG ID 91 (2021); JTS CPG „Whole Blood Transfusion“ (ID 21); TCCC gairės 2026-05-01'
@@ -429,7 +429,7 @@ E.puslapiai = {
       '<h3>Ketaminas</h3><ul><li>Nuskausminimas (CMC) – TCCC 2026: 25 mg IV / IO kas 30 min arba 100 mg IM.</li><li>Sedacija (CPP) – JTS PFC: 1 mg/kg IV / IO, infuzija 1 mg/kg/val. (intubuotam 1–2), 750 mg / 250 ml = 3 mg/ml.</li></ul><p>' + vs('ketaminas', 'Ketaminas – dozės') + '</p>' +
       '<h3>Tikslai ir stebėjimas</h3><p>KD > 12, EtCO₂ < 50 mm Hg, SpO₂ > 94 %, sAKS > 90 mm Hg. Rodikliai, GKS ir skausmas – kas 5 min iki tikslo, toliau kas 15 min.</p>' +
       '<div class="tw"><table><tr><th>RASS</th><th>Būklė</th></tr><tr><td>+1…+4</td><td>Neramus … kovingas</td></tr><tr><td>0</td><td>Budrus ir ramus</td></tr><tr><td>−1</td><td>Mieguistas</td></tr><tr><td>−2</td><td>Lengva sedacija</td></tr><tr><td>−3</td><td>Vidutinė sedacija</td></tr><tr><td>−4</td><td>Gili sedacija</td></tr><tr><td>−5</td><td>Nereaguoja</td></tr></table></div>' +
-      '<p>Per gili sedacija – stabdyti, kvėpavimo takai, ventiliacija; opioidui – ' + vs('naloksonas', 'naloksonas') + ' – titruoti po 40 mcg (JTS PCC); apnėjai JTS PFC leidžia 0,4–2 mg (March gidas – 0,4 mg).</p>',
+      '<p>Per gili sedacija – stabdyti, kvėpavimo takai, ventiliacija; opioidui – ' + vs('naloksonas', 'naloksonas') + ' – IV / IO titruoti po 40 mcg, kol KD > 10 k./min; kai nėra IV – 0,4 mg IM arba Nyxoid 1,8 mg IN (JTS PFC).</p>',
     saltinis: 'JTS CPG „Analgesia and Sedation Management during PFC“ (tccc.org.ua, 2023); JTS CPG ID 91 (2021); TCCC gairės 2026-05-01'
   },
   slauga: {
@@ -468,8 +468,8 @@ E.puslapiai = {
     title: 'Galvos smegenų trauma PCC metu', sub: 'Tikslai, neurologinė patikra, išvarža, traukuliai',
     html:
       '<p>Baigtį blogina antrinis pažeidimas: vienas hipoksijos ar hipotenzijos epizodas.</p>' +
-      '<h3>Tikslai</h3><div class="tw"><table><tr><td>SpO₂</td><td>≥ 92 % (ventiliuojamam > 95 %)</td></tr><tr><td>sAKS</td><td>> 110 mm Hg</td></tr><tr><td>EtCO₂ (ventiliuojamam)</td><td>35–40 mm Hg</td></tr><tr><td>Temperatūra</td><td>35,6–37,5 °C</td></tr><tr><td>Gliukozė</td><td>~10 mmol/l; < 5,6 – gydyti</td></tr><tr><td>Natris (jei matuojama)</td><td>145–160 mmol/l</td></tr></table></div>' +
-      '<p class="muted">JTS TBI PFC: SpO₂ minimum > 90 %; gide – TCCC 2026 riba ≥ 92 %. TCCC 2026 sAKS – > 100 mm Hg (TFC), PCC metu – JTS > 110.</p>' +
+      '<h3>Tikslai</h3><div class="tw"><table><tr><td>SpO₂</td><td>≥ 92 % (ventiliuojamam > 95 %)</td></tr><tr><td>sAKS</td><td>≥ 110 mm Hg (JTS DCR)</td></tr><tr><td>EtCO₂ (ventiliuojamam)</td><td>35–40 mm Hg</td></tr><tr><td>Temperatūra</td><td>35,6–37,5 °C</td></tr><tr><td>Gliukozė</td><td>~10 mmol/l; < 5,6 – gydyti</td></tr><tr><td>Natris (jei matuojama)</td><td>145–160 mmol/l</td></tr></table></div>' +
+      '<p class="muted">JTS TBI PFC: SpO₂ minimum > 90 %; gide – TCCC 2026 riba ≥ 92 %. sAKS lauke (TCCC 2026, March gidas) – > 100 mm Hg.</p>' +
       '<h3>Intrakranijinis spaudimas</h3><ul><li><b>Minimum</b> – galvūgalis 30–60°, kaklas tiesiai; skausmas, nerimas, karščiavimas kontroliuojami.</li><li><b>Geriau</b> – sedacija ir analgezija (RASS −1…−2).</li><li><b>Geriausia</b> – osmoterapija: ' + vs('nacl-hipert', 'hipertoninis NaCl') + ' (pirmenybinis) arba ' + vs('manitolis', 'manitolis') + ' (tik be kraujavimo ir esant sAKS > 110).</li></ul>' +
       '<p>Gresiant išvaržai (vienpusis išsiplėtęs vyzdys, Cushing triada) – laikinai hiperventiliuoti iki EtCO₂ 30 mm Hg ne ilgiau kaip 20 min ir skubiai konsultuotis.</p>' +
       '<h3>Traukuliai</h3><p>' + vs('midazolamas', 'Midazolamas') + ' 5 mg kas 5 min; toliau – ' + vs('levetiracetamas', 'levetiracetamas') + ' (gydytojas).</p>' +

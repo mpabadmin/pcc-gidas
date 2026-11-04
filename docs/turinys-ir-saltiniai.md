@@ -70,6 +70,14 @@ Atnaujinti: redaguokite `_build/*.js` → `node _build/build.js` → `node _buil
 - **Stabligė**: TIG 500 VV užterštai karo žaizdai / 250 VV švariai didelei – kaip JTS žaizdų PFC; pastaba, kad įprasta dozė 250 VV.
 - **Lidokainas**: „ne daugiau kaip 3 mg/kg (80 kg – ne daugiau kaip 240 mg)“, be skaičiuoklės.
 
+## Turinio suvienodinimas su ETC, March ir SIM (2026-11-04, v3.5; patvirtino savininkas)
+
+- **Naloksonas** (atsako į 3 klausimą): IV / IO titruoti po 40 mcg, kol KD > 10 k./min; kai nėra IV – 0,4 mg IM arba Nyxoid 1,8 mg IN, kartoti kas 2–3 min, iš viso ne daugiau kaip 10 mg (JTS PFC; PCS). Greitosios dozės: IV 40 mcg, IM 0,4 mg, IN 1,8 mg. March 0,4 mg ir D priedo 0,4–2 mg nuorodos pašalintos.
+- **Ketaminas**: bolusas – TCCC 2026 (IM ir IN – „kartoti kas 30 min pagal poreikį“); infuzija – „Infuzija – sedacija (JTS PFC)“, 750 mg / 250 ml = 3 mg/ml, 80 kg ≈ 27 ml/val.
+- **Noradrenalinas**: 0,1–0,4 mcg/kg/min lieka; pridėtas pavyzdys infuzomatui (4 mg + 46 ml 5 % gliukozės = 80 mcg/ml; 80 kg: 0,1 = 6 ml/val., 0,4 = 24 ml/val.); ETC dabar tas pats intervalas – pastaba „Skiriasi nuo ETC“ pašalinta.
+- **AKS tikslai** (atsako į 1 klausimą): kraujavimo šokas – sAKS ≈ 100 mm Hg (90–110), kai gaivinama krauju; 80–90 mm Hg, jei kraujo nėra (JTS DCR). Galvos trauma – sAKS ≥ 110 mm Hg (JTS DCR); lauke (TCCC 2026, March gidas) – > 100. Stebėjimo lapas galvos traumai žymi sAKS < 110.
+- **Nudegimai** – patikrinta, atitinka TCCC 10 taisyklę (> 20 %, +100 ml/val. kas 10 kg virš 80, diurezė 30–50 ml/val.); nekeista. **Fentanilis** – PCC viena schema (JTS PFC IV); nekeista.
+
 ## Klausimai kuopos gydytojui
 
 1. **Galvos trauma**: sAKS > 110 mm Hg (JTS TBI PFC) vs > 100 (TCCC 2026); SpO₂ ≥ 92 % (TCCC) vs > 90 % (JTS TBI PFC), ventiliuojamam > 95 %. Patvirtinti.

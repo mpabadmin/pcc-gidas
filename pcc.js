@@ -76,13 +76,13 @@ const PC = (() => {
   const VF = [['hr', 'Pulsas', '/min', 0, 250], ['sys', 'AKS s', 'mm Hg', 0, 300], ['dia', 'AKS d', 'mm Hg', 0, 200], ['rr', 'KD', '/min', 0, 70], ['spo2', 'SpO₂', '%', 0, 100], ['temp', 'T', '°C', 25, 43, 1], ['gcs', 'GKS', '', 3, 15]];
   const AVPU = [['A', 'budrus'], ['V', 'balsas'], ['P', 'skausmas'], ['U', 'nereaguoja']];
   const CRT = [['<2', '< 2 s'], ['2-3', '2–3 s'], ['>3', '> 3 s']];
-  // tbi – galvos trauma: sAKS > 110 mm Hg (turinys, JTS TBI PFC)
+  // tbi – galvos trauma: sAKS ≥ 110 mm Hg (turinys, JTS DCR); kitaip – < 90 (tikslas ≈ 100, 90–110)
   const abn = (k, v, tbi) => {
     if (v === '' || v == null) return false;
     const n = +v;
     switch (k) {
       case 'hr': return n > 120 || n < 50;
-      case 'sys': return tbi ? n <= 110 : n < 90 || n > 180;
+      case 'sys': return tbi ? n < 110 : n < 90 || n > 180;
       case 'rr': return n > 29 || n < 10;
       case 'spo2': return n < 92; // PCC CPG: SpO₂ tikslas ≥ 92 %
       case 'temp': return n < 36 || n > 38.5;
@@ -497,8 +497,8 @@ const PC = (() => {
     h += sparks(x.vits, r.tbi) + vitTable(x.vits, r.tbi);
     const L = x.vits[x.vits.length - 1], si = shockIdx(L), mp = mapOf(L);
     if (si || mp) h += `<p class="muted">${mp ? 'VAKS ' + mp + ' mm Hg' : ''}${si && mp ? ' · ' : ''}${si ? 'šoko indeksas ' + fmt1(si) + (si >= 1 ? ' – <b>≥ 1</b>' : '') : ''}</p>`;
-    h += '<p class="muted">Tikslai: radialinis pulsas ar gerėjanti sąmonė → sAKS > 90 → sAKS 100–110 mm Hg; SpO₂ ≥ 92 %. Galvos trauma: sAKS > 110 mm Hg, SpO₂ ≥ 92 % (ventiliuojamam > 95 %), neurologinė apžiūra kas valandą.</p>';
-    h += '<div class="chips">' + ch('pc-tbi', '1', r.tbi, (r.tbi ? '✓ ' : '') + 'Galvos trauma (sAKS > 110)') + '</div>' + gk;
+    h += '<p class="muted">Tikslai: radialinis pulsas ar gerėjanti sąmonė → sAKS ≈ 100 mm Hg (90–110), kai gaivinama krauju; 80–90 mm Hg, jei kraujo nėra (JTS DCR); SpO₂ ≥ 92 %. Galvos trauma: sAKS ≥ 110 mm Hg (JTS DCR), SpO₂ ≥ 92 % (ventiliuojamam > 95 %), neurologinė apžiūra kas valandą.</p>';
+    h += '<div class="chips">' + ch('pc-tbi', '1', r.tbi, (r.tbi ? '✓ ' : '') + 'Galvos trauma (sAKS ≥ 110)') + '</div>' + gk;
     return h + srcLine('pcc', 'nurse', 'doc');
   }
   function secSks(x) {

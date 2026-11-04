@@ -233,7 +233,7 @@ window.ETC.scenarijai = [
       "ok": false
      }
     ],
-    "why": "Tikslai pasiekti: sAKS 100–110 mm Hg, radialinis pulsas, diurezė > 0,5 ml/kg/val. (80 kg – > 40 ml/val.). Pasiekus tikslą gaivinimas nutraukiamas; toliau – palaikomieji skysčiai ar gėrimas.",
+    "why": "Tikslai pasiekti: sAKS ≈ 100 mm Hg (90–110), radialinis pulsas, diurezė > 0,5 ml/kg/val. (80 kg – > 40 ml/val.). Pasiekus tikslą gaivinimas nutraukiamas; toliau – palaikomieji skysčiai ar gėrimas.",
     "ref": [
      "#/igudis/6",
      "#/igudis/9",
@@ -738,7 +738,7 @@ window.ETC.scenarijai = [
       "ok": true
      }
     ],
-    "why": "JTS PCC (ID 91): 0,4 mg praskiesti 9 ml NaCl (40 mcg/ml) ir titruoti po 40 mcg, kol atsistato kvėpavimas, išlaikant nuskausminimą. Apnėjai JTS PFC leidžia ir 0,4–2 mg (iki 10 mg); March gide – 0,4 mg. Naloksonas midazolamo neatšaukia; opioido kartoti negalima.",
+    "why": "JTS PFC: 0,4 mg (1 ml) + 9 ml 0,9 % NaCl = 40 mcg/ml; po 40 mcg lėtai kas 2–3 min, kol KD > 10 k./min – kvėpavimas atsistato, nuskausminimas išlieka. Kai nėra IV – 0,4 mg IM arba Nyxoid 1,8 mg IN. Naloksonas midazolamo neatšaukia; opioido kartoti negalima.",
     "ref": [
      "#/vaistas/naloksonas",
      "#/igudis/18"
@@ -1493,7 +1493,7 @@ window.ETC.scenarijai = [
       "ok": false
      },
      {
-      "t": "SpO₂ ≥ 92 %, sAKS > 110 mm Hg",
+      "t": "SpO₂ ≥ 92 %, sAKS ≥ 110 mm Hg",
       "ok": true
      },
      {
@@ -1501,7 +1501,7 @@ window.ETC.scenarijai = [
       "ok": false
      }
     ],
-    "why": "Galvos trauma PCC metu: sAKS > 110 mm Hg (JTS TBI PFC; TCCC 2026 – > 100), SpO₂ ≥ 92 % (TCCC 2026; JTS – > 90 %, ventiliuojamam > 95 %), ventiliuojamam EtCO₂ 35–40 mm Hg. SpO₂ 91 % ir sAKS 104 – žemiau tikslo.",
+    "why": "Galvos trauma PCC metu: sAKS ≥ 110 mm Hg (JTS DCR; lauke – TCCC 2026, March gidas – > 100), SpO₂ ≥ 92 % (TCCC 2026; JTS – > 90 %, ventiliuojamam > 95 %), ventiliuojamam EtCO₂ 35–40 mm Hg. SpO₂ 91 % ir sAKS 104 – žemiau tikslo.",
     "ref": [
      "#/igudis/32",
      "#/s/y-galva"

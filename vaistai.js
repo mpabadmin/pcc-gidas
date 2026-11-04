@@ -57,12 +57,12 @@ window.ETC.vaistai = [
       {
         "k": "Nuskausminimas IM (TCCC 2026)",
         "d": "100 mg",
-        "p": "Kai nėra IV / IO."
+        "p": "Kai nėra IV / IO. Kartoti kas 30 min pagal poreikį."
       },
       {
         "k": "Nuskausminimas į nosį (TCCC 2026)",
         "d": "50 mg",
-        "p": "Tik 100 mg/ml – 0,5 ml. PCC metu į nosį – vengti, pirmenybė IV / IO (JTS PFC)."
+        "p": "Tik 100 mg/ml – 0,5 ml. Kartoti kas 30 min pagal poreikį. PCC metu į nosį – vengti, pirmenybė IV / IO (JTS PFC)."
       },
       {
         "k": "Sedacija: prisotinamoji (JTS PFC, CPP)",
@@ -74,9 +74,9 @@ window.ETC.vaistai = [
         "p": "ml – neskiesto 50 mg/ml tirpalo."
       },
       {
-        "k": "Sedacija: infuzija (JTS PFC, CPP)",
-        "d": "neintubuotam 1 mg/kg/val.; intubuotam 1–2 mg/kg/val.",
-        "p": "750 mg į 250 ml 0,9 % NaCl = 3 mg/ml; 80 kg, 1 mg/kg/val. ≈ 27 ml/val. Titruoti po 0,25 mg/kg/val.: proveržio skausmas 2 kartus per valandą – didinti; 2 val. be proveržio – mažinti. Pilnas poveikis – per ~1 val."
+        "k": "Infuzija – sedacija (JTS PFC)",
+        "d": "įsotinti 1 mg/kg IV per 60 s; neintubuotam 1 mg/kg/val., intubuotam 1–2 mg/kg/val.; keisti po 0,25 mg/kg/val.",
+        "p": "750 mg / 250 ml 0,9 % NaCl = 3 mg/ml. 80 kg: 1 mg/kg/val. ≈ 27 ml/val. Proveržio skausmas 2 kartus per valandą – didinti; 2 val. be proveržio – mažinti. Pilnas poveikis – per ≈ 1 val."
       }
     ],
     "ispejimai": [
@@ -612,13 +612,13 @@ window.ETC.vaistai = [
     "tipas": "papild",
     "ne26": true,
     "kam": "Gydytojo sprendimu (telekonsultacija)",
-    "ind": "sAKS lieka < 100–110 mm Hg po gaivinimo krauju ir kraujavimo kontrolės (JTS PCC); spinalinis šokas – kartu su kristaloidais.",
+    "ind": "Nepasiekiamas tikslinis sAKS (≈ 100 mm Hg, 90–110; galvos trauma ≥ 110) po gaivinimo krauju ir kraujavimo kontrolės (JTS PCC, JTS DCR); spinalinis šokas – kartu su kristaloidais.",
     "kontra": "Nesustabdytas kraujavimas ir hipovolemija – pirmiausia kraujas ir kraujavimo kontrolė.",
     "dozes": [
       {
         "k": "Infuzija (JTS PCC)",
         "d": "0,1–0,4 mcg/kg/min",
-        "p": "Tik pagal patvirtintą protokolą ar telekonsultacijos nurodymu; skiedimą ir greitį tikslina gydytojas."
+        "p": "Tik pagal patvirtintą protokolą ar telekonsultacijos nurodymu; skiedimą ir greitį tikslina gydytojas. Pavyzdys, jei yra infuzomatas: 4 mg (4 ml) + 46 ml 5 % gliukozės = 80 mcg/ml (50 ml švirkštas); pradėti nuo 0,1 ir titruoti pagal sAKS; ml/val. = mcg/kg/min × kg × 60 ÷ 80; 80 kg: 0,1 = 6 ml/val., 0,4 = 24 ml/val. Didesnė dozė – gydytojo sprendimu."
       }
     ],
     "ispejimai": [
@@ -626,10 +626,7 @@ window.ETC.vaistai = [
       "Švirkšte ar maiše – aiškiai paženklinta koncentracija."
     ],
     "pakuote": "Ampulės 1 mg/ml",
-    "pastabos": [
-      "Skiriasi nuo ETC gido: ETC – 0,05–1 mcg/kg/min (PCS); čia – JTS PCC CPG 0,1–0,4 mcg/kg/min."
-    ],
-    "saltinis": "JTS CPG ID 91 (2021) – kraujotaka; PCS (noradrenalinas)",
+    "saltinis": "JTS CPG ID 91 (2021) – kraujotaka; ETC lentelė (skiedimo pavyzdys); PCS (noradrenalinas)",
     "nuorodos": [
       [
         "JTS CPG „Prolonged Casualty Care Guidelines“ (ID 91, 2021)",
@@ -979,7 +976,7 @@ window.ETC.vaistai = [
     ],
     "pakuote": "Pagal vieneto rinkinį",
     "pastabos": [
-      "PCC tikslai galvos traumai: SpO₂ ≥ 92 % (ventiliuojamam > 95 %), sAKS > 110 mm Hg, EtCO₂ 35–40 mm Hg, galvūgalis 30–60° (JTS TBI PFC; SpO₂ riba – TCCC 2026).",
+      "PCC tikslai galvos traumai: SpO₂ ≥ 92 % (ventiliuojamam > 95 %), sAKS ≥ 110 mm Hg (JTS DCR), EtCO₂ 35–40 mm Hg, galvūgalis 30–60° (JTS TBI PFC; SpO₂ riba – TCCC 2026).",
       "Be laboratorijos 250 ml 3 % NaCl padidina natrį ~2–3 mmol/l (80 kg; JTS TBI PFC)."
     ],
     "susije": [
@@ -1307,9 +1304,14 @@ window.ETC.vaistai = [
     "kontra": "Alergija.",
     "dozes": [
       {
-        "k": "IV / IO – titruoti (JTS PCC ID 91)",
-        "d": "po 40 mcg, kol atsistato kvėpavimas",
-        "p": "0,4 mg praskiesti 9 ml 0,9 % NaCl = 40 mcg/ml; leisti po 1 ml lėtai, išlaikant nuskausminimą."
+        "k": "IV / IO – titruoti (JTS PFC)",
+        "d": "po 40 mcg, kol KD > 10 k./min",
+        "p": "0,4 mg (1 ml) + 9 ml 0,9 % NaCl = 40 mcg/ml. Leisti po 1 ml lėtai kas 2–3 min – kvėpavimas atsistato, nuskausminimas išlieka."
+      },
+      {
+        "k": "IM / IN – kai nėra IV (JTS PFC; PCS)",
+        "d": "0,4 mg IM · IN – Nyxoid 1,8 mg",
+        "p": "Kartoti kas 2–3 min pagal poreikį; iš viso ne daugiau kaip 10 mg."
       }
     ],
     "ispejimai": [
@@ -1318,14 +1320,14 @@ window.ETC.vaistai = [
     ],
     "pakuote": "Ampulės 0,4 mg / 1 ml",
     "pastabos": [
-      "Titravimas pasirinktas, nes PCC sužeistajam reikia išlaikyti nuskausminimą (JTS PCC ID 91; JTS PFC analgezijos B–C priedai).",
-      "JTS PFC analgezijos D priedas: 0,4–2 mg IV / IM / IN, kartoti kas 2–3 min, iki 10 mg – tinka apnėjai ar kai nuskausminimas nesvarbus. Skiriasi nuo March gido: March – 0,4 mg."
+      "IV titruojama, nes PCC sužeistajam reikia išlaikyti nuskausminimą (JTS PCC ID 91; JTS PFC analgezijos B–C priedai).",
+      "TCCC 2026 naloksono nemini (fentanilis išimtas iš nuskausminimo); ankstesnės TCCC – 0,4 mg turi būti po ranka, kai skiriami opioidai."
     ],
     "susije": [
       "fentanilis",
       "ketaminas"
     ],
-    "saltinis": "JTS CPG ID 91 (2021) – nuskausminimas ir sedacija; JTS CPG „Analgesia and Sedation Management during PFC“ (2023), B–D priedai; PCS (naloksonas)",
+    "saltinis": "JTS CPG „Analgesia and Sedation Management during PFC“ (2023); PCS (naloksonas 400 mcg/ml; Nyxoid 1,8 mg)",
     "nuorodos": [
       [
         "JTS CPG „Prolonged Casualty Care Guidelines“ (ID 91, 2021)",
