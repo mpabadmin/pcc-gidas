@@ -902,7 +902,7 @@ const PC = (() => {
       case 'ml': s.ml = v === 'del' ? String(s.ml || '').slice(0, -1) : v === 'clr' ? '' : (String(s.ml || '') + v).replace(/^0+/, '').slice(0, 5); return draw();
       // vaistai
       case 'pick': s.pick = 1; return draw();
-      case 'name': s.name = v; s.pick = 0; s.qn = ''; { const dv = drugOf(v), q = dv ? ((TCFG.qd || {})[dv.id] || []) : []; if (dv && s.mk !== 'int') s.route = routeOf(dv); if (q.length === 1 && !s.dose) { s.route = q[0][0]; s.dose = q[0][1] + ' ' + q[0][2]; s.qn = q[0][4] || ''; } } autoIvl(s); return draw();
+      case 'name': { const pv = drugOf(s.name), nv = drugOf(v); if (nv && s.mk !== 'int' && (!pv || pv.id !== nv.id)) s.dose = ''; } s.name = v; s.pick = 0; s.qn = ''; { const dv = drugOf(v), q = dv ? ((TCFG.qd || {})[dv.id] || []) : []; if (dv && s.mk !== 'int') s.route = routeOf(dv); if (q.length === 1 && !s.dose) { s.route = q[0][0]; s.dose = q[0][1] + ' ' + q[0][2]; s.qn = q[0][4] || ''; } } autoIvl(s); return draw();
       case 'qd': { const [r, a, i] = v.split('|'), dv = drugOf(s.name), q = dv ? ((TCFG.qd || {})[dv.id] || [])[+i] : null; s.route = r; s.dose = a; s.qn = (q && q[4]) || ''; autoIvl(s); return draw(); } // 5-as elementas – įrašo pavadinimas (kitas preparatas)
       case 'route': s.route = s.route === v ? '' : v; return draw();
       case 'ivl': s.ivl = +v || 0; return draw();
