@@ -14,7 +14,7 @@ const E = window.ETC;
 const sk = (n, t) => `<a href="#/igudis/${n}">${t || 'Įgūdis #' + n}</a>`;
 const vs = (id, t) => `<a href="#/vaistas/${id}">${t}</a>`;
 
-E.versija = '2026-11-04 v3.5 (turinys suvienodintas su ETC, March ir SIM: naloksonas – IV 40 mcg titruoti, IM 0,4 mg, IN 1,8 mg; ketamino infuzija – JTS PFC; noradrenalino skiedimo pavyzdys 80 mcg/ml; AKS tikslai – ≈ 100 (90–110) gaivinant krauju, 80–90 be kraujo, galvos trauma ≥ 110)';
+E.versija = '2026-11-06 v3.6 (paros priežiūros laikrodis #/laikrodis; perdavimo tekstų skaitymas balsu su režimu „Per radiją“)';
 E.programa = 'PCC gidas';
 
 // ───────── FAZĖS ─────────

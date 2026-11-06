@@ -60,6 +60,7 @@ function view(p, q) {
     case 'telekonsultacija': return PC.page('tc');
     case 'turniketai': return PC.page('tq');
     case 'evakuacija': return PC.page('evac');
+    case 'laikrodis': return PC.page('clock');
     case 'scenarijai': return SC.view(p[1], q);
     case 'pacientas': return HUB.view(q);
     case 'qr': case 'qr-priimti': return QR.view(p[0]);
@@ -87,7 +88,7 @@ function render() {
   document.body.className = night ? 'field night' : mode; // naktinis režimas – visada tamsi paletė + raudonas filtras
   { const L = lvl(); [['lvC', 'CLS'], ['lvM', 'CMC'], ['lvP', 'CPP']].forEach(([id, k]) => { const b = document.getElementById(id); b.classList.toggle('on', L === k); b.setAttribute('aria-pressed', L === k); }); }
   backBtn.style.display = p.length ? '' : 'none'; // pradžios ekrane vietoje „Atgal“ – atnaujinimo mygtukas dešinėje
-  const sec = { f: 'home', s: 'home', sarasai: 'home', '9line': 'home', mist: 'pacientas', sitrep: 'home', scenarijai: 'treniruote', treniruote: 'treniruote', pacientas: 'pacientas', qr: 'pacientas', 'qr-priimti': 'pacientas', vaistai: 'vaistai', vaistas: 'vaistai', igudziai: 'igudziai', igudis: 'igudziai', temos: 'treniruote', tema: 'treniruote', p: 'igudziai', korteles: 'treniruote', gks: 'pacientas', vertinimas: 'treniruote', priminimai: 'priminimai', telekonsultacija: 'pacientas', turniketai: 'pacientas', evakuacija: 'pacientas' }[p[0]] || (p.length ? '' : 'home');
+  const sec = { f: 'home', s: 'home', sarasai: 'home', '9line': 'home', mist: 'pacientas', sitrep: 'home', scenarijai: 'treniruote', treniruote: 'treniruote', pacientas: 'pacientas', qr: 'pacientas', 'qr-priimti': 'pacientas', vaistai: 'vaistai', vaistas: 'vaistai', igudziai: 'igudziai', igudis: 'igudziai', temos: 'treniruote', tema: 'treniruote', p: 'igudziai', korteles: 'treniruote', gks: 'pacientas', vertinimas: 'treniruote', priminimai: 'priminimai', telekonsultacija: 'pacientas', turniketai: 'pacientas', evakuacija: 'pacientas', laikrodis: 'pacientas' }[p[0]] || (p.length ? '' : 'home');
   document.querySelectorAll('#nav a').forEach(a => { const on = a.dataset.s === sec; a.classList.toggle('on', on); if (on) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current'); });
   try { PT.sync(); } catch (e) { console.error(e); }
   if (typeof DICT !== 'undefined') DICT.stop();

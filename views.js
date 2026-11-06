@@ -60,6 +60,7 @@ const ICO = {
   eval: ic('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V2.8h6V4M9 12l2 2 4-4"/>'),
   vit: ic('<path d="M3 12h4l3-8 4 16 3-8h4"/>'),
   care: ic('<rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 2v4M16 2v4M4 10h16M8 14h2M12 14h2M8 17h2"/>'),
+  clock: ic('<circle cx="12" cy="12" r="9"/><path d="M12 3v2M21 12h-2M12 21v-2M3 12h2M12 12V8M12 12l3 2"/><circle cx="12" cy="12" r="5.5" stroke-dasharray="1.5 2.5"/>'),
   tele: ic('<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>'),
   tq: ic('<rect x="3" y="9" width="18" height="6" rx="2"/><path d="M12 9V4M9 4h6M8 12h.01M16 12h.01"/>'),
   evac: ic('<path d="M3 17h13l3-5h2v5h-2M3 17V9h9v8M7 9V6h4M6.5 20a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3zM16.5 20a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3z"/>'),
@@ -134,11 +135,12 @@ const V = {
     return h;
   },
 
-  // Sužeistojo įrankiai (PCC): stebėjimo lapas, skysčiai, vaistai, priežiūra, turniketai, evakuacija – dabartiniam pacientui
+  // Sužeistojo įrankiai (PCC): stebėjimo lapas, skysčiai, vaistai, priežiūra, paros laikrodis, turniketai, evakuacija – dabartiniam pacientui
   careTiles() {
     return '<div class="tools t3">' +
       tile('#/pacientas?t=rod', ICO.vit, 'Rodikliai', pcSt(() => PC.st('rod'))) + tile('#/pacientas?t=sks', ICO.drop, 'Skysčiai', pcSt(() => PC.st('sks'))) +
       tile('#/pacientas?t=vst', ICO.syr, 'Vaistai', pcSt(() => PC.st('vst')), 'Vaistai ir veiksmai') + tile('#/pacientas?t=prz', ICO.care, 'Priežiūra', pcSt(() => PC.st('prz')), 'Priežiūros grafikas') +
+      tile('#/laikrodis', ICO.clock, 'Paros laikrodis', pcSt(() => PC.st('clock')), 'Paros priežiūros laikrodis') +
       tile('#/gks', ICO.gks, 'GKS', stOf(() => GK).replace(/^Paskutinė: /, ''), 'GKS skaičiuoklė') + tile('#/turniketai', ICO.tq, 'Turniketai', pcSt(() => PC.st('tq'))) + tile('#/evakuacija', ICO.evac, 'Evakuacija', pcSt(() => PC.st('evac')), 'Pasiruošimas evakuacijai') + '</div>';
   },
   // Perdavimas: telekonsultacija, MIST, 9-Line, SITREP, QR

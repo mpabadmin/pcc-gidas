@@ -1,7 +1,7 @@
 'use strict';
 // ───────── PCC gidas – ilgalaikės sužeistojo priežiūros lauke priedai (PC) ─────────
 // Stebėjimo lapas (rodikliai, blogėjimo žymėjimas, tendencijos), skysčių balansas ir diurezė, vaistų ir veiksmų žurnalas su kartojimo priminimais,
-// priežiūros grafikas (JTS CPG ID 70), turniketų laikų langai (< 2 val., 2–6 val., > 6 val.), telekonsultacija (JTS CPG ID 94, PFC) ir ATMISTER,
+// priežiūros grafikas (JTS CPG ID 70), paros priežiūros laikrodis (#/laikrodis), turniketų laikų langai (< 2 val., 2–6 val., > 6 val.), telekonsultacija (JTS CPG ID 94, PFC) ir ATMISTER,
 // pasiruošimas evakuacijai, duomenų kopijavimas / įkėlimas. Paciento ekrano skiltys – per TCFG.hub (pacientas.js), priminimai – per TCFG.remHook (REM).
 //
 // Duomenys: TCFG.pre + 'pcc' = { [pid]: įrašas } – pid kaip MIST kortelės (PT). Sužeistojo tapatybė, mechanizmas, sužalojimai, alergijos, evakuacijos
@@ -526,7 +526,7 @@ const PC = (() => {
   }
   function secPrz(x) {
     const r = x.r, cs = careState(x);
-    let h = critChips(r) + '<p class="muted">Intervalai pagal būklę: kritinė – trumpesni.</p>';
+    let h = row('#/laikrodis', 'Paros laikrodis', st('clock') || '24 val. ciferblatas: rodikliai, vartymas, vaistai, žaizdos') + critChips(r) + '<p class="muted">Intervalai pagal būklę: kritinė – trumpesni.</p>';
     h += '<div class="lbl">Uždėtos priemonės – priminimai tik joms</div><div class="opts pcdev" role="group" aria-label="Uždėtos priemonės">' + DEV.map(([k, lb]) => { const on = !r.dev || !!r.dev[k]; return ch('pc-dev', k, on, (on ? '✓ ' : '') + lb); }).join('') + '</div>';
     h += '<div class="pcl">' + cs.map(c => careRow(x, c)).join('') + '</div>';
     const nt = cs.filter(c => c.note); if (nt.length) h += '<details class="alt"><summary>Paaiškinimas</summary>' + nt.map(c => `<p class="muted"><b>${esc(shortNm(c.nm))}</b> – ${esc(c.note)}</p>`).join('') + '</details>';
@@ -577,18 +577,19 @@ const PC = (() => {
   function page(k) {
     const x = X(); if (!x) return notFound();
     const bar = PT.bar().replace(/<a class="ptf"[^>]*>[^<]*<\/a>/, '');
-    const T = { tc: 'Telekonsultacija', tq: 'Turniketai', evac: 'Pasiruošimas evakuacijai' };
+    const T = { tc: 'Telekonsultacija', tq: 'Turniketai', evac: 'Pasiruošimas evakuacijai', clock: 'Paros laikrodis' };
     let h = bar + `<h1>${T[k]}<small class="muted" style="display:block;font-weight:400;font-size:14px">${esc(x.label)}</small></h1>`;
     if (k === 'tq') h += remAll(x.pid).filter(y => /^ptq:/.test(y.key)).map(remRow).join('');
     if (k === 'tc') h += teleBlock(x);
     else if (k === 'tq') h += tqBlock(x, true);
+    else if (k === 'clock') h += clockBlock(x);
     else h += evacBlock(x);
     return h + row('#/pacientas', 'Paciento failas', 'Rodikliai, skysčiai, priežiūra, perdavimas');
   }
   // Priminimai: visų sužeistųjų vėluojantys ir artėjantys darbai
   function remView() {
     const R = remRows(), multi = PT.list().pts.length > 1, soon = [];
-    let h = '<h1>Priminimai</h1>' + R.other.map(remRow).join('');
+    let h = '<h1>Priminimai</h1>' + row('#/laikrodis', 'Paros laikrodis', 'Dabartinio sužeistojo priežiūra 24 val. ciferblate') + R.other.map(remRow).join('');
     R.pts.forEach(({ x, tq, due, md, soon: so }) => {
       so.forEach(([nm, d]) => soon.push([x, nm, d]));
       if (!tq.length && !due.length && !md.length) return;
@@ -599,6 +600,92 @@ const PC = (() => {
     if (!R.n) h += '<p class="muted">Vėluojančių darbų nėra.</p>';
     if (soon.length) h += '<h2>Artėja (15 min)</h2><div class="pcl">' + soon.sort((a, b) => a[2] - b[2]).map(([x, nm, due]) => `<a class="pcli" href="#/pacientas?t=prz" data-act="pc-sel" data-p="${esc(x.pid)}" data-r="#/pacientas?t=prz"><div class="x">${esc(shortNm(nm))}<small>${esc((multi ? '#' + x.n + ' ' : '') + x.label)}</small></div><span class="tm">${dhm(due)}</span></a>`).join('') + '</div>';
     return h + '<p class="muted">Priminimai veikia, kai programėlė atverta. ✓ – atlikta dabar.</p>';
+  }
+
+  // ───────── Paros priežiūros laikrodis (#/laikrodis): 24 val. ciferblatas (00 viršuje, 06 dešinėje, 12 apačioje, 18 kairėje) ─────────
+  // Žiedai iš išorės į vidų: rodikliai (kas vint), vartymas, vaistai (grafiko, ne pagal poreikį), žaizdos ir tvarsčiai, mini vizitas – tik taikomi punktai.
+  // Langas – 24 val.: praeitis nuo priežiūros pradžios (iki 18 val.), likusi dalis – ateitis. Taškai: atlikta (blankūs), kitas (pilnas),
+  // planuojama (tuščiaviduris), dabar ar vėluoja (didesnis, su gintariniu žiedu). Rodyklė – dabartinis laikas; tamsesnis sektorius – nuo priežiūros pradžios.
+  // Turniketai – lankas išorėje nuo uždėjimo iki dabar (< 2 val. žalias, 2–6 val. gintarinis, > 6 val. raudonas). Naktiniame režime spalvas keičia forma (CSS).
+  const CKR = [['vit', 'Rodikliai', '#5DCAA5'], ['vart', 'Vartymas', '#AFA9EC'], ['med', 'Vaistai', '#FAC775'], ['zaiz', 'Žaizdos, tvarsčiai', '#85B7EB'], ['mini', 'Mini vizitas', '#F0997B']];
+  const CKC = 175, CKR0 = 138, CKST = 18, TAU = 2 * Math.PI; // centras (viewBox 350), išorinis žiedas, žiedų žingsnis
+  const DST = { done: 'atlikta', plan: 'planuojama', next: 'kitas', soon: 'netrukus', due: 'dabar', over: 'vėluoja' };
+  const ckAng = t => { const d = new Date(t); return (d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60) / 1440 * TAU; };
+  const ckXY = (r, a) => [(CKC + r * Math.sin(a)).toFixed(1), (CKC - r * Math.cos(a)).toFixed(1)];
+  // lankas nuo a0 iki a1 pagal laikrodžio rodyklę; sector – su centru (sektorius)
+  function ckArc(r, a0, a1, sector) {
+    let sw = a1 - a0; while (sw < 0) sw += TAU; if (sw >= TAU - 1e-6) sw = TAU - 1e-3;
+    const p0 = ckXY(r, a0), p1 = ckXY(r, a0 + sw);
+    return (sector ? `M${CKC},${CKC} L` : 'M') + p0.join(',') + ` A${r},${r} 0 ${sw > Math.PI ? 1 : 0} 1 ` + p1.join(',') + (sector ? ' Z' : '');
+  }
+  function clockData(x, t) {
+    t = t || now();
+    const s0 = careStart(x), P = s0 ? Math.max(0, Math.min(t - s0, 18 * HR)) : 0, w0 = t - P, w1 = w0 + 24 * HR;
+    const cs = careState(x, t), ms = medState(x, t).filter(m => !m.prn), rings = [];
+    CKR.forEach(([k, nm, col]) => {
+      if (k === 'med') {
+        if (!ms.length) return;
+        rings.push({ k, nm, col, ms, items: ms.map(m => ({ nm: m.m.name, ivl: +m.m.ivl, due: m.due, st: m.st })), done: x.r.meds.filter(m => m.kind === 'med' && +m.ivl > 0 && !prnOf(m.name)).map(m => ({ t: m.t, nm: m.name })) });
+        return;
+      }
+      const c = cs.find(y => y.k === k); if (!c) return;
+      rings.push({ k, nm, col, c, items: [{ nm: shortNm(c.nm), ivl: c.ivl, due: c.due, st: c.st }], done: k === 'vit' ? x.vits.map(v => ({ t: v.t, nm: 'Rodikliai' })) : c.last ? [{ t: c.last, nm: shortNm(c.nm) }] : [] });
+    });
+    rings.forEach((g, i) => {
+      g.r = CKR0 - i * CKST; g.ivl = Math.min(...g.items.map(it => it.ivl || 1440));
+      const D = [];
+      g.done.forEach(d => { if (d.t >= w0 && d.t <= t) D.push({ t: d.t, st: 'done', nm: d.nm }); });
+      g.items.forEach(it => {
+        if (!it.due || !(it.ivl > 0)) return;
+        D.push({ t: Math.max(it.due, w0), st: it.st === 'over' || it.st === 'due' || it.st === 'soon' ? it.st : 'next', nm: it.nm }); // vėluojantis – ne anksčiau lango pradžios
+        for (let q = it.due + it.ivl * MIN, n = 0; q <= w1 && n < 200; q += it.ivl * MIN, n++) if (q > t) D.push({ t: q, st: 'plan', nm: it.nm });
+      });
+      g.dots = D.sort((a, b) => a.t - b.t);
+    });
+    return { t, s0, P, w0, w1, rings, cs, ms };
+  }
+  function clockSvg(x, C) {
+    const { t, s0, P, w0, rings } = C, cnt = { over: 0, due: 0, plan: 0, done: 0 };
+    rings.forEach(g => g.dots.forEach(d => { if (d.st === 'over') cnt.over++; else if (d.st === 'due') cnt.due++; else if (d.st === 'done') cnt.done++; else cnt.plan++; }));
+    let h = '';
+    if (P > 0) h += `<path class="el" d="${ckArc(CKR0 + 8, ckAng(w0), ckAng(t), true)}"/>`;
+    tqs(x).filter(q => q.t && !q.conv).forEach(q => { const s = tqState(q, t); h += `<path class="tq ${s}" d="${ckArc(147, ckAng(Math.max(q.t, w0)), ckAng(t))}"><title>${esc('Turniketas · ' + q.limb + ' · ' + dhm(q.t) + ' · ' + tqTxt(q))}</title></path>`; });
+    for (let i = 0; i < 24; i++) {
+      const a = i / 24 * TAU, mj = i % 6 === 0, p0 = ckXY(mj ? 149 : 151, a), p1 = ckXY(157, a);
+      h += `<line class="tk${mj ? ' mj' : ''}" x1="${p0[0]}" y1="${p0[1]}" x2="${p1[0]}" y2="${p1[1]}"/>`;
+      if (i % 3 === 0) { const p = ckXY(165, a); h += `<text class="hl${mj ? ' mj' : ''}" x="${p[0]}" y="${p[1]}" text-anchor="middle" dominant-baseline="central">${pad(i)}</text>`; }
+    }
+    rings.forEach(g => { h += `<circle class="rg" cx="${CKC}" cy="${CKC}" r="${g.r}"/>`; });
+    rings.forEach(g => {
+      const base = g.ivl <= 20 ? 2.4 : g.ivl <= 45 ? 3.2 : 4.6;
+      g.dots.forEach(d => {
+        const [cx, cy] = ckXY(g.r, ckAng(d.t)), tt = `<title>${esc(d.nm + ' · ' + hm(d.t) + ' · ' + DST[d.st])}</title>`;
+        if (d.st === 'plan') h += `<circle class="d plan" cx="${cx}" cy="${cy}" r="${base}" fill="none" stroke="${g.col}" stroke-width="1.5">${tt}</circle>`;
+        else if (d.st === 'done') h += `<circle class="d done" cx="${cx}" cy="${cy}" r="${base}" fill="${g.col}">${tt}</circle>`;
+        else if (d.st === 'over' || d.st === 'due') h += `<circle class="d ${d.st}" cx="${cx}" cy="${cy}" r="${base + (d.st === 'over' ? 3 : 2)}" fill="${g.col}" stroke="#FAC775" stroke-width="2.5">${tt}</circle>`;
+        else h += `<circle class="d next" cx="${cx}" cy="${cy}" r="${base + 1.2}" fill="${g.col}">${tt}</circle>`;
+      });
+    });
+    { const a = ckAng(t), p0 = ckXY(54, a), p1 = ckXY(152, a); h += `<line class="hd" x1="${p0[0]}" y1="${p0[1]}" x2="${p1[0]}" y2="${p1[1]}"/><circle class="hc" cx="${p1[0]}" cy="${p1[1]}" r="3.5"/>`; }
+    h += `<text class="cl" x="${CKC}" y="154" text-anchor="middle" dominant-baseline="central">priežiūra</text><text class="ct" x="${CKC}" y="177" text-anchor="middle" dominant-baseline="central">${hm(t)}</text>` +
+      `<text class="cd" x="${CKC}" y="199" text-anchor="middle" dominant-baseline="central">${esc(s0 ? dur(t - s0) : 'nepradėta')}</text>`;
+    const lb = 'Paros priežiūros laikrodis: dabar ' + hm(t) + ', priežiūra ' + (s0 ? dur(t - s0) : 'nepradėta') + '. ' + (rings.length ? 'Žiedai: ' + rings.map(g => g.nm).join(', ') + '. ' : '') +
+      ['vėluoja ' + cnt.over, 'dabar ' + cnt.due, 'suplanuota ' + cnt.plan, 'atlikta ' + cnt.done].join(', ') + '.';
+    return `<svg class="pcck" viewBox="0 0 350 350" role="img" aria-label="${esc(lb)}">${h}</svg>`;
+  }
+  function clockBlock(x) {
+    const C = clockData(x), { rings, s0 } = C;
+    let h = clockSvg(x, C);
+    if (rings.length) h += '<ul class="pckl" aria-label="Žiedai iš išorės į vidų">' + rings.map(g => `<li><i class="sw" style="--c:${g.col}"></i><b>${esc(g.nm)}</b> · ${esc(g.k === 'med' ? (g.items.length === 1 ? g.items[0].nm + ' kas ' + ivlTxt(g.items[0].ivl) : plural(g.items.length, ['vaistas', 'vaistai', 'vaistų'])) : 'kas ' + ivlTxt(g.items[0].ivl))}</li>`).join('') + '</ul>';
+    h += '<p class="muted pckn">Blankūs taškai – atlikta, pilnas – kitas, tuščiaviduris – planuojama, su gintariniu žiedu – dabar ar vėluoja. Rodyklė – dabar, tamsesnis sektorius – nuo priežiūros pradžios.</p>';
+    if (!s0) h += '<p class="muted">Priežiūros grafikas ir priminimai prasidės nuo pirmo įrašo: traumos laikas, būklė, rodikliai, skysčiai ar vaistai.</p>';
+    const rem = remAll(x.pid).filter(y => isPcc(y.key)).map(remRow).join('');
+    if (rem) h += '<h2>Dabar</h2>' + rem;
+    // žiedų eilutės (✓ – atlikta dabar, + – matuoti) pagal kito laiko eilę; be laiko – gale
+    const rows = [];
+    rings.forEach(g => { if (g.k === 'med') g.ms.forEach(m => rows.push({ due: m.due || Infinity, h: medRow(x, m) })); else rows.push({ due: g.c.due || Infinity, h: careRow(x, g.c) }); });
+    if (rows.length) h += '<h2>Žiedai</h2><div class="pcl">' + rows.sort((a, b) => a.due - b.due).map(o => o.h).join('') + '</div>';
+    return h + row('#/pacientas?t=prz', 'Priežiūros grafikas', 'Visi punktai, priemonės, netaikomi') + srcLine('nurse', 'pcc');
   }
 
 
@@ -614,6 +701,11 @@ const PC = (() => {
       case 'tq': { const q = tqs(x).filter(z => !z.conv && z.t).sort((a, b) => a.t - b.t)[0]; return q ? q.limb + ' · ' + dur(t - q.t) : ''; }
       case 'evac': { const [n, tot] = evProg(r); return n ? n + ' / ' + tot : r.eta ? dhm(r.eta) : ''; }
       case 'tc': return r.tc.req || r.tc.exam ? 'pildoma' : '';
+      case 'clock': { // vėluojantys žiedų darbai arba artimiausias planuotas laikas
+        const ks = CKR.map(z => z[0]), cs = careState(x).filter(c => ks.indexOf(c.k) >= 0), ms = medState(x).filter(m => !m.prn);
+        const n = cs.filter(c => c.st === 'due' || c.st === 'over').length + ms.filter(m => m.st === 'due' || m.st === 'over').length; if (n) return 'vėluoja ' + n;
+        const nx = cs.filter(c => c.due > t).concat(ms.filter(m => m.due > t)).sort((a, b) => a.due - b.due)[0]; return nx ? 'kitas ' + hm(nx.due) : '';
+      }
     }
     return '';
   }
@@ -991,7 +1083,7 @@ const PC = (() => {
   function tick() {
     nav();
     const r = route().p[0], ae = document.activeElement;
-    if (['pacientas', 'priminimai', 'turniketai', 'evakuacija'].indexOf(r) < 0) return;
+    if (['pacientas', 'priminimai', 'turniketai', 'evakuacija', 'laikrodis'].indexOf(r) < 0) return; // laikrodis – rodyklė ir taškai perpiešiami kas 30 s
     if (SH || (MC.sheetOpen && MC.sheetOpen()) || HUB.isOpen() || (ae && /INPUT|TEXTAREA|SELECT/.test(ae.tagName))) return;
     const rd = document.getElementById('rd'); if (rd && !rd.hidden) return;
     keepY();
@@ -1046,7 +1138,8 @@ const PC = (() => {
     ['#/turniketai', 'Turniketai – laikų langai', 'Konversija iki 2 val., 2–6 val. langas, > 6 val. nenuimti', 'turniketas turniketai konversija laikas 2 val 6 val nenuimti'],
     ['#/telekonsultacija', 'Telekonsultacija ir ATMISTER', 'Pranešimas gydytojui konsultantui, perdavimas', 'telekonsultacija telemedicina konsultacija gydytojas skambutis atmister perdavimas handover'],
     ['#/evakuacija', 'Pasiruošimas evakuacijai', 'Kontrolinis sąrašas, kategorija, laikas', 'evakuacija pasiruošimas medevac pakavimas neštuvai sąrašas'],
-    ['#/priminimai', 'Priminimai', 'Vėluojantys ir artėjantys darbai', 'priminimai vėluoja darbai laikmatis']
+    ['#/priminimai', 'Priminimai', 'Vėluojantys ir artėjantys darbai', 'priminimai vėluoja darbai laikmatis'],
+    ['#/laikrodis', 'Paros priežiūros laikrodis', '24 val. ciferblatas: rodikliai, vartymas, vaistai, žaizdos, mini vizitas', 'laikrodis paros ciferblatas žiedai grafikas priežiūra rodikliai vartymas vaistai žaizdos tvarsčiai mini vizitas 24 val para']
   ];
 
   return { st, sec, timers, page, remView, homeBanner, nav, barExtra, quick, act, onInput, tick, settings, dataSettings, sourceRows, remSettings, searchTools,
@@ -1066,7 +1159,7 @@ TCFG.hub = {
   weight: true, // svoris – diurezei (ml/kg/val.) ir dozių skaičiuoklei
   get drugs() { return Array.isArray(E.daznVaistai) ? E.daznVaistai : (E.vaistai || []).slice(0, 6).map(v => v.id); },
   drugOk: v => ok(v.lygis), drugTag: v => isAdv(v.lygis) ? tag(v.lygis) : '',
-  noBar: ['pacientas', 'mist', 'skenuoti', 'qr-priimti', 'egzaminas', 'vertinimas', 'telekonsultacija', 'turniketai', 'evakuacija'],
+  noBar: ['pacientas', 'mist', 'skenuoti', 'qr-priimti', 'egzaminas', 'vertinimas', 'telekonsultacija', 'turniketai', 'evakuacija', 'laikrodis'],
   quick: [['pv', '+ Rodikliai', 1], ['pin', '+ Įvesta', 1], ['pout', '+ Išskirta', 1], ['pmed', '+ Vaistas', 1], ['tq', '+ Turniketas'], ['mk', '+ Žymė schemoje']],
   sheetQuick: [['pv', '+ Rodikliai', 1], ['pmed', '+ Vaistas', 1], ['pin', '+ Įvesta'], ['pout', '+ Išskirta'], ['prz', 'Priežiūra'], ['perduoti', 'Perduoti']],
   quickKeys: ['pv', 'pin', 'pout', 'pmed', 'pint'],
