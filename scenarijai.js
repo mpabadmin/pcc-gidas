@@ -1338,7 +1338,7 @@ window.ETC.scenarijai = [
     "klaus": "Ką skiriate pirmiausia?",
     "opt": [
      {
-      "t": "10 ml 10 % kalcio gliukonato IV per 2–3 min",
+      "t": "30 ml 10 % kalcio gliukonato IV per 5–10 min",
       "ok": true
      },
      {
@@ -1350,7 +1350,7 @@ window.ETC.scenarijai = [
       "ok": false
      }
     ],
-    "why": "Hiperkalemija su EKG pokyčiais – pirmiausia kalcis: JTS Crush PFC – 10 ml 10 % kalcio gliukonato per 2–3 min, kartoti pagal poreikį (poveikis iš karto, trunka 30–60 min). ETC gide hiperkalemijai – 30 ml.",
+    "why": "Hiperkalemija su EKG pokyčiais – pirmiausia kalcis: 30 ml 10 % kalcio gliukonato (arba 10 ml 10 % kalcio chlorido) IV / IO per 5–10 min; kartoti po 5–10 min, jei EKG pokyčiai išlieka (ERC 2025). Poveikis iš karto, trunka 30–60 min.",
     "ref": [
      "#/vaistas/kalcis",
      "#/s/y-crush"
@@ -2123,7 +2123,7 @@ window.ETC.scenarijai = [
     "klaus": "Ką skiriate pirmiausia?",
     "opt": [
      {
-      "t": "Kalcį: 10 ml 10 % gliukonato per 2–3 min",
+      "t": "Kalcį: 30 ml 10 % gliukonato per 5–10 min",
       "ok": true
      },
      {
@@ -2135,7 +2135,7 @@ window.ETC.scenarijai = [
       "ok": false
      }
     ],
-    "why": "Hiperkalemija su EKG pokyčiais – pirmiausia kalcis: stabilizuoja širdį iš karto. Insulinas ir salbutamolis kalį mažina vėliau (~20–30 min).",
+    "why": "Hiperkalemija su EKG pokyčiais – pirmiausia kalcis: 30 ml 10 % kalcio gliukonato (arba 10 ml 10 % kalcio chlorido) IV / IO per 5–10 min (ERC 2025); širdį stabilizuoja iš karto. Insulinas ir salbutamolis kalį mažina vėliau (~20–30 min).",
     "ref": [
      "#/vaistas/kalcis",
      "#/igudis/35"
@@ -2158,11 +2158,11 @@ window.ETC.scenarijai = [
       "ok": true
      },
      {
-      "t": "Kartojate kalcį kas 5 min visą valandą",
+      "t": "Daugiau nieko – kalcis kalį jau sumažino",
       "ok": false
      }
     ],
-    "why": "Kalcis kalio nemažina ir veikia 30–60 min. Toliau: insulinas su gliukoze (4–6 val.) ir salbutamolis 10 mg (~2 val.); jų poveikis sumuojasi.",
+    "why": "Kalcis kalio nemažina – tik 30–60 min apsaugo širdį (jei EKG pokyčiai išlieka – kartoti po 5–10 min). Kalį mažina insulinas su gliukoze (4–6 val.) ir salbutamolis 10 mg (~2 val.); jų poveikis sumuojasi.",
     "ref": [
      "#/vaistas/insulinas",
      "#/vaistas/salbutamolis"

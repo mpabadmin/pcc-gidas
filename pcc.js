@@ -375,7 +375,7 @@ const PC = (() => {
   const ROUTES = ['IV', 'IO', 'IM', 'PO', 'IN', 'Kita'];
   const INTS = ['Turniketo konversija', 'Šlapimo kateteris', 'Pleuros drenas', 'Pirštinė torakostomija', 'Intubacija', 'Krikotiroidotomija', 'Kraujo perpylimas', 'IV / IO prieiga', 'Tvarsčio keitimas', 'Žaizdos plovimas', 'Įtvaras', 'Šildymas'];
   const dname = v => v.id === 'txa' ? 'TXA' : String(v.name || v.id).replace(/ \(.*\)$/, '');
-  const drugOf = nm => { nm = String(nm || '').trim().toLowerCase(); return nm ? (E.vaistai || []).find(v => [v.id, v.name, dname(v)].some(s => String(s || '').toLowerCase() === nm)) : null; };
+  const drugOf = nm => { nm = String(nm || '').trim().toLowerCase(); return nm ? (E.vaistai || []).find(v => [v.id, v.name, dname(v)].concat(((TCFG.qd || {})[v.id] || []).map(q => q[4])).some(s => String(s || '').toLowerCase() === nm)) : null; }; // + greitųjų dozių įrašo pavadinimai (kalcio chloridas)
   const MGRP = { skausmas: 'an', antibiotikai: 'ab' };
   // Kartojimo intervalas iš gido dozių teksto („kas 8 val.“, „kas 30 min“, „kartą per parą“) – tik jei sutampa su pasirinkimu; kitaip nekeičiama
   function ivlOf(v, r) {
@@ -774,14 +774,14 @@ const PC = (() => {
           (names.indexOf(s.name) >= 0 && !s.pick ? `<div class="mqrow"><button class="mqc sm on" data-pa="name" data-v="${esc(s.name)}" aria-pressed="true">${esc(s.name)}</button><button class="mqc sm" data-pa="pick">Keisti</button></div>` // pasirinkus – sąrašas suskleidžiamas, dozė matoma iškart
             : names.length ? '<div class="mqrow">' + names.map(n => `<button class="mqc sm${s.name === n ? ' on' : ''}" data-pa="name" data-v="${esc(n)}">${esc(n)}</button>`).join('') + '</div>' : '');
         if (!isInt) {
-          if (qd.length) h += '<div class="mqlab">Dozė (iš gido)</div><div class="mqrow">' + qd.map(([r, a, u]) => `<button class="mqc big${s.dose === a + ' ' + u && s.route === r ? ' on' : ''}" data-pa="qd" data-v="${esc(r + '|' + a + ' ' + u)}"><b>${esc(a + ' ' + u)}</b><small>${esc(r)}</small></button>`).join('') + '</div>';
+          if (qd.length) h += '<div class="mqlab">Dozė (iš gido)</div><div class="mqrow">' + qd.map(([r, a, u, n, qn], i) => `<button class="mqc big${s.dose === a + ' ' + u && s.route === r && (!qn || (s.qn || s.name) === qn) ? ' on' : ''}" data-pa="qd" data-v="${esc(r + '|' + a + ' ' + u + '|' + i)}"><b>${esc((n ? n + ' ' : '') + a + ' ' + u)}</b><small>${esc(r)}</small></button>`).join('') + '</div>';
           h += `<label class="mqf">Dozė<input class="inp" data-si="dose" value="${esc(s.dose)}" placeholder="pvz. 1 g" autocomplete="off"></label>` +
             '<div class="mqlab">Būdas</div><div class="mqrow">' + ROUTES.map(r => `<button class="mqc${s.route === r ? ' on' : ''}" data-pa="route" data-v="${r}" aria-pressed="${s.route === r}">${r}</button>`).join('') + '</div>' +
             '<div class="mqlab">Kartoti kas</div><div class="mqrow">' + MIVL.map(([m, t]) => `<button class="mqc${s.ivl === m ? ' on' : ''}" data-pa="ivl" data-v="${m}" aria-pressed="${s.ivl === m}">${t}</button>`).join('') + '</div>' +
             (v ? `<div class="mqrow"><a class="mqc" href="#/vaistas/${esc(v.id)}">Dozės gide ›</a></div>` : '');
         }
         h += '<div class="mqlab">Laikas</div>' + tRow() + `<label class="mqf">Pastaba<input class="inp" data-si="note" data-dict value="${esc(s.note)}" autocomplete="off"></label>`;
-        const nm = String(s.name || '').trim(), okd = isInt || String(s.dose || '').trim();
+        const nm = String((!isInt && s.qn) || s.name || '').trim(), okd = isInt || String(s.dose || '').trim();
         return { title: isInt ? 'Veiksmas' : 'Vaistas', h, foot: `<button class="btn pri mqsave" data-pa="save"${nm && okd ? '' : ' disabled'}>${!nm ? 'Įveskite pavadinimą' : !okd ? 'Įveskite dozę' : 'Įrašyti: ' + esc([nm, s.dose, isInt ? '' : s.route].filter(Boolean).join(' ')) + ' · ' + hm(shTs())}</button>` };
       }
       case 'kg': {
@@ -870,7 +870,7 @@ const PC = (() => {
     const k = t.dataset.si, v = t.value;
     if (k.indexOf('c:') === 0) { mcCard(SH.pid, c => { c[k.slice(2)] = v; }); return; }
     if (k.indexOf('r:') === 0) { upd(SH.pid, r => { r[k.slice(2)] = v; }); return; }
-    SH[k] = v;
+    SH[k] = v; if (k === 'name') SH.qn = '';
     const f = shEl.querySelector('.mqshf'); if (f && (k === 'name' || k === 'dose')) { const B = body(); f.innerHTML = B.foot; }
   }
   function sact(el) {
@@ -902,8 +902,8 @@ const PC = (() => {
       case 'ml': s.ml = v === 'del' ? String(s.ml || '').slice(0, -1) : v === 'clr' ? '' : (String(s.ml || '') + v).replace(/^0+/, '').slice(0, 5); return draw();
       // vaistai
       case 'pick': s.pick = 1; return draw();
-      case 'name': s.name = v; s.pick = 0; { const dv = drugOf(v), q = dv ? ((TCFG.qd || {})[dv.id] || []) : []; if (dv && s.mk !== 'int') s.route = routeOf(dv); if (q.length === 1 && !s.dose) { s.route = q[0][0]; s.dose = q[0][1] + ' ' + q[0][2]; } } autoIvl(s); return draw();
-      case 'qd': { const [r, a] = v.split('|'); s.route = r; s.dose = a; autoIvl(s); return draw(); }
+      case 'name': s.name = v; s.pick = 0; s.qn = ''; { const dv = drugOf(v), q = dv ? ((TCFG.qd || {})[dv.id] || []) : []; if (dv && s.mk !== 'int') s.route = routeOf(dv); if (q.length === 1 && !s.dose) { s.route = q[0][0]; s.dose = q[0][1] + ' ' + q[0][2]; s.qn = q[0][4] || ''; } } autoIvl(s); return draw();
+      case 'qd': { const [r, a, i] = v.split('|'), dv = drugOf(s.name), q = dv ? ((TCFG.qd || {})[dv.id] || [])[+i] : null; s.route = r; s.dose = a; s.qn = (q && q[4]) || ''; autoIvl(s); return draw(); } // 5-as elementas – įrašo pavadinimas (kitas preparatas)
       case 'route': s.route = s.route === v ? '' : v; return draw();
       case 'ivl': s.ivl = +v || 0; return draw();
       // svoris, laikas
@@ -958,7 +958,7 @@ const PC = (() => {
         close(false); toast('Įrašyta: ' + ioName(e.k, e.type) + ' ' + ml + ' ml'); return;
       }
       case 'med': {
-        const name = String(s.name || '').trim(); if (!name) return toast('Įveskite pavadinimą');
+        const name = String((s.mk !== 'int' && s.qn) || s.name || '').trim(); if (!name) return toast('Įveskite pavadinimą');
         if (s.mk !== 'int' && !String(s.dose || '').trim()) return toast('Įveskite dozę');
         const m = { id: uid(), kind: s.mk, name, dose: String(s.dose || '').trim(), route: s.mk === 'int' ? '' : s.route || '', ivl: s.mk === 'int' ? 0 : s.ivl || 0, t: shTs(), note: String(s.note || '').trim() };
         upd(s.pid, r => { r.meds.push(m); const g = m.kind === 'int' && INTDEV[m.name]; if (g && r.dev && !r.dev[g]) r.dev[g] = m.t; }); // veiksmas (kateteris, IV …) – įjungia tos priemonės priminimus

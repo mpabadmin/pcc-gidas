@@ -6,9 +6,10 @@ window.ETC = window.ETC || {};
 const E = window.ETC;
 // Pranešimų priėmimas – ta pati Google lentelė kaip March ir ETC gidų (pranešimai žymimi E.programa = „PCC gidas“)
 if (!E.atsiliepimai) E.atsiliepimai = { url: 'https://script.google.com/macros/s/AKfycbyUpzDmAClJ40FMltkHi21Ozc4PpItRr3u6yy4rU0DKNGe7JkRBnOr0y42wLwpJcBau/exec' };
-// Greitosios dozės vaisto languose: [būdas, kiekis, vienetai] – tik reikšmės, kurios pažodžiui yra vaistai.js dozių tekste (tikrina t_pcc2.py)
+// Greitosios dozės vaisto languose: [būdas, kiekis, vienetai, mygtuko pavadinimas?, įrašo pavadinimas?] – tik reikšmės, kurios pažodžiui yra vaistai.js dozių tekste (tikrina t_pcc2.py).
+// 4-as elementas rodomas mygtuke prieš dozę (pvz. „Chloridas 10 ml“), 5-as – vaisto pavadinimas žurnale ir MIST kortelėje (kitas preparatas, pvz. kalcio chloridas).
 if (!E.qd) E.qd = {
-  ketaminas: [['IV', '25', 'mg'], ['IM', '100', 'mg']], meloksikamas: [['PO', '15', 'mg']], fentanilis: [['IV', '50', 'mcg']], txa: [['IV', '2', 'g']], kalcis: [['IV', '30', 'ml'], ['IV', '10', 'ml']],
+  ketaminas: [['IV', '25', 'mg'], ['IM', '100', 'mg']], meloksikamas: [['PO', '15', 'mg']], fentanilis: [['IV', '50', 'mcg']], txa: [['IV', '2', 'g']], kalcis: [['IV', '30', 'ml', 'Gliukonatas', 'Kalcio gliukonatas 10 %'], ['IV', '10', 'ml', 'Chloridas', 'Kalcio chloridas 10 %']],
   cefadroksilis: [['PO', '1', 'g']], ceftriaksonas: [['IV', '2', 'g'], ['IM', '2', 'g']], ertapenemas: [['IV', '1', 'g']], moksifloksacinas: [['PO', '400', 'mg']], cefazolinas: [['IV', '2', 'g']],
   'nacl-hipert': [['IV', '250', 'ml']], levetiracetamas: [['IV', '2000', 'mg']], ondansetronas: [['ODT', '4', 'mg'], ['IV', '4', 'mg']], naloksonas: [['IV', '40', 'mcg'], ['IM', '0,4', 'mg'], ['IN', '1,8', 'mg']]
 };

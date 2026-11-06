@@ -14,7 +14,7 @@ const E = window.ETC;
 const sk = (n, t) => `<a href="#/igudis/${n}">${t || 'Įgūdis #' + n}</a>`;
 const vs = (id, t) => `<a href="#/vaistas/${id}">${t}</a>`;
 
-E.versija = '2026-11-06 v3.6 (paros priežiūros laikrodis #/laikrodis; perdavimo tekstų skaitymas balsu su režimu „Per radiją“)';
+E.versija = '2026-11-06 v3.7 (vienos schemos: manitolis, kalcis hiperkalemijai, midazolamas traukuliams, levetiracetamas – JTS / ERC 2025)';
 E.programa = 'PCC gidas';
 
 // ───────── FAZĖS ─────────
@@ -262,7 +262,7 @@ E.sarasai = {
       { t: 'SpO₂ ≥ 92 % (ventiliuojamam > 95 %); sAKS ≥ 110 mm Hg (JTS DCR); EtCO₂ 35–40 mm Hg', k: true, sk: 32, i: 'Lauke (TCCC 2026, March gidas) – > 100 mm Hg. JTS TBI PFC (2023): SpO₂ > 90 % (ventiliuojamam > 95 %); gide SpO₂ riba – TCCC 2026 (≥ 92 %).' },
       { t: 'Temperatūra 35,6–37,5 °C; gliukozė ~10 mmol/l (< 5,6 – gydyti)', g: 'CMC', r: '#/vaistas/gliukoze' },
       { t: 'Išvaržos požymiai – hipertoninis NaCl, skubi telekonsultacija', g: 'CMC', k: true, r: '#/vaistas/nacl-hipert', s: ['Laikinai EtCO₂ 30 mm Hg ≤ 20 min'] },
-      { t: 'Traukuliai – midazolamas 5 mg kas 5 min; toliau levetiracetamas', g: 'CPP', r: '#/vaistas/midazolamas' },
+      { t: 'Traukuliai – midazolamas 5 mg IV / IO / IM, kartoti kas 5 min; toliau levetiracetamas', g: 'CPP', r: '#/vaistas/midazolamas' },
       { t: 'Atvira galvos žaizda – antibiotikas', g: 'CPP', r: '#/vaistas/ceftriaksonas' },
       { t: 'Sedaciją minimizuoti; GKS užrašyti prieš kiekvieną dozę' },
       { t: 'Blogėja – didinti evakuacijos skubumą', k: true, sk: 36 }
@@ -293,7 +293,7 @@ E.sarasai = {
       { t: '> 2 val. ir gydymo pradėti negalima – du turniketai greta prieš išlaisvinimą', g: 'CMC', tm: 'turn' },
       { t: 'Diurezė 100–200 ml/val.; šlapimo spalva', k: true, sk: 10 },
       { t: 'EKG: bradikardija, smailūs T, platus QRS, ekstrasistolės', g: 'CMC', k: true, s: ['Kas 15 min pirmas 1–2 val., toliau kas 30 min, stabiliai – kas valandą', 'Normali EKG hiperkalemijos neatmeta'] },
-      { t: 'Hiperkalemija: 10 ml 10 % kalcio gliukonato IV per 2–3 min, kartoti pagal poreikį', g: 'CMC', r: '#/vaistas/kalcis' },
+      { t: 'Hiperkalemija: 30 ml 10 % kalcio gliukonato (arba 10 ml 10 % kalcio chlorido) IV / IO per 5–10 min', g: 'CMC', r: '#/vaistas/kalcis', s: ['Kartoti po 5–10 min, jei EKG pokyčiai išlieka (ERC 2025)'] },
       { t: 'Toliau: insulinas su gliukoze, salbutamolis', g: 'CPP', r: '#/vaistas/insulinas' },
       { t: 'Galūnė šalta, nejautri, įtempta, be pulso – turniketai lieka, telekonsultacija' }
     ]
@@ -470,9 +470,9 @@ E.puslapiai = {
       '<p>Baigtį blogina antrinis pažeidimas: vienas hipoksijos ar hipotenzijos epizodas.</p>' +
       '<h3>Tikslai</h3><div class="tw"><table><tr><td>SpO₂</td><td>≥ 92 % (ventiliuojamam > 95 %)</td></tr><tr><td>sAKS</td><td>≥ 110 mm Hg (JTS DCR)</td></tr><tr><td>EtCO₂ (ventiliuojamam)</td><td>35–40 mm Hg</td></tr><tr><td>Temperatūra</td><td>35,6–37,5 °C</td></tr><tr><td>Gliukozė</td><td>~10 mmol/l; < 5,6 – gydyti</td></tr><tr><td>Natris (jei matuojama)</td><td>145–160 mmol/l</td></tr></table></div>' +
       '<p class="muted">JTS TBI PFC: SpO₂ minimum > 90 %; gide – TCCC 2026 riba ≥ 92 %. sAKS lauke (TCCC 2026, March gidas) – > 100 mm Hg.</p>' +
-      '<h3>Intrakranijinis spaudimas</h3><ul><li><b>Minimum</b> – galvūgalis 30–60°, kaklas tiesiai; skausmas, nerimas, karščiavimas kontroliuojami.</li><li><b>Geriau</b> – sedacija ir analgezija (RASS −1…−2).</li><li><b>Geriausia</b> – osmoterapija: ' + vs('nacl-hipert', 'hipertoninis NaCl') + ' (pirmenybinis) arba ' + vs('manitolis', 'manitolis') + ' (tik be kraujavimo ir esant sAKS > 110).</li></ul>' +
+      '<h3>Intrakranijinis spaudimas</h3><ul><li><b>Minimum</b> – galvūgalis 30–60°, kaklas tiesiai; skausmas, nerimas, karščiavimas kontroliuojami.</li><li><b>Geriau</b> – sedacija ir analgezija (RASS −1…−2).</li><li><b>Geriausia</b> – osmoterapija: ' + vs('nacl-hipert', 'hipertoninis NaCl') + ' (pirmenybinis) arba ' + vs('manitolis', 'manitolis') + ' 1 g/kg per 20 min (tik be kraujavimo ir šoko, sAKS ≥ 110).</li></ul>' +
       '<p>Gresiant išvaržai (vienpusis išsiplėtęs vyzdys, Cushing triada) – laikinai hiperventiliuoti iki EtCO₂ 30 mm Hg ne ilgiau kaip 20 min ir skubiai konsultuotis.</p>' +
-      '<h3>Traukuliai</h3><p>' + vs('midazolamas', 'Midazolamas') + ' 5 mg kas 5 min; toliau – ' + vs('levetiracetamas', 'levetiracetamas') + ' (gydytojas).</p>' +
+      '<h3>Traukuliai</h3><p>' + vs('midazolamas', 'Midazolamas') + ' 5 mg IV / IO / IM, kartoti kas 5 min, kol traukuliai liausis; toliau – ' + vs('levetiracetamas', 'levetiracetamas') + ' 2000 mg IV / IO per 15 min, po to 500 mg kas 12 val. (gydytojo sprendimu).</p>' +
       '<h3>Kita</h3><ul><li>GKS ir vyzdžiai – ne rečiau kaip kas valandą.</li><li>Atvira galvos žaizda – antibiotikas 5 d.; uždarai – nereikia.</li><li>Sedaciją minimizuoti, kad matytumėte neurologiją.</li></ul>',
     saltinis: 'JTS CPG „TBI Management in PFC“ (tccc.org.ua, 2023); JTS CPG ID 91 (2021); TCCC gairės 2026-05-01'
   },
@@ -497,8 +497,9 @@ E.puslapiai = {
       '<p>Diurezė 100–200 ml/val. Žemiau tikslo > 2 val. esant 1 l/val. – inkstai pažeisti. Raudonas, rudas ar juodas šlapimas – didėjanti rizika.</p>' +
       '<h3>Hiperkalemija</h3><p>EKG: bradikardija (pagrindinis), smailūs T, ilgėjantis PR, platus QRS, ekstrasistolės. Normali EKG jos neatmeta. Stebėti kas 15 min pirmas 1–2 val., toliau kas 30 min, stabiliai – kas valandą.</p>' +
       '<div class="tw"><table><tr><th>Vaistas</th><th>Pradžia</th><th>Trukmė</th></tr><tr><td>' + vs('kalcis', 'Kalcis') + '</td><td>Iš karto</td><td>30–60 min</td></tr><tr><td>' + vs('insulinas', 'Insulinas + gliukozė') + '</td><td>~20 min</td><td>4–6 val.</td></tr><tr><td>' + vs('salbutamolis', 'Salbutamolis') + '</td><td>~30 min</td><td>~2 val.</td></tr></table></div>' +
+      '<p>' + vs('kalcis', 'Kalcis') + ': 30 ml 10 % kalcio gliukonato (arba 10 ml 10 % kalcio chlorido) IV / IO per 5–10 min; kartoti po 5–10 min, jei EKG pokyčiai išlieka (ERC 2025).</p>' +
       '<h3>Galūnė</h3><p>Šalta, nejautri, įtempta, be pulso – greičiausiai negyvybinga: du turniketai lieka, telekonsultacija. Vėsinti garinimu, ne ledu ar sniegu.</p>',
-    saltinis: 'JTS CPG „Crush Syndrome in PFC“ (tccc.org.ua, 2023); JTS CPG „Damage Control Resuscitation in PFC“ (ID 73)'
+    saltinis: 'JTS CPG „Crush Syndrome in PFC“ (tccc.org.ua, 2023); JTS CPG „Damage Control Resuscitation in PFC“ (ID 73); ERC gairės 2025 (hiperkalemija – kalcio dozė)'
   },
   hipotermija: {
     title: 'Hipotermija ir perkaitimas', sub: 'Šilumos palaikymas paromis',
@@ -543,7 +544,7 @@ E.puslapiai = {
       '<tr><td>Infekcija, atvira galvos trauma, suspaudimas</td><td>Ertapenemas, cefazolinas, moksifloksacinas</td><td>Gydytojas</td></tr>' +
       '<tr><td>Išvaržos požymiai</td><td>Hipertoninis NaCl; manitolis</td><td>CMC / gydytojas</td></tr>' +
       '<tr><td>Traukuliai</td><td>Midazolamas → levetiracetamas</td><td>CPP / gydytojas</td></tr>' +
-      '<tr><td>Hiperkalemija (kalcis – 10 ml, JTS Crush)</td><td>Kalcis → insulinas su gliukoze → salbutamolis</td><td>CMC / gydytojas</td></tr>' +
+      '<tr><td>Hiperkalemija (kalcis – 30 ml gliukonato / 10 ml chlorido, ERC 2025)</td><td>Kalcis → insulinas su gliukoze → salbutamolis</td><td>CMC / gydytojas</td></tr>' +
       '<tr><td>Hipotenzija po kraujo</td><td>Noradrenalinas</td><td>Gydytojas</td></tr></table></div>' +
       '<p class="muted">Vaistai skiriami tik pagal kompetenciją, vieneto protokolus ir gydytojo (telekonsultacijos) nurodymus.</p>',
     saltinis: 'TCCC gairės 2026-05-01; JTS PCC ir PFC gairės (žr. kiekvieno vaisto šaltinius)'

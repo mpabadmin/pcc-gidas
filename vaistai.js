@@ -349,8 +349,8 @@ window.ETC.vaistai = [
         "p": "Kartoti kas 5 min iki tikslo arba KD < 10 (JTS PFC)."
       },
       {
-        "k": "Traukuliai IV / IO / IM (JTS TBI PFC)",
-        "d": "5 mg kas 5 min, kol traukuliai liausis",
+        "k": "Traukuliai (JTS TBI PFC)",
+        "d": "5 mg IV / IO / IM; kartoti kas 5 min, kol traukuliai liausis",
         "p": "Toliau – levetiracetamas (gydytojas)."
       }
     ],
@@ -497,9 +497,9 @@ window.ETC.vaistai = [
         "p": "Transfuzija. TCCC tai vadina „1 g kalcio“: gliukonato – 3 ampulės po 10 ml. Tęsiant transfuziją – ta pati dozė po kas 4 vienetų (JTS DCR PFC)."
       },
       {
-        "k": "Hiperkalemija (JTS Crush PFC)",
-        "d": "10 ml 10 % kalcio gliukonato IV per 2–3 min",
-        "p": "Kartoti pagal EKG ir poreikį. Poveikis iš karto, trunka 30–60 min; kalio nemažina – toliau insulinas su gliukoze."
+        "k": "Hiperkalemija (ERC 2025; UK Kidney Association 2020)",
+        "d": "30 ml 10 % kalcio gliukonato (arba 10 ml 10 % kalcio chlorido) IV / IO per 5–10 min; kartoti po 5–10 min, jei EKG pokyčiai išlieka",
+        "p": "Ta pati dozė kaip po kraujo vieneto. Poveikis iš karto, trunka 30–60 min; kalio nemažina – toliau insulinas su gliukoze."
       }
     ],
     "ispejimai": [
@@ -508,13 +508,13 @@ window.ETC.vaistai = [
     ],
     "pakuote": "Ampulės 10 ml, 10 % (100 mg/ml)",
     "pastabos": [
-      "Skiriasi nuo ETC gido: hiperkalemijai ETC – 30 ml 10 % gliukonato per 10 min (JTS hiperkalemijos CPG, CGO, UK RA); čia – JTS Crush PFC dozė."
+      "Kiti šaltiniai – JTS Crush PFC nurodo 10 ml 10 % – druska nenurodyta; programėlėse – ERC dozė."
     ],
     "susije": [
       "txa",
       "insulinas"
     ],
-    "saltinis": "TCCC gairės 2026-05-01 (TFC 6); JTS CPG „Damage Control Resuscitation in PFC“; JTS CPG „Crush Syndrome in PFC“ (2023); PCS (kalcio gliukonatas 10 %)",
+    "saltinis": "TCCC gairės 2026-05-01 (TFC 6); JTS CPG „Damage Control Resuscitation in PFC“; ERC gairės 2025 (hiperkalemija); UK Kidney Association „Treatment of Acute Hyperkalaemia in Adults“ (2020); JTS CPG „Crush Syndrome in PFC“ (2023); PCS (kalcio gliukonatas 10 %)",
     "nuorodos": [
       [
         "TCCC gairės 2026-05-01 (PDF, Deployed Medicine)",
@@ -1023,17 +1023,17 @@ window.ETC.vaistai = [
     "ne26": true,
     "kam": "Gydytojo sprendimu (telekonsultacija)",
     "ind": "Padidėjęs intrakranijinis spaudimas, kai hipertoninio NaCl nėra ar nepakanka (JTS pirmenybę teikia NaCl).",
-    "kontra": "Kraujavimas, hipovolemija, sAKS ≤ 110 mm Hg (JTS TBI PFC).",
+    "kontra": "Kraujavimas, šokas, hipovolemija, sAKS < 110 mm Hg (JTS TBI PFC).",
     "dozes": [
       {
-        "k": "IV / IO (JTS TBI PFC)",
-        "d": "1 g/kg per 20 min · ml 20 % tirpalo",
+        "k": "Osmoterapija (JTS TBI PFC)",
+        "d": "1 g/kg IV / IO per 20 min (20 % tirpalas – 5 ml/kg; 80 kg – 400 ml)",
         "c": {
           "per": 1,
           "u": "g",
           "conc": 0.2
         },
-        "p": "Toliau – 0,5 g/kg kas 3 val. pagal poreikį (gydytojas)."
+        "p": "Tik kai nėra kraujavimo ir šoko, sAKS ≥ 110. Prireikus kartoti 0,5 g/kg kas 3 val. Pirmenybė – hipertoniniam NaCl."
       }
     ],
     "ispejimai": [
@@ -1042,12 +1042,12 @@ window.ETC.vaistai = [
     ],
     "pakuote": "20 % tirpalas",
     "pastabos": [
-      "Skiriasi nuo ETC gido: ETC – 0,5 g/kg (0,25–1 g/kg; ETC vadovas 5.0); čia – JTS TBI PFC 1 g/kg."
+      "Kiti šaltiniai – ETC vadovas 5.0: 0,5 g/kg (0,25–1 g/kg). Gide naudojama JTS TBI PFC dozė."
     ],
     "susije": [
       "nacl-hipert"
     ],
-    "saltinis": "JTS CPG „TBI Management in PFC“ (2023)",
+    "saltinis": "JTS CPG „TBI Management in Prolonged Field Care“ (2023); ETC vadovas 5.0 (kiti šaltiniai)",
     "nuorodos": [
       [
         "JTS CPG „TBI Management in PFC“ (tccc.org.ua, 2023)",
@@ -1068,18 +1068,21 @@ window.ETC.vaistai = [
     "kontra": "Alergija.",
     "dozes": [
       {
-        "k": "IV / IO (JTS TBI PFC)",
-        "d": "2000 mg per 15 min, toliau 500 mg kas 12 val.",
+        "k": "Po traukulių (JTS TBI PFC)",
+        "d": "2000 mg IV / IO per 15 min, toliau 500 mg kas 12 val. – gydytojo sprendimu",
         "p": "Pirmiausia traukulius nutraukti midazolamu."
       }
     ],
     "ispejimai": [
       "Sedacija apsunkina neurologinį vertinimą – GKS užrašyti prieš skiriant."
     ],
+    "pastabos": [
+      "Kiti šaltiniai – epilepsinė būklė (ESETT, NICE 2022): 60 mg/kg, ne daugiau kaip 4,5 g, per 10 min."
+    ],
     "susije": [
       "midazolamas"
     ],
-    "saltinis": "JTS CPG „TBI Management in PFC“ (2023)",
+    "saltinis": "JTS CPG „TBI Management in PFC“ (2023); ESETT (NEJM 2019) ir NICE NG217 (2022) – kiti šaltiniai",
     "nuorodos": [
       [
         "JTS CPG „TBI Management in PFC“ (tccc.org.ua, 2023)",

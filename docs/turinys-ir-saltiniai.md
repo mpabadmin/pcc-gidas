@@ -63,10 +63,10 @@ Atnaujinti: redaguokite `_build/*.js` → `node _build/build.js` → `node _buil
 
 - **Naloksonas**: viena schema – titruoti po 40 mcg IV / IO (0,4 mg + 9 ml NaCl). Šaltinis – JTS PCC CPG ID 91 (tekstas tikrintas: „dilute 0.4 mg in 9 mL… give 40 mcg IV/IO PRN“) ir JTS PFC analgezijos B–C priedai; pasirinkta, nes PCC sužeistajam reikia išlaikyti nuskausminimą. D priedo 0,4–2 mg (iki 10 mg) ir March 0,4 mg – paminėti pastabose, scenarijuje p8 nebežymimi kaip klaida.
 - **Galvos traumos tikslai** visur vienodi: SpO₂ ≥ 92 % (TCCC 2026; JTS TBI PFC – > 90 %), ventiliuojamam > 95 %, sAKS > 110 mm Hg (JTS TBI PFC; TCCC 2026 – > 100). Skirtumai nurodyti puslapyje, įgūdyje #32, sąraše `y-galva`, scenarijuje p17.
-- **Kalcis**: transfuzijai – 30 ml (TCCC 2026); hiperkalemijai – 10 ml 10 % gliukonato per 2–3 min (JTS Crush PFC) – vaisto puslapyje, įgūdyje #35, sąraše `y-crush`, scenarijuose p15, p24. p2 nebežymi 10 ml kaip klaidos.
+- **Kalcis**: transfuzijai – 30 ml (TCCC 2026); hiperkalemijai – nuo v3.7 ta pati dozė (ERC 2025), žr. žemiau. p2 nebežymi 10 ml kaip klaidos.
 - **Scenarijų lygiai**: p8 ir p15 → CPP.
 - **Ketaminas**: pridėta TCCC 2026 IN 50 mg (kaip March) su JTS PFC pastaba „PCC metu vengti“.
-- **Skiriasi nuo ETC / March gido** (pastabose): manitolis 1 g/kg (ETC 0,5), gliukozė 25 g (ETC 200 ml 10 %), noradrenalinas 0,1–0,4 (ETC 0,05–1 mcg/kg/min), fentanilis be IN (March – 100 mcg IN; lygis CPP kaip March), kalcis hiperkalemijai 10 ml (ETC 30 ml), naloksonas titruojamas (March 0,4 mg).
+- **Skiriasi nuo ETC / March gido** (pastabose): gliukozė 25 g (ETC 200 ml 10 %), noradrenalinas 0,1–0,4 (ETC 0,05–1 mcg/kg/min), fentanilis be IN (March – 100 mcg IN; lygis CPP kaip March), naloksonas titruojamas (March 0,4 mg). Manitolis ir kalcis hiperkalemijai nuo v3.7 suvienodinti.
 - **Stabligė**: TIG 500 VV užterštai karo žaizdai / 250 VV švariai didelei – kaip JTS žaizdų PFC; pastaba, kad įprasta dozė 250 VV.
 - **Lidokainas**: „ne daugiau kaip 3 mg/kg (80 kg – ne daugiau kaip 240 mg)“, be skaičiuoklės.
 
@@ -77,6 +77,16 @@ Atnaujinti: redaguokite `_build/*.js` → `node _build/build.js` → `node _buil
 - **Noradrenalinas**: 0,1–0,4 mcg/kg/min lieka; pridėtas pavyzdys infuzomatui (4 mg + 46 ml 5 % gliukozės = 80 mcg/ml; 80 kg: 0,1 = 6 ml/val., 0,4 = 24 ml/val.); ETC dabar tas pats intervalas – pastaba „Skiriasi nuo ETC“ pašalinta.
 - **AKS tikslai** (atsako į 1 klausimą): kraujavimo šokas – sAKS ≈ 100 mm Hg (90–110), kai gaivinama krauju; 80–90 mm Hg, jei kraujo nėra (JTS DCR). Galvos trauma – sAKS ≥ 110 mm Hg (JTS DCR); lauke (TCCC 2026, March gidas) – > 100. Stebėjimo lapas galvos traumai žymi sAKS < 110.
 - **Nudegimai** – patikrinta, atitinka TCCC 10 taisyklę (> 20 %, +100 ml/val. kas 10 kg virš 80, diurezė 30–50 ml/val.); nekeista. **Fentanilis** – PCC viena schema (JTS PFC IV); nekeista.
+
+## Turinio suvienodinimas, 2 dalis (2026-11-06, v3.7; spec 2026-11-06, 9–13 sk.)
+
+- **Morfinas** – PCC gide nėra; nekeista.
+- **Manitolis** (atsako į 8 klausimą): „1 g/kg IV / IO per 20 min (20 % tirpalas – 5 ml/kg; 80 kg – 400 ml)“; tik kai nėra kraujavimo ir šoko, sAKS ≥ 110; prireikus 0,5 g/kg kas 3 val.; pirmenybė – hipertoniniam NaCl (JTS TBI PFC). Svorio skaičiuoklė lieka (1 g/kg, 5 ml/kg). Kontraindikacija – sAKS < 110. ETC 5.0 0,5 g/kg (0,25–1) – pastabose kaip kitas šaltinis. Puslapis „galva“ papildytas doze.
+- **Kalcis hiperkalemijai** (atsako į 2 klausimą): „30 ml 10 % kalcio gliukonato (arba 10 ml 10 % kalcio chlorido) IV / IO per 5–10 min; kartoti po 5–10 min, jei EKG pokyčiai išlieka“ (ERC 2025; UK Kidney Association 2020) – ta pati dozė kaip po kraujo vieneto. Vaisto puslapis, įgūdis #35, sąrašas `y-crush`, puslapis „crush“, vaistų lentelė, scenarijai p15 ir p24. Pastaba: JTS Crush PFC nurodo 10 ml 10 % – druska nenurodyta; programėlėse – ERC dozė.
+  Greitosios dozės: „Gliukonatas 30 ml“ ir „Chloridas 10 ml“ (E.qd 4-as elementas – mygtuko pavadinimas, 5-as – įrašo pavadinimas), todėl žurnale ir MIST kortelėje įrašoma „Kalcio chloridas 10 % 10 ml IV“, ne „Kalcio gliukonatas 10 % 10 ml“.
+  p24 2 klausimas: klaidingas „Kartojate kalcį kas 5 min visą valandą“ pakeistas į „Daugiau nieko – kalcis kalį jau sumažino“, kad naujoji kartojimo taisyklė nepadarytų jo teisingu.
+- **Midazolamas traukuliams**: atskira eilutė „Traukuliai (JTS TBI PFC)“ – „5 mg IV / IO / IM; kartoti kas 5 min, kol traukuliai liausis“; įgūdis #32, sąrašas `y-galva`, puslapis „galva“ – su doze. 0,5–2 mg traukuliams niekur nenurodyta (įgūdyje #17 – tik ketamino emergencijos reakcijai).
+- **Levetiracetamas**: „2000 mg IV / IO per 15 min, toliau 500 mg kas 12 val. – gydytojo sprendimu“ (JTS TBI PFC); kiti šaltiniai – epilepsinė būklė (ESETT, NICE 2022): 60 mg/kg, ne daugiau kaip 4,5 g, per 10 min.
 
 ## Klausimai kuopos gydytojui
 

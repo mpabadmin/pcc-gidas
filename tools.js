@@ -1101,7 +1101,8 @@ const MC = (() => {
   }
   function lastGiven(s, v) { // paskutinis to vaisto laikas (C lentelė ir vaistų žymėjimas)
     let t = '';
-    s.rows.forEach(r => { if (r.name && (r.name === dn(v) || String(r.name).toLowerCase().indexOf(dn(v).toLowerCase()) === 0) && r.time && r.time > t) t = r.time; });
+    const nms = [dn(v)].concat((QDF()[v.id] || []).map(q => q[4]).filter(Boolean)).map(n => n.toLowerCase()); // + kitas preparatas (kalcio chloridas)
+    s.rows.forEach(r => { if (r.name && nms.some(n => String(r.name).toLowerCase().indexOf(n) === 0) && r.time && r.time > t) t = r.time; });
     if (typeof VZ !== 'undefined') VZ.get().e.forEach(e => { if (e.v === v.id) { const x = hm(e.t); if (x > t) t = x; } });
     return t;
   }
@@ -1114,7 +1115,7 @@ const MC = (() => {
     if (kind === 'vit') SH = Object.assign(base, { v: { av: '', rr: '', spo2: '', hr: '', bpS: '', bpD: '', pain: '', gcs: '' }, fk: 'rr', bpd: 0, gcs: 0 });
     else if (kind === 'rx') {
       SH = Object.assign(base, { tab: o.tab === 'fl' && flOk() ? 'fl' : 'rx', drug: o.drug && (E.vaistai || []).some(v => v.id === o.drug) ? o.drug : '', dose: null, man: null, fl: { name: '', amt: '', r: 'IV' } });
-      const q = SH.drug ? QDF()[SH.drug] || [] : []; if (q.length === 1) SH.dose = { i: 0, r: q[0][0], a: q[0][1], u: q[0][2] };
+      const q = SH.drug ? QDF()[SH.drug] || [] : []; if (q.length === 1) SH.dose = { i: 0, r: q[0][0], a: q[0][1], u: q[0][2], nm: q[0][4] || '' };
     } else if (kind === 'mk') SH = Object.assign(base, { t: TOOLS.indexOf(o.t) >= 0 ? o.t : tool, sd: o.sd === 'b' ? 'b' : 'f', pt: null, n: 0 });
     else if (kind === 'tq') {
       SH = Object.assign(base, { k: TQ.some(q => q[0] === o.k) ? o.k : '' });
@@ -1289,10 +1290,10 @@ const MC = (() => {
             h += `<div class="mqpan" id="mqpan"><div class="mqph"><b>${esc(dn(v))}</b><small>C lentelė: ${esc(gn)}</small></div>` +
               (ah ? `<p class="mqwarn" role="alert">Pažymėta alergija: ${esc(ah)} – patikrinkite prieš skiriant.</p>` : alg.length ? `<p class="muted mqhint">Alergijos: ${esc(alg.join(', '))}</p>` : '') +
               (lg ? `<p class="muted mqhint">Paskutinė dozė šiam sužeistajam: ${esc(lg)}</p>` : '') +
-              (q.length ? '<div class="mqlab">Dozė ir būdas (iš gido)</div><div class="mqrow">' + q.map(([r, a, u], i) => { const on = SH.dose && !SH.dose.c && SH.dose.i === i; return `<button class="mqc big${on ? ' on' : ''}" data-sa="qd" data-v="${i}" aria-pressed="${!!on}"><b>${esc(a)} ${esc(u)}</b><small>${esc(r)}</small></button>`; }).join('') + '</div>' : '<p class="muted mqhint">Greitųjų dozių gide nėra – įveskite dozę.</p>') +
+              (q.length ? '<div class="mqlab">Dozė ir būdas (iš gido)</div><div class="mqrow">' + q.map(([r, a, u, n], i) => { const on = SH.dose && !SH.dose.c && SH.dose.i === i; return `<button class="mqc big${on ? ' on' : ''}" data-sa="qd" data-v="${i}" aria-pressed="${!!on}"><b>${n ? esc(n) + ' ' : ''}${esc(a)} ${esc(u)}</b><small>${esc(r)}</small></button>`; }).join('') + '</div>' : '<p class="muted mqhint">Greitųjų dozių gide nėra – įveskite dozę.</p>') +
               `<div class="mqrow"><button class="mqc${SH.dose && SH.dose.c ? ' on' : ''}" data-sa="cdose">${SH.dose && SH.dose.c ? esc(SH.dose.a + ' ' + SH.dose.u + ' ' + SH.dose.r) + ' ✎' : 'Kita dozė / būdas…'}</button><a class="mqc" href="#/vaistas/${esc(v.id)}">Dozės gide ›</a></div>` +
               '<div class="mqlab">Laikas</div>' + tmRow() + noteIn() + '</div>';
-            if (SH.dose) foot = `<button class="btn pri mqsave" data-sa="save">Įrašyti: ${esc(dn(v) + ' ' + SH.dose.a + ' ' + SH.dose.u + ' ' + SH.dose.r)} · ${shT()}</button>`;
+            if (SH.dose) foot = `<button class="btn pri mqsave" data-sa="save">Įrašyti: ${esc((SH.dose.nm || dn(v)) + ' ' + SH.dose.a + ' ' + SH.dose.u + ' ' + SH.dose.r)} · ${shT()}</button>`;
           }
           return { title: 'Vaistas', h, foot };
         }
@@ -1480,10 +1481,10 @@ const MC = (() => {
       case 'flg': if (SH.fl.man && (v === 'fl' || v === 'bl')) SH.fl.g = v; return shRender();
       case 'drug': {
         SH.man = null; SH.drug = SH.drug === v ? '' : v; SH.dose = null;
-        const q = (QDF()[SH.drug] || []); if (q.length === 1) SH.dose = { i: 0, r: q[0][0], a: q[0][1], u: q[0][2] };
+        const q = (QDF()[SH.drug] || []); if (q.length === 1) SH.dose = { i: 0, r: q[0][0], a: q[0][1], u: q[0][2], nm: q[0][4] || '' };
         shRender(); const p = shEl.querySelector('#mqpan'); if (p) p.scrollIntoView({ block: 'nearest' }); return;
       }
-      case 'qd': { const q = (QDF()[SH.drug] || [])[+v]; if (!q) return; SH.dose = { i: +v, r: q[0], a: q[1], u: q[2] }; return shRender(); }
+      case 'qd': { const q = (QDF()[SH.drug] || [])[+v]; if (!q) return; SH.dose = { i: +v, r: q[0], a: q[1], u: q[2], nm: q[4] || '' }; return shRender(); } // nm – kitas preparatas (pvz. kalcio chloridas)
       case 'cdose': { const q = (QDF()[SH.drug] || [])[0]; SH.sub = { kind: 'num', ctx: 'rx', buf: SH.dose && SH.dose.c ? SH.dose.a : '', unit: SH.dose ? SH.dose.u : q ? q[2] : 'mg', route: SH.dose ? SH.dose.r : q ? q[0] : 'IV' }; SH.top = 1; return shRender(); }
       case 'flp': SH.fl = { name: !SH.fl.man && SH.fl.name === v ? '' : v, amt: '', r: SH.fl.r || 'IV', dg: SH.fl.dg || '' }; return shRender();
       case 'dgrp': SH.fl.dg = SH.fl.dg === v ? '' : v; return shRender();
@@ -1496,7 +1497,7 @@ const MC = (() => {
       case 'nkp': { const o = SH.sub; let b = o.buf || ''; if (v === 'del') b = b.slice(0, -1); else if (v === ',') { if (b && b.indexOf(',') < 0) b += ','; } else if (b.length < 6) b += v; o.buf = b; return shRender(); }
       case 'nok': {
         const o = SH.sub, b = o.buf || ''; if (!(/^\d+(,\d+)?$/.test(b) && parseFloat(b.replace(',', '.')) > 0)) return;
-        if (o.ctx === 'rx') SH.dose = { c: 1, a: b, u: o.unit, r: o.route }; else if (o.ctx === 'man') SH.man.dose = { a: b, u: o.unit, r: o.route }; else SH.fl.amt = b + ' ' + o.unit;
+        if (o.ctx === 'rx') SH.dose = { c: 1, a: b, u: o.unit, r: o.route, nm: (SH.dose && SH.dose.nm) || '' }; else if (o.ctx === 'man') SH.man.dose = { a: b, u: o.unit, r: o.route }; else SH.fl.amt = b + ' ' + o.unit;
         SH.sub = null; return shRender();
       }
       case 'kr': {
@@ -1570,7 +1571,8 @@ const MC = (() => {
             VZ.add({ t: tsOf(t), v: v.id, a: String(D.a).replace('.', ','), u: D.u, r: D.r, n: String(SH.note || '').trim().slice(0, 120) });
             shClose(false); const y = scrollY; render(); scrollTo(0, y); toast('Įrašyta: ' + dn(v) + ' ' + D.a + ' ' + D.u + ' ' + D.r + ' · ' + t); return;
           }
-          return commit(s => { s.rows.push({ g: grpOf(v), name: dn(v), dose: D.a + ' ' + D.u, route: D.r, time: t, t: tsOf(t), src: 'mc:' + Date.now().toString(36) }); addNote(s, dn(v)); }, 'Įrašyta: ' + dn(v) + ' ' + D.a + ' ' + D.u + ' ' + D.r + ' · ' + t);
+          const dnm = D.nm || dn(v);
+          return commit(s => { s.rows.push({ g: grpOf(v), name: dnm, dose: D.a + ' ' + D.u, route: D.r, time: t, t: tsOf(t), src: 'mc:' + Date.now().toString(36) }); addNote(s, dnm); }, 'Įrašyta: ' + dnm + ' ' + D.a + ' ' + D.u + ' ' + D.r + ' · ' + t);
         }
         const F = SH.fl, fn0 = String(F.name || '').trim(); if (!fn0 || !F.amt) return;
         const bl = TCFG.krGrupes && BLP.indexOf(fn0) >= 0, bg = bl ? F.dg : '', fn = bg && ABO.indexOf(bg) >= 0 ? fn0 + ' ' + bg : fn0;
