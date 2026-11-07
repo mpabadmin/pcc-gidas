@@ -688,7 +688,7 @@ window.ETC.scenarijai = [
   "lygis": "CPP",
   "q": [
    {
-    "sit": "Naktį budintis medikas pagal vieneto SOP suleido fentanilio, o kitas – midazolamo nerimui. Sužeistasis sunkiai pažadinamas.",
+    "sit": "Per naktį pagal vieneto SOP sužeistajam kas valandą kartotos fentanilio dozės (iš viso 300 mcg IV per 4 val.), o kitas medikas suleido midazolamo nerimui. Sužeistasis sunkiai pažadinamas.",
     "gp": {
      "AVPU": "P",
      "KD": "6",
@@ -745,7 +745,7 @@ window.ETC.scenarijai = [
     ]
    },
    {
-    "sit": "Po 120 mcg kvėpavimas atsistatė. Po 40 min vėl retėja.",
+    "sit": "Po 120 mcg naloksono kvėpavimas atsistatė. Naujų opioidų dozių nebuvo, bet po 40 min kvėpavimas vėl retėja.",
     "gp": {
      "KD": "9",
      "SpO₂": "90 %",
@@ -754,7 +754,7 @@ window.ETC.scenarijai = [
     "klaus": "Kodėl taip nutiko?",
     "opt": [
      {
-      "t": "Naloksonas baigė veikti anksčiau nei opioidas",
+      "t": "Naloksonas baigė veikti anksčiau nei susikaupęs fentanilis",
       "ok": true
      },
      {
@@ -766,7 +766,7 @@ window.ETC.scenarijai = [
       "ok": false
      }
     ],
-    "why": "Naloksonas gali baigti veikti anksčiau nei opioidas – stebėkite ir kartokite po 40 mcg. Midazolamo poveikis prasideda per kelias minutes.",
+    "why": "IV naloksonas veikia ~30–90 min, o kartotinės fentanilio dozės kaupiasi audiniuose – poveikis trunka ilgiau nei vienos dozės. Stebėkite ne trumpiau kaip 2 val. po paskutinės naloksono dozės, kartokite po 40 mcg; gali prireikti naloksono infuzijos (gydytojo sprendimu, telekonsultacija). Alerginė reakcija į naloksoną – labai reta ir kvėpavimo neretina; midazolamas pradeda veikti per kelias minutes, ne po valandos.",
     "ref": [
      "#/igudis/18",
      "#/vaistas/naloksonas"

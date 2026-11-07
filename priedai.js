@@ -140,10 +140,10 @@ const FC = (() => {
     return { c: s.c && typeof s.c === 'object' && !Array.isArray(s.c) ? s.c : {}, d: +s.d || 0, n: +s.n || 0, y: +s.y || 0 };
   }
   const save = s => LS.set(KEY, s);
-  const shownV = v => typeof ok !== 'function' || ok(v.kam != null ? v.kam : v.lygis);
+  const shownV = v => typeof ok !== 'function' || ok(v.lygis); // v3.8: pagal lygio kodą (lygis), ne „kam“ tekstą
   function cards() {
     const out = [];
-    (E.vaistai || []).filter(v => shownV(v) && !v.ne26).forEach(v => { // ne TCCC 2026 (March opioidai) – dozių kortelėse nemokomi
+    (E.vaistai || []).filter(v => shownV(v)).forEach(v => { // v3.8: ir ne TCCC 2026 PCC vaistai (naloksonas, kristaloidai, gliukozė, lidokainas, CPP vaistai) – pagal lygį
       const add = (x, pre) => {
         if (!x || !String(x.d || '').trim() || !String(x.k || '').trim()) return;
         const k = (pre ? pre + ' · ' : '') + x.k;
@@ -219,6 +219,8 @@ const OP = (() => {
   const has = () => KEYS.some(k => { try { return localStorage.getItem(k) != null; } catch (e) { return false; } });
   function wipe(auto) {
     KEYS.forEach(k => { try { localStorage.removeItem(k); } catch (e) {} });
+    (TCFG.opSession || []).forEach(k => { try { sessionStorage.removeItem(TCFG.pre + k); } catch (e) {} });
+    try { if (typeof FB !== 'undefined' && FB.clear) FB.clear(); } catch (e) {} // pranešimo apie klaidą langas (ekrano vaizdai atmintyje)
     try { sessionStorage.setItem(FLAG, auto ? 'auto' : '1'); } catch (e) {}
     LS.set(AKT, Date.now());
     if (location.hash && location.hash !== '#/') history.replaceState(null, '', location.pathname + location.search + '#/');
@@ -242,7 +244,7 @@ const OP = (() => {
       '<button class="btn dng" data-act="op-wipe" style="width:100%">Ištrinti visų sužeistųjų duomenis</button>' +
       '<p class="muted">Automatiškai ištrinti, jei programėlė nenaudojama:</p><div class="seg2" role="group" aria-label="Automatinis ištrynimas">' +
       [[0, 'Išjungta'], [12, '12 val.'], [24, '24 val.'], [72, '3 d.']].map(([k, t]) => `<button class="${h === k ? 'on' : ''}" data-act="op-auto" data-k="${k}" aria-pressed="${h === k}">${t}</button>`).join('') + '</div>' +
-      '<details class="alt"><summary>Kas ištrinama</summary><p class="muted">Nukentėjusiųjų kortelės, paciento failas' + (typeof PC !== 'undefined' ? ' (stebėjimo lapas, skysčiai, vaistai, priežiūra, telekonsultacija)' : '') + ', laikai, sąrašų žymėjimai, 9-Line' + (typeof MS !== 'undefined' ? ', Mascal' : '') + (typeof VZ !== 'undefined' ? ', vaistų žymėjimas, nudegimai, šviežias kraujas' : '') + (typeof SR !== 'undefined' ? ', SITREP' : '') + '. Lieka: nustatymai, įsivertinimai, vertinimai ir dozių kortelės.</p></details>';
+      '<details class="alt"><summary>Kas ištrinama</summary><p class="muted">Nukentėjusiųjų kortelės, pacientų duomenys' + (typeof PC !== 'undefined' ? ' (stebėjimo lapas, skysčiai, vaistai, priežiūra, telekonsultacija ir jos ryšio numeris)' : '') + ', laikai, sąrašų žymėjimai, 9-Line' + (typeof MS !== 'undefined' ? ', Mascal' : '') + (typeof VZ !== 'undefined' ? ', vaistų žymėjimas, nudegimai, šviežias kraujas' : '') + (typeof SR !== 'undefined' ? ', SITREP' : '') + ', priminimų atidėjimai ir nustatymas, neišsiųsti pranešimai apie klaidas, vertinimo lapai, atvertas paciento skirtukas. Lieka: nustatymai, „Aš“ profilis, įsivertinimai ir dozių kortelės.</p></details>';
   }
   function act(el) {
     const d = el.dataset;

@@ -17,7 +17,10 @@ const TCFG = {
   // MIST vaisto lango greitosios dozės [būdas, kiekis, vienetai] – tik iš duomenų (vaistai.js: E.qd = { vaisto id: [[…], …] }); PCC kode dozių nėra
   get qd() { return (window.ETC || {}).qd || {}; },
   pt: ['laikai', 'ck', 'svoris'], // šie raktai priklauso dabartiniam pacientui (perjungiami kartu su MIST kortele)
-  opKeys: ['pcc'], // OPSEC: PCC duomenys (stebėjimo lapas ir kt.) trinami kartu su sužeistųjų duomenimis
+  // OPSEC: kartu su sužeistųjų duomenimis trinami PCC įrašai, telekonsultacijos ryšys ir diurezės laikotarpis (pcc-nust), priminimų atidėjimai ir intervalas,
+  // neišsiųsti pranešimai apie klaidas (gali būti ekrano vaizdai), vertinimo lapai; „Aš“ profilis (as) lieka
+  opKeys: ['pcc', 'pcc-nust', 'rem-z', 'remvit', 'fb-out', 'vl'],
+  opSession: ['hub-tab'], // sessionStorage: atvertas paciento skirtukas
   txa: false,    // TXA 3 val. riba (MIST priminimas, laikmačiai) PCC nerodoma – TXA aprašyta turinyje
   remTq: false,  // turniketo priminimai – PCC langai (< 2 val., 2–6 val., > 6 val.) pcc.js
   remVit: false, // gyvybinių rodiklių priminimas – priežiūros grafike (pcc.js)
@@ -93,7 +96,8 @@ const RDV = (() => {
     lt: [[/\bmcg\b|µg/g, 'mikrogramų'], [/\bmg\b/g, 'miligramų'], [/\bml\b/g, 'mililitrų'], [/(\d)\s*g\b/g, '$1 gramų'], [/\/kg\b/g, ' kilogramui'], [/\/val\.?/g, ' per valandą'], [/\/min\.?/g, ' per minutę'],
       [/\bval\./g, 'valandos'], [/(\d)\s*min\b\.?/g, '$1 minutės'], [/\bIV\b/g, 'į veną'], [/\bIM\b/g, 'į raumenis'], [/\bIN\b/g, 'į nosį'], [/\bIO\b/g, 'į kaulą'], [/\bPO\b/g, 'per burną'], [/\bTQ\b/g, 'turniketas'],
       [/\bSpO[₂2](?!\w)/g, 'saturacija'], [/\bmm\s?Hg\b/g, 'milimetrų gyvsidabrio']],
-    en: [[/\bmcg\b|µg/g, 'micrograms'], [/\bmg\b/g, 'milligrams'], [/\bml\b/g, 'millilitres'], [/\/kg\b/g, ' per kilogram'], [/\/(h|hr)\b/g, ' per hour'], [/\/min\b/g, ' per minute'], [/\bTQ\b/g, 'tourniquet'],
+    en: [[/\bmcg\b|µg/g, 'micrograms'], [/\bmg\b/g, 'milligrams'], [/\bml\b/g, 'millilitres'], [/(\d)\s*g\b/g, '$1 grams'], [/\/kg\b/g, ' per kilogram'], [/\/(h|hr)\b/g, ' per hour'], [/\/min\b/g, ' per minute'], [/\bTQ\b/g, 'tourniquet'],
+      [/\bIV\b/g, 'I V'], [/\bIM\b/g, 'I M'], [/\bIN\b/g, 'intranasal'], [/\bIO\b/g, 'I O'], // v56: keliai raidėmis / žodžiu (kaip LT)
       [/\bSpO[₂2](?!\w)/g, 'oxygen saturation'], [/\bmm\s?Hg\b/g, 'millimetres of mercury']]
   };
   const ICO = { prev: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M6 5h2.5v14H6zM19 5v14L9.5 12z"/></svg>', next: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.5 5H18v14h-2.5zM5 5v14l9.5-7z"/></svg>',
@@ -122,7 +126,8 @@ const RDV = (() => {
     (en ? AB.en : AB.lt).forEach(r => { t = t.replace(r[0], r[1]); });
     t = t.replace(/(\d)\s*\/\s*(\d)/g, en ? '$1 over $2' : '$1 su $2'); // AKS 92/58 → „92 su 58“
     if (rd) t = t.replace(/(\d)[.,](\d)/g, en ? '$1 point $2' : '$1 kablelis $2').replace(/(\d):(?=\d)/g, '$1 ').replace(/(\d)(?=[A-Za-z])|([A-Za-z])(?=\d)/g, '$1$2 ').replace(/\d+/g, m => m.split('').join(' ')); // 35U → „3 5 U“
-    return t.replace(/,\s*(?=[.,;:])/g, '').replace(/\s+/g, ' ').trim();
+    // v56: be likusių skyriklių – „Eilutė 1 nenurodyta ;“ → „Eilutė 1 nenurodyta“; „nenurodyta ; 35U“ → „nenurodyta; 35U“
+    return t.replace(/,\s*(?=[.,;:])/g, '').replace(/\s+(?=[.,;:])/g, '').replace(/([.,;:])[.,;:\s]*(?=[.,;:])/g, '$1').replace(/\s+/g, ' ').replace(/[\s.,;:\-]+$/, '').trim();
   };
   const voice = en => {
     let vs = []; try { vs = SS ? SS.getVoices() : []; } catch (e) {}
@@ -1952,7 +1957,7 @@ const PT = (() => {
   function bar() {
     sync(); const L = list(); if (!L.pts.length) return '';
     return '<div class="ptbar" role="tablist" aria-label="Pacientai">' + L.pts.map(p => `<button role="tab" aria-selected="${p.i === L.cur}" class="${p.i === L.cur ? 'on' : ''}" data-act="pt-sel" data-k="${p.i}"${due(p.pid) ? ` aria-label="${esc('#' + (p.i + 1) + (p.card.id ? ' ' + String(p.card.id).slice(0, 14) : '') + ' – yra priminimų')}"` : ''}>${chipLbl(p)}</button>`).join('') +
-      '<button class="add" data-act="pt-new" aria-label="Kitas sužeistasis" title="Kitas sužeistasis">+</button><a class="ptf" href="#/pacientas" aria-label="Paciento failas">Failas ›</a></div>';
+      '<button class="add" data-act="pt-new" aria-label="Kitas sužeistasis" title="Kitas sužeistasis">+</button><a class="ptf" href="#/pacientas" aria-label="Pacientas">Pacientas ›</a></div>';
   }
   // Ką tik pridėtas sužeistasis – „Atšaukti“ (jei dar nepildytas): pašalinamas, grįžtama prie ankstesnio
   function added(prev) {
@@ -1967,7 +1972,7 @@ const PT = (() => {
   function homeRow() {
     const L = list(), p = L.pts[L.cur]; if (!p) return '';
     const n = events(p.pid).length;
-    return row('#/pacientas', 'Paciento failas: ' + p.label + (L.pts.length > 1 ? ' (#' + (p.i + 1) + ' iš ' + L.pts.length + ')' : ''), n ? plural(n, ['įvykis', 'įvykiai', 'įvykių']) + ' · perduoti, QR' : 'Visi įrankiai – šiam pacientui');
+    return row('#/pacientas', 'Pacientas: ' + p.label + (L.pts.length > 1 ? ' (#' + (p.i + 1) + ' iš ' + L.pts.length + ')' : ''), n ? plural(n, ['įvykis', 'įvykiai', 'įvykių']) + ' · perduoti, QR' : 'Visi įrankiai – šiam pacientui');
   }
   function events(pid) {
     const L = list(), p = L.pts.find(x => x.pid === pid); if (!p) return [];
@@ -2069,7 +2074,8 @@ const REM = (() => {
   // ✓ – atlikta (programėlė gali įrašyti ar atverti langą – TCFG.remDone); „Atidėti“ – paslepia 15 min, paskui primena vėl
   const row = x => `<div class="rem rem-${x.lvl}" role="status">${CLOCK}<div class="remt"><b>${esc(x.title)}</b><small>${esc(x.sub)}</small></div><button class="remb" data-act="rem-go" data-k="${esc(x.pid)}" data-r="${esc(x.go)}">Atidaryti</button><button class="remz" data-act="rem-z" data-k="${esc(x.key)}" aria-label="Atidėti 15 min">Atidėti<br>15 min</button><button class="remx" data-act="rem-x" data-k="${esc(x.key)}" aria-label="Atlikta">✓</button></div>`;
   function snooze(k) {
-    const t = Date.now(), o = snz(), n = {}; Object.keys(o).forEach(q => { if (+o[q] > t) n[q] = o[q]; }); n[k] = t + 15 * 60000; LS.set(ZK, n);
+    const t = Date.now(), o = snz(), n = {}; Object.keys(o).forEach(q => { if (+o[q] > t) n[q] = o[q]; });
+    ((typeof TCFG.remSnz === 'function' && TCFG.remSnz(k)) || [k]).forEach(q => { n[q] = t + 15 * 60000; }); LS.set(ZK, n); // PCC: grupės atidėjimas – kiekvienam darbui (raktas nesikeičia, pasikeitus grupei)
     LS.set(NK, (LS.get(NK, []) || []).filter(q => q.indexOf(k + ':') !== 0)); // po 15 min – vėl vibracija ir pranešimas
     toast('Atidėta iki ' + hm(n[k]));
   }
@@ -2078,7 +2084,7 @@ const REM = (() => {
     if (typeof TCFG.remSettings === 'function') return TCFG.remSettings();
     return '<h2>Priminimai</h2><p class="muted">Turniketo peržiūra (2 val.), TXA riba (3 val. nuo traumos)' + (typeof VZ !== 'undefined' ? ' ir kartotinės dozės pagal gidą' : '') + ' primenamos visada. Gyvybės požymių pakartojimas:</p>' +
       '<div class="seg2">' + [[0, 'Išjungta'], [5, '5 min'], [15, '15 min'], [30, '30 min']].map(([k, t]) => `<button class="${v === k ? 'on' : ''}" data-act="rem-vit" data-k="${k}" aria-pressed="${v === k}">${t}</button>`).join('') + '</div>' +
-      '<p class="muted">Priminimas – juosta ir paciento failas, vibracija. Veikia, kol programėlė atidaryta' + (/iPhone|iPad/.test(navigator.userAgent) ? ' (iPhone – tik atidarius)' : ' ar veikia fone') + '.</p>';
+      '<p class="muted">Priminimas – juosta ir paciento ekranas, vibracija. Veikia, kol programėlė atidaryta' + (/iPhone|iPad/.test(navigator.userAgent) ? ' (iPhone – tik atidarius)' : ' ar veikia fone') + '.</p>';
   }
   function act(el) {
     const d = el.dataset;
@@ -2093,7 +2099,8 @@ const REM = (() => {
     let due; try { due = items(); } catch (e) { return; }
     const seen = LS.get(NK, []) || [], nk = x => x.key + ':' + x.lvl; // pasikeitus lygiui (liko 15 min → laikas) – primenama dar kartą
     const fresh = due.filter(x => seen.indexOf(nk(x)) < 0);
-    try { if (navigator.setAppBadge) { if (due.length) navigator.setAppBadge(due.length); else navigator.clearAppBadge(); } } catch (e) {}
+    const cnt = typeof TCFG.remCount === 'function' ? TCFG.remCount() : due.length; // PCC: tiek pat, kiek „Priminimai“ eilučių
+    try { if (navigator.setAppBadge) { if (cnt) navigator.setAppBadge(cnt); else navigator.clearAppBadge(); } } catch (e) {}
     if (!fresh.length) return;
     LS.set(NK, seen.concat(fresh.map(nk)).slice(-200));
     if (navigator.vibrate) navigator.vibrate([250, 120, 250]);
@@ -2346,7 +2353,7 @@ const QR = (() => {
   function zText(z) { return (z || []).map(e => { const v = (E.vaistai || []).find(x => x.id === e.v); return [(v ? v.name.replace(/ \(.*\)$/, '') : e.v), e.a, e.u, e.r, hm(+e.t)].filter(Boolean).join(' '); }).join('; '); }
   function importNew(o) {
     const c = cleanCard(o.m);
-    if (typeof VZ === 'undefined' && Array.isArray(o.z) && o.z.length) c.txTxt = [String(c.txTxt || '').trim(), 'Vaistai: ' + zText(o.z)].filter(Boolean).join('; ');
+    if (typeof VZ === 'undefined' && typeof PC === 'undefined' && Array.isArray(o.z) && o.z.length) c.txTxt = [String(c.txTxt || '').trim(), 'Vaistai: ' + zText(o.z)].filter(Boolean).join('; ');
     PT.add(c);
     if (o.lk && typeof o.lk === 'object') { const la = {}; if (+o.lk.trauma) la.trauma = +o.lk.trauma; if (+o.lk.turn) la.turn = +o.lk.turn; LS.set(TCFG.laikai, la); }
     if (+o.kg > 0 && +o.kg < 400) LS.set(TCFG.pre + 'svoris', +o.kg); // paciento svoris (naujas pacientas jau dabartinis)
@@ -2356,11 +2363,12 @@ const QR = (() => {
     if (o['9'] && typeof o['9'] === 'object' && confirm('Kode yra ir 9-Line forma. Perrašyti savo 9-Line formą gautais duomenimis?')) LS.set(TCFG.pre + '9line', o['9']);
     if (o.c && typeof MS !== 'undefined') MS.link(PT.list().pts[PT.list().cur].pid, o.c, c.id);
     if (o.p && typeof PC !== 'undefined') PC.importRec(PT.list().pts[PT.list().cur].pid, o.p, false);
+    if (typeof VZ === 'undefined' && typeof PC !== 'undefined' && PC.importZ) PC.importZ(PT.list().pts[PT.list().cur].pid, o.z); // PCC: gauti vaistai → kortelė ir žurnalas (priminimai)
   }
   function merge(o) {
     PT.sync(); const st = MC.state(), c = st.pts[st.cur], m = cleanCard(o.m);
     ['id', 'name', 'sex', 'dob', 'unit', 'country', 'allerg', 'dt', 't0', 'mechTxt', 'injTxt', 'sympt', 'abo', 'evac', 'pos', 'tqT', 'txaT'].forEach(k => { if (!c[k] && m[k]) c[k] = String(m[k]); });
-    let tt = String(m.txTxt || ''); if (typeof VZ === 'undefined' && Array.isArray(o.z) && o.z.length) tt = [tt, 'Vaistai: ' + zText(o.z)].filter(Boolean).join('; ');
+    let tt = String(m.txTxt || ''); if (typeof VZ === 'undefined' && typeof PC === 'undefined' && Array.isArray(o.z) && o.z.length) tt = [tt, 'Vaistai: ' + zText(o.z)].filter(Boolean).join('; ');
     if (tt && String(c.txTxt || '').indexOf(tt) < 0) c.txTxt = [String(c.txTxt || '').trim(), tt].filter(Boolean).join('; ');
     const uni = (a, b) => a.concat((Array.isArray(b) ? b : []).filter(x => typeof x === 'string' && a.indexOf(x) < 0));
     c.mech = uni(c.mech, m.mech); c.tx = uni(c.tx, m.tx); c.nat = uni(c.nat || [], m.nat);
@@ -2378,6 +2386,7 @@ const QR = (() => {
     if (typeof NB !== 'undefined' && o.n && !NB.total()) LS.set(TCFG.pre + 'nb', o.n);
     if (typeof KR !== 'undefined' && o.w) { const w = LS.get(TCFG.pre + 'wbb', null); if (!w || !(w.t1 || w.t2 || w.don)) LS.set(TCFG.pre + 'wbb', o.w); }
     if (o.p && typeof PC !== 'undefined') PC.importRec(PT.list().pts[PT.list().cur].pid, o.p, true);
+    if (typeof VZ === 'undefined' && typeof PC !== 'undefined' && PC.importZ) PC.importZ(PT.list().pts[PT.list().cur].pid, o.z);
   }
   function view(r) { return r === 'qr' ? sendView() : recvView(); }
   function after(r) { if (r === 'qr') startSend(); else if (r === 'qr-priimti') startRecv(); else stopAll(); }

@@ -14,7 +14,7 @@ const E = window.ETC;
 const sk = (n, t) => `<a href="#/igudis/${n}">${t || 'Įgūdis #' + n}</a>`;
 const vs = (id, t) => `<a href="#/vaistas/${id}">${t}</a>`;
 
-E.versija = '2026-11-06 v3.7 (vienos schemos: manitolis, kalcis hiperkalemijai, midazolamas traukuliams, levetiracetamas – JTS / ERC 2025)';
+E.versija = '2026-11-07 v3.8 (peržiūros pataisos: naktinis kontrastas, OPSEC, diurezė „nematuota“, laiko įvedimas praeityje, PRN logika, dozių kortelės pagal lygį, lygių žymos, GST temperatūra, priminimų nuovargis)';
 E.programa = 'PCC gidas';
 
 // ───────── FAZĖS ─────────
@@ -118,7 +118,7 @@ E.sarasai = {
       { t: 'Rodikliai pagal grafiką – į lapą su laiku; palyginti su ankstesniu', k: true, sk: 3 },
       { t: 'Turniketai, tvarsčiai: naujo kraujavimo nėra', k: true, sk: 27 },
       { t: 'Kvėpavimo takai ir vamzdeliai vietoje; SpO₂, EtCO₂', sk: 11 },
-      { t: 'Diurezė per valandą – užrašyta', g: 'CMC', sk: 10 },
+      { t: 'Diurezė per valandą – užrašyta (CLS įrašo įvestą ir išskirtą; CMC vertina ml/kg/val.)', sk: 10 },
       { t: 'Galvos trauma: GKS ir vyzdžiai', sk: 32 },
       { t: 'Skausmas (0–10) ir RASS sedatuotam', sk: 17 },
       { t: 'Šiluma: apvalkalas sausas, temperatūra', sk: 31 },
@@ -160,7 +160,7 @@ E.sarasai = {
       { t: '2–6 val. – svarstyti: kalcis, insulinas su gliukoze, EKG paruošti; telekonsultacija', g: 'CMC', k: true, sk: 35 },
       { t: '> 6 val. – nenuimti', k: true },
       { t: 'Po spaudžiamuoju tvarsčiu – distalinis pulsas ir odos spalva', sk: 27 },
-      { t: 'Įtvarai: pulsas kas 6 val. (be sąmonės – kas 2 val.)', k: true, sk: 28 },
+      { t: 'Įtvarai: pulsas kas 6 val. (be sąmonės ar kritinei – kas 2 val.)', k: true, sk: 28 },
       { t: 'Ar skauda įtvaras, ne lūžis? Spaudimas, tirpimas, oda po juostele', sk: 28 },
       { t: 'Kompartmento sindromas: didėjantis skausmas, skausmas judinant pasyviai', k: true, sk: 28, s: ['Atlaisvinti įtvarą → neišnyksta – nuimti, medikas, telekonsultacija'] }
     ]
@@ -223,7 +223,7 @@ E.sarasai = {
       { t: 'Rankų higiena, švarus paviršius, toliau nuo purvo', sk: 30 },
       { t: 'Plovimas: sterilus NaCl ar vanduo → geriamasis vanduo → virintas ≥ 3 min', g: 'CMC', k: true, sk: 25, s: ['Maža – 1–3 l; vidutinė – 4–8 l; didelė ar labai nešvari – ≥ 9 l'] },
       { t: 'Neužsiūti lauko žaizdų; abejojant – atvira', k: true, sk: 25 },
-      { t: 'Gilioms – NPWT arba drėgnas–sausas tvarstis 1–2 kartus per dieną', g: 'CPP', sk: 26 },
+      { t: 'Gilioms – drėgnas–sausas tvarstis 1–2 kartus per dieną', g: 'CMC', sk: 26, s: ['NPWT (vakuuminis) – CPP'] },
       { t: 'Spalva, išskyros, kvapas, skausmas – į lapą; nuotrauka telekonsultacijai', sk: 25 },
       { t: 'Negyvybingų audinių šalinimas – tik apmokytam, su telekonsultacija', g: 'CPP' }
     ]
@@ -261,9 +261,9 @@ E.sarasai = {
       { t: 'Galvūgalis 30–60° (jei nėra šoko), kaklas tiesiai', k: true },
       { t: 'SpO₂ ≥ 92 % (ventiliuojamam > 95 %); sAKS ≥ 110 mm Hg (JTS DCR); EtCO₂ 35–40 mm Hg', k: true, sk: 32, i: 'Lauke (TCCC 2026, March gidas) – > 100 mm Hg. JTS TBI PFC (2023): SpO₂ > 90 % (ventiliuojamam > 95 %); gide SpO₂ riba – TCCC 2026 (≥ 92 %).' },
       { t: 'Temperatūra 35,6–37,5 °C; gliukozė ~10 mmol/l (< 5,6 – gydyti)', g: 'CMC', r: '#/vaistas/gliukoze' },
-      { t: 'Išvaržos požymiai – hipertoninis NaCl, skubi telekonsultacija', g: 'CMC', k: true, r: '#/vaistas/nacl-hipert', s: ['Laikinai EtCO₂ 30 mm Hg ≤ 20 min'] },
-      { t: 'Traukuliai – midazolamas 5 mg IV / IO / IM, kartoti kas 5 min; toliau levetiracetamas', g: 'CPP', r: '#/vaistas/midazolamas' },
-      { t: 'Atvira galvos žaizda – antibiotikas', g: 'CPP', r: '#/vaistas/ceftriaksonas' },
+      { t: 'Išvaržos požymiai – hipertoninis NaCl 250 ml 3 % ar 5 % (arba 30 ml 23,4 %) per ≥ 10 min (TCCC 2026), skubi telekonsultacija', g: 'CMC', k: true, r: '#/vaistas/nacl-hipert', s: ['Laikinai EtCO₂ 30 mm Hg ≤ 20 min'], i: 'Kiti šaltiniai – JTS TBI PFC: 250 ml 3 % per 20 min, kartoti kas 3 val.; daugiau kaip 2 dozės – tik telekonsultacijos metu.' },
+      { t: 'Traukuliai – midazolamas 5 mg IV / IO / IM, kartoti kas 5 min (CMC – pagal SOP); toliau levetiracetamas – gydytojo sprendimu', g: 'CMC', r: '#/vaistas/midazolamas' },
+      { t: 'Atvira galvos žaizda – antibiotikas (ceftriaksonas 2 g IV / IO / IM kartą per parą)', g: 'CMC', r: '#/vaistas/ceftriaksonas' },
       { t: 'Sedaciją minimizuoti; GKS užrašyti prieš kiekvieną dozę' },
       { t: 'Blogėja – didinti evakuacijos skubumą', k: true, sk: 36 }
     ]
@@ -333,7 +333,7 @@ E.sarasai = {
   'e-perdavimas': {
     title: 'Perdavimas', short: 'Perdavimas',
     items: [
-      { t: 'Tiesiogiai priimančiam medikui; MIST (ATMIST)', k: true, sk: 38, r: '#/mist' },
+      { t: 'Tiesiogiai priimančiam medikui; ATMISTER (MIST)', k: true, sk: 38, r: '#/telekonsultacija' },
       { t: 'Pirmiausia kas tęstina: turniketų laikai, paskutinės dozės, infuzijos ir greičiai, alergijos', k: true, sk: 38 },
       { t: 'Tendencijos: rodikliai, GKS, diurezė, skysčių balansas per 24 val.' },
       { t: 'Problemų sąrašas, telekonsultacijų rekomendacijos, neatlikti darbai', sk: 38 },
@@ -455,7 +455,7 @@ E.puslapiai = {
   zaizdos: {
     title: 'Žaizdos ir infekcija', sub: 'Plovimas, tvarsčiai, uždarymas, antibiotikai',
     html:
-      '<p>Visos lauko žaizdos laikomos nešvariomis (užterštos dirvožemiu, išmatomis ar senesnės nei 6 val.).</p>' +
+      '<p>Visos lauko žaizdos laikomos užterštomis (dirvožemis, išmatos, sprogimo nuolaužos). Pirminis užsiuvimas – tik švarioms ir ne vėliau kaip ~12 val. po sužeidimo; užterštos ir senesnės žaizdos paliekamos atviros – uždelstas pirminis užsiuvimas po 3–7 d. (JTS CPG „Acute Traumatic Wound Management in the Prolonged Field Care Setting“, 2017).</p>' +
       '<h3>Plovimas</h3><div class="tw"><table><tr><th>Žaizda</th><th>Kiekis</th></tr><tr><td>Maža ar švari</td><td>1–3 l</td></tr><tr><td>Vidutinė ar nešvari</td><td>4–8 l</td></tr><tr><td>Didelė ar labai nešvari</td><td>≥ 9 l</td></tr></table></div>' +
       '<p>Skystis: sterilus NaCl ar vanduo → švarus geriamasis vanduo → virintas ≥ 3 min. Slėgis – 6–15 psi (35 ml švirkštas su 19 G kateteriu ~8 psi); didesnis žaloja audinius. Jodo, alkoholio ar antibiotikų priedai nemažina infekcijos.</p>' +
       '<h3>Uždarymas</h3><p>Abejojant – žaizda paliekama atvira. Su audinių netekimu ir dūrinės – atviros. Uždelstas užsiuvimas – po 3–7 d., jei nėra infekcijos. Infekavusi uždaryta žaizda atveriama.</p>' +
@@ -470,7 +470,7 @@ E.puslapiai = {
       '<p>Baigtį blogina antrinis pažeidimas: vienas hipoksijos ar hipotenzijos epizodas.</p>' +
       '<h3>Tikslai</h3><div class="tw"><table><tr><td>SpO₂</td><td>≥ 92 % (ventiliuojamam > 95 %)</td></tr><tr><td>sAKS</td><td>≥ 110 mm Hg (JTS DCR)</td></tr><tr><td>EtCO₂ (ventiliuojamam)</td><td>35–40 mm Hg</td></tr><tr><td>Temperatūra</td><td>35,6–37,5 °C</td></tr><tr><td>Gliukozė</td><td>~10 mmol/l; < 5,6 – gydyti</td></tr><tr><td>Natris (jei matuojama)</td><td>145–160 mmol/l</td></tr></table></div>' +
       '<p class="muted">JTS TBI PFC: SpO₂ minimum > 90 %; gide – TCCC 2026 riba ≥ 92 %. sAKS lauke (TCCC 2026, March gidas) – > 100 mm Hg.</p>' +
-      '<h3>Intrakranijinis spaudimas</h3><ul><li><b>Minimum</b> – galvūgalis 30–60°, kaklas tiesiai; skausmas, nerimas, karščiavimas kontroliuojami.</li><li><b>Geriau</b> – sedacija ir analgezija (RASS −1…−2).</li><li><b>Geriausia</b> – osmoterapija: ' + vs('nacl-hipert', 'hipertoninis NaCl') + ' (pirmenybinis) arba ' + vs('manitolis', 'manitolis') + ' 1 g/kg per 20 min (tik be kraujavimo ir šoko, sAKS ≥ 110).</li></ul>' +
+      '<h3>Intrakranijinis spaudimas</h3><ul><li><b>Minimum</b> – galvūgalis 30–60°, kaklas tiesiai; skausmas, nerimas, karščiavimas kontroliuojami.</li><li><b>Geriau</b> – sedacija ir analgezija (RASS −1…−2).</li><li><b>Geriausia</b> – osmoterapija: ' + vs('nacl-hipert', 'hipertoninis NaCl') + ' (pirmenybinis; TCCC 2026 – 250 ml 3 % ar 5 % arba 30 ml 23,4 % per ≥ 10 min; kiti šaltiniai – JTS TBI PFC: 250 ml 3 % per 20 min, kas 3 val.) arba ' + vs('manitolis', 'manitolis') + ' 1 g/kg per 20 min (tik be kraujavimo ir šoko, sAKS ≥ 110).</li></ul>' +
       '<p>Gresiant išvaržai (vienpusis išsiplėtęs vyzdys, Cushing triada) – laikinai hiperventiliuoti iki EtCO₂ 30 mm Hg ne ilgiau kaip 20 min ir skubiai konsultuotis.</p>' +
       '<h3>Traukuliai</h3><p>' + vs('midazolamas', 'Midazolamas') + ' 5 mg IV / IO / IM, kartoti kas 5 min, kol traukuliai liausis; toliau – ' + vs('levetiracetamas', 'levetiracetamas') + ' 2000 mg IV / IO per 15 min, po to 500 mg kas 12 val. (gydytojo sprendimu).</p>' +
       '<h3>Kita</h3><ul><li>GKS ir vyzdžiai – ne rečiau kaip kas valandą.</li><li>Atvira galvos žaizda – antibiotikas 5 d.; uždarai – nereikia.</li><li>Sedaciją minimizuoti, kad matytumėte neurologiją.</li></ul>',
@@ -526,7 +526,7 @@ E.puslapiai = {
       '<p>Evakuacijos prašymas teikiamas perimant sužeistąjį, o skubumas peržiūrimas keičiantis būklei. Ruoškitės ilgesnei nei planuota kelionei.</p>' +
       '<h3>Prieš išvykimą</h3><ul><li>Pilnas pakartotinis vertinimas; turniketai, tvarsčiai, linijos, vamzdeliai, kateteris – pritvirtinti.</li><li>Vaistai, skysčiai, kraujas, deguonis, baterijos – su atsarga vėlavimui.</li><li>Hipotermijos apsauga; neštuvų diržai ne ant lūžių; akių ir ausų apsauga.</li><li>Dokumentai kartu: DD1380, stebėjimo lapas.</li></ul>' +
       '<h3>Skrydis</h3><p>Krentant slėgiui plečiasi dujos (pneumotoraksas, manžetės, balionėliai) ir didėja hipoksija; vibracija, triukšmas ir šaltis apsunkina stebėjimą.</p>' +
-      '<h3>Perdavimas</h3><p>Tiesiogiai priimančiam medikui: MIST (ar ATMIST) – mechanizmas ir laikas, sužalojimai, požymiai ir jų tendencijos, gydymas. Pirmiausia – kas tęstina: turniketų laikai, paskutinės dozės, infuzijos ir greičiai, alergijos. Skysčių balansas, problemų sąrašas, telekonsultacijų rekomendacijos. Atsakykite į klausimus prieš išvykdami.</p>' +
+      '<h3>Perdavimas</h3><p>Tiesiogiai priimančiam medikui: ATMISTER (MIST) – mechanizmas ir laikas, sužalojimai, požymiai ir jų tendencijos, gydymas. Pirmiausia – kas tęstina: turniketų laikai, paskutinės dozės, infuzijos ir greičiai, alergijos. Skysčių balansas, problemų sąrašas, telekonsultacijų rekomendacijos. Atsakykite į klausimus prieš išvykdami.</p>' +
       '<p>Dokumentavimo lygiai: DD1380 (minimum) → stebėjimo lapas (geriau) → AAR po perdavimo (geriausia).</p>',
     saltinis: 'JTS CPG ID 91 (2021); PFC WG 10 gebėjimų (2015); kuopos paskaita „Slauga taktinėje aplinkoje (PCC)“; TCCC gairės 2026-05-01'
   },

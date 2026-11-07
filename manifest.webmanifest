@@ -17,7 +17,7 @@
     { "src": "icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Paciento failas", "short_name": "Pacientas", "url": "./#/pacientas", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
+    { "name": "Pacientas", "short_name": "Pacientas", "url": "./#/pacientas", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
     { "name": "Priminimai", "short_name": "Priminimai", "url": "./#/priminimai", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] },
     { "name": "Telekonsultacija", "short_name": "Telekons.", "url": "./#/telekonsultacija", "icons": [{ "src": "icon-192.png", "sizes": "192x192" }] }
   ]

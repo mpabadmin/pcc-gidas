@@ -441,7 +441,8 @@ html.fbopen,html.fbopen body{overflow:hidden}
 @media(max-height:420px) and (orientation:landscape){header{position:static}#nav a{flex-direction:row;justify-content:center;gap:6px;padding:4px 0}main{padding-bottom:calc(60px + env(safe-area-inset-bottom))}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
 /* ── naktinis raudonas režimas: tamsi paletė + raudonas filtras (lieka tik raudonas kanalas) ── */
-body.night::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;background:#c80000;mix-blend-mode:multiply}
+/* v3.8 (kaip ETC v56): #f00 (buvo #c80000) – multiply palieka tik raudoną kanalą; su #c80000 net balta ant juodos tebūtų 3,5:1, su #f00 – 5,25:1 (WCAG 4,5:1 pasiekiama) */
+body.night::after{content:'';position:fixed;inset:0;z-index:9999;pointer-events:none;background:#f00;mix-blend-mode:multiply}
 body.night{background:#000}
 #night[aria-pressed="true"]{background:var(--tx);color:var(--bg)}
 header .seg{min-width:0}header .seg button{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-left:2px;padding-right:2px}
@@ -735,7 +736,7 @@ html.gl .hbt button{font-size:15px;padding-left:1px;padding-right:1px}
 @media(max-width:400px){.hbt button{font-size:13px}html.gl .hbt button{font-size:13.5px}}
 @media(max-width:350px){.hbt button,html.gl .hbt button{font-size:12px;letter-spacing:-.25px}}
 /* požymių ir kiti langai – laiko lustai vienoje eilutėje */
-.mqtm .mqc{flex:1 1 auto;justify-content:center;padding:0 7px;white-space:nowrap}
+.mqtm .mqc{flex:1 1 auto;justify-content:center;padding:0 7px;white-space:nowrap;min-width:44px}@media(max-width:400px){.mqtm .mqtol{display:none}}@media(max-width:360px){.mqtm{gap:4px}.mqtm .mqtos{display:none}.mqsh .mqtm .mqc{padding:0 3px;font-size:13px}} /* v3.8: siauruose ekranuose – „Kitas…“, „−5“ (pilnas pavadinimas – aria-label) */
 @media(max-width:360px){.mqtm .mqc{font-size:13px;padding:0 6px}}
 .mqtm .mqst{flex:1}
 html.gl .mqtm .mqc,html.gl .mqqv .mqc{min-height:56px;font-size:16px}
@@ -753,7 +754,7 @@ html.gl .mqtm .mqc,html.gl .mqqv .mqc{min-height:56px;font-size:16px}
   .mqsh .mqrow:has(> [data-sa="gcson"]){margin-top:4px}.mqsh [data-sa="gcson"]{min-height:32px}
   .mqqv .mqc{min-height:36px}
 }
-@media(max-height:680px){.mqkp button{min-height:40px;font-size:20px}.mqavpu button,.mqvf button{min-height:40px}.mqdisp{min-height:36px}.mqdisp b,.mqbp{font-size:28px;min-height:36px}.mqsh .mqc{min-height:38px}}
+@media(max-height:680px){.mqsh{max-height:96vh;max-height:96dvh}.mqkp{gap:4px}.mqkp button{min-height:44px;font-size:20px}.mqavpu button,.mqvf button{min-height:40px}.mqdisp{min-height:36px}.mqdisp b,.mqbp{font-size:28px;min-height:36px}.mqsh .mqc{min-height:38px}.mqsave{padding:8px 12px}} /* v3.8 (kaip ETC v56): klaviatūra ≥ 44 px (320×640) */
 @media(max-height:760px) and (max-width:360px){.mqvf span{font-size:9.5px;letter-spacing:-.2px}.mqvf b{font-size:13px}}
 /* pirštinių „Atgal“ – dešinėje, virš juostos: neuždengia žymėjimų ir MARCH PAWS raidžių */
 #glback{left:auto;right:12px;width:56px;height:56px}
@@ -875,6 +876,9 @@ body.night .ptdue{background:#fff}
 .pcli.due{border-color:var(--amb);border-width:2px;background:var(--ambbg);color:var(--amb)}.pcli.due .x small{color:inherit;opacity:.9}
 .pcli.over{border-color:var(--abn);border-width:2px;background:var(--redbg);color:var(--red)}.pcli.over .x small{color:inherit;opacity:.9}
 .pcli.conv{opacity:.7}
+.pcli.na .st{font-weight:600;color:var(--tx2)}
+.pcall{width:100%;margin:2px 0 10px;min-height:48px;font-weight:700}
+.pcuo.nm .btn{margin-top:6px}
 .pcli .ok,.pcli .del{flex:none;min-width:48px;min-height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--tx);font:inherit;font-size:18px;font-weight:700;touch-action:manipulation}
 .pcli.due .ok,.pcli.over .ok{background:var(--tx);color:var(--bg);border-color:var(--tx)}
 .pcli .btn.sm{flex:none;margin:0}
@@ -885,6 +889,16 @@ body.night .ptdue{background:#fff}
 .nbdg.red{background:var(--abn);color:#fff}
 @media(max-width:350px){.pctot b{font-size:15px}.pcbtns .btn{font-size:14px}}
 html.gl .pcli .ok,html.gl .pcli .del{min-width:56px;min-height:52px}
+/* v3.8: lietimo taikiniai ≥ 44 px (lentelės „×“, lygio mygtukai antraštėje, paciento skirtukai); pirštinėmis rodiklių langas telpa 390×844 be slinkimo */
+.pcvt .del{min-width:44px;min-height:44px}html.gl .pcvt .del{min-width:52px;min-height:52px}
+header .lvseg button{min-height:44px}
+.acts4{grid-template-columns:repeat(4,minmax(0,1fr))}html.gl .btn.ibx{padding:8px 2px;font-size:14px;min-width:0} /* pirštinėmis 4 mygtukai telpa (be horizontalaus slinkimo) */
+.seg2.hbt button{min-height:44px}
+html.gl .mqsh{max-height:96vh;max-height:96dvh}
+html.gl .mqsh .mqkp button{min-height:56px;font-size:26px}html.gl .mqsh .mqkp{gap:6px}
+html.gl .mqsh .mqstrip .mqc{min-height:46px}
+html.gl .mqsh .mqvf button,html.gl .mqsh .mqavpu button{min-height:52px}
+html.gl .mqsh .mqtm .mqc{min-height:50px}
 /* ── paros priežiūros laikrodis (#/laikrodis): 24 val. ciferblatas su žiedais ── */
 .pcck{display:block;width:100%;max-width:320px;height:auto;margin:6px auto 0}
 .pcck text{font-family:inherit}
@@ -901,7 +915,53 @@ html.gl .pcli .ok,html.gl .pcli .del{min-width:56px;min-height:52px}
 .pckn{font-size:12.5px;margin-top:6px}
 /* naktinis režimas: lieka tik raudonas kanalas – spalvas keičia forma: pilnas (kitas), blankus (atlikta), tuščiaviduris (planuojama), storas tuščiaviduris (vėluoja) */
 body.night .pcck .d{fill:#fff;stroke:#fff}body.night .pcck .d.plan,body.night .pcck .d.over,body.night .pcck .d.due{fill:none}body.night .pcck .d.over,body.night .pcck .d.due{stroke-width:3}
-body.night .pcck .rg,body.night .pcck .tk{stroke:#8a8a8a}body.night .pcck .hl{fill:#bbb}body.night .pcck .tq{stroke:#fff}body.night .pcck .tq.early{stroke-dasharray:2 4}body.night .pckl .sw{background:#fff}
+body.night .pcck .rg,body.night .pcck .tk{stroke:#8a8a8a}body.night .pcck .hl{fill:#fff}body.night .pcck .tq{stroke:#fff}body.night .pcck .tq.early{stroke-dasharray:2 4}body.night .pckl .sw{background:#fff}
+
+/* v3.8: naktinis režimas – juoda / balta paletė su rėmeliais (perimta iš ETC v56, pritaikyta PCC selektoriams). Multiply filtras palieka tik raudoną kanalą –
+   spalvų skirtumai dingsta, todėl naktį tik juoda / balta: spalvoti fonai – juodi su baltu rėmeliu, „įjungta“ – balta su juodu tekstu, būsenos – rėmelio storiu ir ženklu. */
+body.night,body.field.night{--bg:#000;--card:#141414;--line:#8f8f8f;--tx:#fff;--tx2:#F5F5F5;--acc:#fff;--accbg:#000;--red:#fff;--redbg:#000;--amb:#fff;--ambbg:#000;--grn:#fff;--grnbg:#000;--hl:#444;--tlbg:#000;--tlfg:#fff;--tlic:#fff;--tlicfg:#000;--abn:#fff;--ok:#fff;--mkr:#fff;--bfill:#000;--bline:#fff;--sMb:#000;--sMf:#fff;--sIb:#000;--sIf:#fff;--sSb:#000;--sSf:#fff;--sTb:#000;--sTf:#fff;--sEb:#000;--sEf:#fff;--sMc:#fff;--sIc:#fff;--sSc:#fff;--sTc:#fff;--sEc:#fff}
+body.night .dose,body.night .dose.tc,body.night .warn,body.night .tag,body.night .hbtm,body.night .tool,body.night .nn,body.night .msk,body.night .msum a,body.night .tp1,body.night .tp2,body.night .tp3,body.night .gres,body.night .rA,body.night .rB,body.night .rC,body.night .mcl .lt,body.night .bdg,body.night .mqt,body.night .mcs .btn.pri,body.night .nbres.hi,body.night .sco .scl,body.night .scm,body.night .vlm,body.night .tz,
+body.night .phase,body.night .f1,body.night .f2,body.night .f3,body.night .f4,body.night .f5,body.night .f6,body.night .fSTAB,body.night .fVAL,body.night .fPAR,body.night .fYPAT,body.night .fEVAC,body.night .trf a,body.night .trt .tra,body.night .lvk,body.night .dstrip,body.night .ltpa,body.night .hbm,body.night .hbar,body.night .hbq,body.night .sk.tmk,body.night .mqc.on.tq,body.night .nbdg,body.night .nbdg.red,body.night .nbdg.due,body.night #toast{background:#000!important;color:#fff!important;border:1px solid #fff!important}
+body.night .tool .ti{background:#fff;color:#000}
+body.night .btn.pri,body.night .btn.pri0,body.night .acts .pri0,body.night .pn .pri0,body.night .gdgo,body.night .trnext,body.night .mqsave,body.night .hbqa.pri,body.night .row.nxt,body.night .mqkp button.nx,body.night .add{background:#000!important;color:#fff!important;border:2px solid #fff!important}
+body.night .btn.pri:disabled,body.night .mqsave:disabled{opacity:.55}
+body.night .hbqa{background:#000;color:#fff;border-color:#fff}body.night .hbqa.pri{border-width:2px;font-weight:800}
+body.night .x{background:#000;color:#fff;border-color:#fff}
+body.night .mqkp button{background:#000;color:#fff;border-color:#fff}
+body.night .mqseg button.on,body.night .mqpain button.on,body.night .mqsh .mqc.on,body.night .mcs .mqc.on,body.night .mcs .opts button.on,body.night .madd.sm button.on,body.night .lgs button.on,body.night .chips button.on,body.night .tabs button.on,body.night .seg button.on,body.night .seg2 button.on,body.night .mqvf button.on,body.night .mqavpu button.on,body.night .trt .trd,body.night .rdvp,body.night .rdvp.on,body.night .dictb.on,body.night .nl.ok .nn,body.night .sco.ok .scl,body.night .ck.on .bx,body.night .tnb,
+body.night .lvseg button.on,body.night .lvseg #lvC.on,body.night .lvseg #lvM.on,body.night .lvseg #lvP.on,body.night .pccrit button.on,body.night .pccrit button.on.crit,body.night .pccrit button.on.ser,body.night .pccrit button.on.non,body.night .ptbar button.on,body.night .opts button.on,body.night .mqcrt button.on,body.night .cki[aria-expanded=true],body.night .phib[aria-expanded=true] .cki,body.night .gdopt button.on,body.night .mch,body.night .trt .bdg{background:#fff!important;color:#000!important;border-color:#fff!important;box-shadow:none}
+body.night .mch *,body.night .ptbar button.on *,body.night .mqavpu button.on *,body.night .mqvf button.on *,body.night .lvseg button.on *{color:#000!important}
+body.night .mqvf button.on{border:2px solid #fff}
+body.night .mqvf span,body.night .mqdisp small,body.night .hbtm small,body.night .row small,body.night .muted,body.night #nav a,body.night .mqpv,body.night .pcli .x small,body.night .pcli .tm,body.night .pcvt th,body.night .pcvt td.t,body.night .pcspk small,body.night .pctot small,body.night .pctot .h,body.night .pckv b,body.night .pcsrc,body.night .pcsrc a,body.night .pckl,body.night .lvb small,body.night .ckx,body.night .gdx,body.night .gdopt button small,body.night .trt .trv small{color:#F5F5F5!important;opacity:1}
+body.night #nav a.on{background:#000;color:#fff;box-shadow:inset 0 0 0 1px #fff}
+body.night .ck.on .t{color:#F5F5F5}
+body.night .prog i,body.night .scprog i.d,body.night .qrprog i.d,body.night .gdd button.on{background:#fff}body.night .prog,body.night .scprog i,body.night .qrprog i,body.night .gdd button{background:#555}
+body.night .esme{border-left-color:#fff}
+body.night .rdl.on{background:#141414;box-shadow:0 0 0 6px #141414,-10px 0 0 #fff}
+body.night .mqev .evu,body.night .mqev .evp,body.night .mqev .evr{background:#000;color:#fff;border:1px solid #fff}
+body.night .mcs,body.night .mcl,body.night .msT1,body.night .msT2,body.night .msT3,body.night .msT4,body.night .msX{--c:#fff;--f:#fff;--b:#000;--g:#000;--gf:#fff}
+body.night .mcl{background:#000!important;border-top:1px solid #fff;border-bottom:1px solid #fff}body.night .mcl *{color:#fff!important}body.night .mqtl,body.night .mqtl.r{color:#fff}
+body.night .madd button{background:#000;color:#fff;border-color:#fff}body.night .madd:not(.sm) button,body.night .madd.sm button.on{background:#fff;color:#000}
+body.night input,body.night select,body.night textarea{background:#000;color:#fff;border-color:#fff}
+/* PCC: priminimų juostos, eilutės, stebėjimo lapas, diurezė, laikrodis, lygiai */
+body.night .rem,body.night .rem-r,body.night .rem-a{background:#000;color:#fff;border:1px solid #fff}body.night .rem-r{border-width:3px}
+body.night .remz,body.night .remx{background:#000;color:#fff;border:1px solid #fff}body.night .remb{color:#fff;border-color:#fff}
+body.night .pcli.due,body.night .pcli.over{background:#000;color:#fff;border:2px dashed #fff}body.night .pcli.over{border:3px solid #fff}
+body.night .pcli.due .ok,body.night .pcli.over .ok{background:#fff;color:#000;border-color:#fff}
+body.night .pcli .ok,body.night .pcli .del,body.night .pcvt .del{background:#000;color:#fff;border-color:#fff}
+body.night .pcli.over .st::before{content:'! '}
+body.night .pcuo,body.night .pcuo.lo,body.night .pcuo.ok,body.night .pcuo.hi{background:#000;color:#fff;border:2px solid #fff}body.night .pcuo.lo{border-width:3px}body.night .pcuo.lo b::after{content:' !'}
+body.night .pcvt td{background:#000;color:#fff;border-color:#8f8f8f}body.night .pcvt td.ab,body.night .pcvt td.wr{color:#fff;border-color:#fff}body.night .pcvt td.t{background:#000}
+body.night .pcspk div,body.night .pctot div{background:#000;border-color:#8f8f8f}body.night .pctot .h{border:0}body.night .pcspk b.ab{color:#fff}
+body.night .pcspk polyline{stroke:#fff}body.night .pcspk circle{fill:#fff}
+body.night .lvb.on,body.night .lvb.cls.on,body.night .lvb.cmc.on,body.night .lvb.cpp.on{border-color:#fff;border-width:3px}
+body.night .ck.lv-cls,body.night .ck.lv-cmc,body.night .ck.lv-cpp{border-left-color:#fff;background:none}
+body.night .dstrip svg,body.night .dstrip em{color:#fff}
+body.night .cki{background:#000;color:#fff;border:1px solid #fff}
+body.night .trt .trv .ti{background:#fff;color:#000}
+body.night .nbdg.red,body.night .nbdg.due{border-width:2px!important;font-weight:900}
+body.night .gdic{background:#000;border:1px solid #fff}body.night .gdi{stroke:#fff}
+body.night .scr i{background:#fff}
 
 /* ── instrukcija „Kaip naudotis“ ── */
 body.gdon{overflow:hidden}

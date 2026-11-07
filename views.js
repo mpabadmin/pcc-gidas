@@ -314,7 +314,7 @@ const V = {
     let h = `<h1>${esc(s.pav)}</h1><span class="tag">#${esc(s.id)}</span>${lvTag(s)}` + (s.fazes || []).map(f => { const x = fazeById(f); return `<span class="tag ${phCls(f)}">${esc(x ? phLbl(x) : f)}</span>`; }).join('');
     if (s.aprasas) h += `<p class="lead">${esc(s.aprasas)}</p>`;
     const ulr = a => '<ul>' + a.map(x => '<li>' + skRefs(x) + '</li>').join('') + '</ul>';
-    if (!ok(s.lygis)) h += '<div class="warn">CMC / CPP įgūdis – įjungtas filtras „Rodyti tik komandos veiksmus“, todėl jo nėra sąrašuose.</div>';
+    if (!ok(s.lygis)) h += '<div class="warn">' + esc(lvName(s.lygis)) + ' įgūdis – aukštesnis nei nustatymų „Mano lygis“ (' + esc(lvName(lvl())) + '), todėl jo nėra sąrašuose.</div>';
     if ((s.zingsniai || []).length) h += '<h2>Žingsniai</h2><ol class="steps">' + s.zingsniai.map(x => '<li>' + skRefs(x) + '</li>').join('') + '</ol>';
     if ((s.esme || []).length) h += '<div class="card esme"><b>Svarbu</b>' + ulr(s.esme) + '</div>';
     if ((s.klaidos || []).length) h += '<div class="warn wl"><b>Dažnos klaidos ir pavojai</b>' + ulr(s.klaidos) + '</div>';
@@ -375,7 +375,7 @@ const V = {
     let h = '<h1>Nustatymai</h1>' + disclaimer() + '<a class="row" href="#" data-g="open"><div>Kaip naudotis<small>Trumpa instrukcija su pagrindiniais mygtukais</small></div><span class="ar">›</span></a>' + GL.settingRow();
     if (advAny()) h += '<h2>Mano lygis</h2>' + lvlPick();
     h += '<h2>Aš</h2>' + (typeof MC !== 'undefined' && MC.profileView ? MC.profileView() : '') + pcSt(() => PC.settings());
-    h += '<h2>Sužeistasis</h2>' + row('#/pacientas', 'Paciento failas', 'Rodikliai, skysčiai, priežiūra, perdavimas') + b('new-pt', '+ Kitas sužeistasis', 'Ankstesni lieka sąraše') + REM.settings() + pcSt(() => PC.dataSettings()) + OP.settings();
+    h += '<h2>Sužeistasis</h2>' + row('#/pacientas', 'Pacientas', 'Rodikliai, skysčiai, priežiūra, perdavimas') + b('new-pt', '+ Kitas sužeistasis', 'Ankstesni lieka sąraše') + REM.settings() + pcSt(() => PC.dataSettings()) + OP.settings();
     if (FB.configured() || FB.pending()) {
       h += '<h2>Atsiliepimai</h2>' + (FB.configured() ? b('fb', 'Pranešti apie klaidą ar pasiūlyti', 'Komentaras ir ekrano vaizdas') : '');
       const nOut = FB.pending();

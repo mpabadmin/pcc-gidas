@@ -247,5 +247,7 @@ ${c.pazymeta ? `<div class="card fbsel"><small class="muted">Pažymėtas tekstas
   addEventListener('online', () => flush());
   setTimeout(flush, 4000);
 
-  return { open, flush, pending: () => outbox().length, configured: () => !!url() };
+  // OPSEC ištrynimas: neišsiųsti pranešimai (localStorage) ir atvertas langas su ekrano vaizdais (atmintyje)
+  function clear() { try { localStorage.removeItem(OUT); } catch (e) {} st = null; if (box) { box.hidden = true; box.innerHTML = ''; } }
+  return { open, flush, clear, pending: () => outbox().length, configured: () => !!url() };
 })();

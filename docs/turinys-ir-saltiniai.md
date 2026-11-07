@@ -1,4 +1,4 @@
-# PCC gidas – turinio failai (v2.1, 2026-10-28)
+# PCC gidas – turinio failai (v3.8, 2026-11-07)
 
 Turinys PCC gidui (1040 medkuopa), parašytas **March gido duomenų formatais**. Įdėkite failus į perstatytos programėlės šaknį vietoje March failų.
 
@@ -8,13 +8,12 @@ Turinys PCC gidui (1040 medkuopa), parašytas **March gido duomenų formatais**.
 | `igudziai.js` | kaip March: vienas JSON objektas eilutėje | 39 įgūdžiai (CLS 16 · CMC 18 · CPP 5) |
 | `scenarijai.js` | kaip March: JSON, 1 tarpo įtrauka | 30 scenarijų `p1`–`p30`, 90 klausimų (po 3 atsakymus, vienas teisingas) |
 | `vaistai.js` | kaip ETC: `vaistuGrupes` + `vaistai`, JSON, 2 tarpų įtrauka, baigiasi `];\n` | 24 vaistai, 6 grupės |
-| `_build/` | šaltiniai (`ig.js`, `sc.js`, `vs.js`), generatorius `build.js`, tikrintuvas `validate.js` | – |
 
-Atnaujinti: redaguokite `_build/*.js` → `node _build/build.js` → `node _build/validate.js` (`sarasai.js` redaguojamas tiesiogiai).
+Atnaujinti: turinio failai redaguojami tiesiogiai (generatoriaus ir tikrintuvo repozitorijoje nėra). Po pakeitimų – `node --check` kiekvienam failui ir programėlės testai (Playwright: maršrutų peržiūra be klaidų, scenarijuose – po vieną teisingą atsakymą).
 
 ## Patikra
 
-- `node _build/validate.js`: visi failai įkeliami (`global.window = {}`), JSON dalys praeina `JSON.parse`, tikrinamos visos nuorodos (`sk`, `r`, `ref`, `#N` įgūdžiuose, temų įgūdžiai, sąrašai ir vaistai, `susije`, `alt`), lygiai, fazės, „tik vienas teisingas“, atsakymų ilgių balansas (teisingo pozicija a/b/c – 30/35/25). Klaidų ir įspėjimų nėra.
+- Turinio patikra (pradinė v2.1, tuomet atskiru įrankiu, kurio repozitorijoje nėra): visi failai įkeliami (`global.window = {}`), JSON dalys praeina `JSON.parse`, tikrinamos nuorodos (`sk`, `r`, `ref`, `#N` įgūdžiuose, temų įgūdžiai, sąrašai ir vaistai, `susije`, `alt`), lygiai, fazės, „tik vienas teisingas“. Nuo v3.8 tai tikrina programėlės Playwright testai.
 - Dūmų testas: failai įdėti į March gido kopiją ir atvaizduoti Chromium naršyklėje 23 maršrutai (`#/f/STAB` … `#/scenarijai/p20`, `#/vertinimas`) – 0 konsolės klaidų.
 
 ## Pagrindiniai sprendimai
@@ -58,6 +57,8 @@ Atnaujinti: redaguokite `_build/*.js` → `node _build/build.js` → `node _buil
 - TCCC gairės 2026-05-01 – https://learning-media.allogy.com/api/v1/pdf/18ccfdfc-a076-47e9-8a34-376efdd81b43/contents (dozės sutikrintos su March / ETC vaistai.js)
 - Gamintojų PCS (JK eMC, EMA) – nuorodos prie kiekvieno vaisto
 - Kuopos paskaitos: „Slauga taktinėje aplinkoje (PCC)“ (2026-09-21), „Bendrieji higienos ir infekcijų kontrolės principai“ (2026)
+- DD Form 1380 „TCCC Card“ (JUL 2025), JAV gynybos departamentas – viešoji sritis; tuščios kortelės šablonai `img/skenas/dd1380-f.png`, `dd1380-b.png` (popierinės kortelės nuskaitymas, `#/skenuoti`)
+- JTS CPG „Acute Traumatic Wound Management in the Prolonged Field Care Setting“ (2017) – žaizdų uždarymas (pirminis – ne vėliau kaip ~12 val.; užterštos – uždelstas pirminis po 3–7 d.)
 
 ## Peržiūros pataisos (2026-10-28, v2.1)
 
@@ -87,6 +88,18 @@ Atnaujinti: redaguokite `_build/*.js` → `node _build/build.js` → `node _buil
   p24 2 klausimas: klaidingas „Kartojate kalcį kas 5 min visą valandą“ pakeistas į „Daugiau nieko – kalcis kalį jau sumažino“, kad naujoji kartojimo taisyklė nepadarytų jo teisingu.
 - **Midazolamas traukuliams**: atskira eilutė „Traukuliai (JTS TBI PFC)“ – „5 mg IV / IO / IM; kartoti kas 5 min, kol traukuliai liausis“; įgūdis #32, sąrašas `y-galva`, puslapis „galva“ – su doze. 0,5–2 mg traukuliams niekur nenurodyta (įgūdyje #17 – tik ketamino emergencijos reakcijai).
 - **Levetiracetamas**: „2000 mg IV / IO per 15 min, toliau 500 mg kas 12 val. – gydytojo sprendimu“ (JTS TBI PFC); kiti šaltiniai – epilepsinė būklė (ESETT, NICE 2022): 60 mg/kg, ne daugiau kaip 4,5 g, per 10 min.
+
+## Peržiūros pataisos (2026-11-07, v3.8; patvirtino savininkas)
+
+- **Dozių kortelės** – vaistai pagal lygio kodą (`lygis`), ne pagal `kam` tekstą; pašalinta `ne26` išimtis – kortelėse ir PCC vaistai (naloksonas, kristaloidai, gliukozė, lidokainas; CPP lygiui – CPP vaistai).
+- **Lygių žymos (JTS)**: `y-galva` – atvira galvos žaizda: antibiotikas (ceftriaksonas) – CMC; traukuliai – midazolamas CMC pagal SOP (vaisto lygis lieka CPP sedacijai, `kam` – „traukuliams – ir CMC pagal SOP“); žaizdų sąraše drėgnas–sausas tvarstis – CMC (NPWT – CPP); valandinė apžiūra – diurezė CLS (CLS įrašo įvestą ir išskirtą, CMC vertina ml/kg/val.), kaip `v-skysciai`.
+- **Ketaminas** – „Kiti šaltiniai“: JTS PCC (ID 91) 30 mg (0,3 mg/kg) IV kas 20 min, IM / IN 50–100 mg kas 20–30 min; JTS PFC 20 mg (0,1–0,2 mg/kg) IV. Pagrindinė schema – TCCC 2026.
+- **Hipertoninis NaCl** – TCCC 2026 dozė sąraše ir puslapyje „galva“; „Kiti šaltiniai – JTS TBI PFC: 250 ml 3 % per 20 min, kas 3 val.“.
+- **Žaizdos** – „senesnės nei 6 val.“ pakeista pagal JTS žaizdų PFC: pirminis užsiuvimas ne vėliau kaip ~12 val., užterštos – uždelstas pirminis po 3–7 d.
+- **Scenarijus p8** – fentanilis kartotas kas valandą (300 mcg per 4 val.), todėl naloksono poveikio pabaiga anksčiau nei susikaupusio opioido – pagrįsta; paaiškinimas papildytas (stebėti ≥ 2 val., infuzija – gydytojo sprendimu). Visuose 90 klausimų – po vieną teisingą atsakymą.
+- **Terminai**: „ATMISTER (MIST)“, kai kalbama apie perdavimo įrankį; „rehidratacija“; „Pacientas“ vietoj „Paciento failas“.
+- **Priežiūros grafikas**: vartymas – kas 2 val., kritinei ir be sąmonės – kas 1–2 val. (priminimas kas 2 val.); įtvarai – kas 6 val., be sąmonės ar kritinei – kas 2 val. (sutampa su `v-galunes`); kosėjimas ir maitinimas – tik kai paskutinis AVPU – A.
+- **Programėlė** (ne turinys): galvos traumai temperatūra žymima, kai < 35,6 ar > 37,5 °C; paracetamolis ir meloksikamas – pagal grafiką (priminimai), pagal poreikį – tik dozėje „pagal poreikį“ arba ketaminas, esketaminas, fentanilis, morfinas, midazolamas, naloksonas, ondansetronas.
 
 ## Klausimai kuopos gydytojui
 

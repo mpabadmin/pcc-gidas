@@ -308,7 +308,7 @@ const SK = (() => {
       `<label class="btn" data-sk-side="${k}">📷 Fotografuoti<input type="file" accept="image/*" capture="environment" data-skf="${k}" hidden></label><label class="btn">Iš galerijos<input type="file" accept="image/*" data-skf="${k}" hidden></label></div>`).join('') + '</div>';
     if (S.err) h += '<div class="warn">' + esc(S.err) + '</div>';
     if (S.res.f || S.res.b) h += review() + '<div class="acts"><button class="btn dng" data-act="sk-reset">Pradėti iš naujo</button></div>';
-    return h;
+    return h + '<p class="pcsrc">Kortelės šablonas: DD Form 1380 „TCCC Card“ (JUL 2025), JAV gynybos departamentas – viešoji sritis.</p>';
   }
   // ── kampų redagavimas ──
   let disp = 1;

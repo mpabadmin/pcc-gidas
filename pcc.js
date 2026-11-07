@@ -62,7 +62,8 @@ const PC = (() => {
     try { PT.sync(); } catch (e) { return null; }
     const L = PT.list(), p = pid ? L.pts.find(q => q.pid === pid) : L.pts[L.cur]; if (!p) return null;
     const c = p.card, la = obj(PT.get(p.pid, 'laikai')), kg = +PT.get(p.pid, 'svoris') || 0;
-    const tInj = +la.trauma || (MC.trTs ? MC.trTs(c) : 0) || 0, r = ensure(p.pid);
+    ensure(p.pid); syncCard(p.pid, c);
+    const tInj = +la.trauma || (MC.trTs ? MC.trTs(c) : 0) || 0, r = norm(all()[p.pid]);
     const x = { pid: p.pid, n: p.i + 1, tot: L.pts.length, label: p.label, c, r, kg, tInj, cur: p.i === L.cur };
     x.vits = allVits(x);
     return x;
@@ -76,7 +77,7 @@ const PC = (() => {
   const VF = [['hr', 'Pulsas', '/min', 0, 250], ['sys', 'AKS s', 'mm Hg', 0, 300], ['dia', 'AKS d', 'mm Hg', 0, 200], ['rr', 'KD', '/min', 0, 70], ['spo2', 'SpO₂', '%', 0, 100], ['temp', 'T', '°C', 25, 43, 1], ['gcs', 'GKS', '', 3, 15]];
   const AVPU = [['A', 'budrus'], ['V', 'balsas'], ['P', 'skausmas'], ['U', 'nereaguoja']];
   const CRT = [['<2', '< 2 s'], ['2-3', '2–3 s'], ['>3', '> 3 s']];
-  // tbi – galvos trauma: sAKS ≥ 110 mm Hg (turinys, JTS DCR); kitaip – < 90 (tikslas ≈ 100, 90–110)
+  // tbi – galvos trauma: sAKS ≥ 110 mm Hg (turinys, JTS DCR), temperatūra 35,6–37,5 °C (JTS TBI PFC); kitaip – sAKS < 90 (tikslas ≈ 100, 90–110)
   const abn = (k, v, tbi) => {
     if (v === '' || v == null) return false;
     const n = +v;
@@ -85,7 +86,7 @@ const PC = (() => {
       case 'sys': return tbi ? n < 110 : n < 90 || n > 180;
       case 'rr': return n > 29 || n < 10;
       case 'spo2': return n < 92; // PCC CPG: SpO₂ tikslas ≥ 92 %
-      case 'temp': return n < 36 || n > 38.5;
+      case 'temp': return tbi ? n < 35.6 || n > 37.5 : n < 36 || n > 38.5; // galvos trauma: 35,6–37,5 °C (JTS TBI PFC)
       case 'gcs': return n < 15;
       case 'pain': return n >= 7;
       case 'avpu': return v !== 'A';
@@ -111,6 +112,34 @@ const PC = (() => {
   const has = v => v !== '' && v != null;
   const vitText = v => [v.avpu ? 'AVPU ' + v.avpu : '', has(v.gcs) ? 'GKS ' + v.gcs : '', has(v.hr) ? 'P ' + v.hr : '', has(v.sys) ? 'AKS ' + v.sys + (has(v.dia) ? '/' + v.dia : '') : '', has(v.rr) ? 'KD ' + v.rr : '', has(v.spo2) ? 'SpO₂ ' + v.spo2 + ' %' : '', has(v.temp) ? 'T ' + fmt1(v.temp) + ' °C' : '', v.crt ? 'kapil. prisipild. ' + v.crt.replace('-', '–') + ' s' : '', has(v.pain) ? 'skausmas ' + v.pain + '/10' : ''].filter(Boolean).join(', ');
   const num = s => { const m = /^\s*(\d{1,3})/.exec(String(s == null ? '' : s)); return m ? +m[1] : ''; };
+  // v3.8: kortelės vaistų eilutės (DD1380 vaisto langas, gauti QR / ETC vaistų įrašai) → žurnalo įrašai su jų laiku, kad grafiko vaistams veiktų priminimai.
+  // src – kortelės eilutės raktas (be dublikatų); eilutė iš kortelės pašalinta – pašalinamas ir įrašas. Skysčiai ir kraujas – ne (jie skysčių balanse).
+  const rowKey = y => /^vz:/.test(String(y.src || '')) ? String(y.src) : 'mc:' + (+y.t || String(y.time || '')) + '|' + String(y.name || '').trim().toLowerCase();
+  const cardDrugRows = c => (c.rows || []).filter(y => y && !/^pcc:/.test(String(y.src || '')) && y.g !== 'fl' && y.g !== 'bl' && drugOf(y.name) && (+y.t || PT.hmTs(y.time)));
+  function syncCard(pid, c) {
+    const o = all(); if (!o[pid] || !c) return;
+    const r = norm(o[pid]), rows = cardDrugRows(c), keys = rows.map(rowKey); let ch = false;
+    const n0 = r.meds.length; r.meds = r.meds.filter(m => !/^(mc|vz):/.test(String(m.src || '')) || keys.indexOf(m.src) >= 0); if (r.meds.length !== n0) ch = true;
+    rows.forEach((y, i) => {
+      if (r.meds.some(m => m.src === keys[i])) return;
+      const v = drugOf(y.name), iv = ivlOf(v, String(y.route || ''));
+      r.meds.push({ id: uid(), kind: 'med', name: String(y.name).trim(), dose: String(y.dose || '').trim(), route: String(y.route || '').trim(), ivl: iv >= 0 ? iv : 0, t: +y.t || PT.hmTs(y.time), note: '', src: keys[i] }); ch = true;
+    });
+    if (ch) { r.meds.sort((a, b) => a.t - b.t); o[pid] = r; LS.set(KEY, o); }
+  }
+  // Gauti kito gido (ETC) vaistų žymėjimo įrašai (QR „z“): kortelės eilutė src 'vz:id' (jei jos dar nėra) → syncCard sukuria žurnalo įrašą
+  function importZ(pid, z) {
+    if (!Array.isArray(z) || !z.length) return;
+    mcCard(pid, c => {
+      c.rows = Array.isArray(c.rows) ? c.rows : [];
+      z.forEach(e => {
+        if (!e || !e.id || !(+e.t > 0) || c.rows.some(y => y && y.src === 'vz:' + e.id)) return;
+        const v = (E.vaistai || []).find(y => y.id === e.v), nm = String(e.n || (v ? dname(v) : e.v) || '').trim(); if (!nm) return;
+        c.rows.push({ g: v ? (v.id === 'nacl-hipert' ? 'fl' : MGRP[v.grupe] || 'ot') : 'ot', name: nm, dose: [e.a, e.u].filter(Boolean).join(' '), route: String(e.r || ''), time: hm(+e.t), t: +e.t, src: 'vz:' + e.id });
+      });
+    });
+    const x = X(pid); return x;
+  }
   // MIST kortelėje įvesti požymiai (be atitikmens stebėjimo lape) – rodomi kaip „MIST“ stulpeliai
   function mistVits(x) {
     const own = {}; x.r.vit.forEach(v => { own[v.t] = 1; });
@@ -153,15 +182,15 @@ const PC = (() => {
   const CARE = [
     ['vit', 'Gyvybiniai rodikliai', null, null, 'Kritinė – kas 15–30 min; rimta – kas 4 val.; nekritinė – kas 12 val.'],
     ['mini', 'Mini vizitas', null, null, 'Kas valandą: stabilus? Gerėja ar blogėja? Turniketai, tvarsčiai, hipotermija, skausmas'],
-    ['vart', 'Vartyti, patikrinti paminkštinimą (pakaušis, alkūnės, kulnai, kryžkaulis)', 2, 2, 'Ant kieto paviršiaus – kas 1 val.; be sąmonės – kas 1–2 val., galva pakelta ~30°'],
+    ['vart', 'Vartyti, patikrinti paminkštinimą (pakaušis, alkūnės, kulnai, kryžkaulis)', 2, 2, 'Kas 2 val.; kritinei ir be sąmonės – kas 1–2 val. (priminimas – kas 2 val.); ant kieto paviršiaus – kas 1 val.; galva pakelta ~30°'],
     ['burna', 'Burnos, nosies, lūpų priežiūra', 12, 4, 'Sąmoningas – valytis dantis kas 12 val.'],
-    ['kos', 'Skatinti kosėti, giliai kvėpuoti', 1, null, 'Sąmoningam'],
+    ['kos', 'Skatinti kosėti, giliai kvėpuoti', 1, null, 'Sąmoningam (AVPU – A); kitaip netaikoma', 'avpu'],
     ['vamz', 'Apžiūrėti vamzdelius, linijas, drenus', 4, 4, ''],
     ['plauti', 'Praplauti nenaudojamas IV linijas', 6, 6, 'Kas 4–8 val.'],
-    ['itv', 'Įtvarai: distalinis pulsas, oda, skausmas', 6, 2, 'Kompartmento sindromas – didėjantis skausmas, skausmas pasyviai judinant'],
+    ['itv', 'Įtvarai: distalinis pulsas, oda, skausmas', 6, 2, 'Kas 6 val.; be sąmonės ar kritinei – kas 2 val. Kompartmento sindromas – didėjantis skausmas, skausmas pasyviai judinant'],
     ['zaiz', 'Žaizdos ir tvarsčiai', 24, 12, 'Keisti ar sutvirtinti pagal poreikį'],
     ['kat', 'Šlapimo kateterio priežiūra, maišas žemiau šlapimo pūslės', 24, 24, ''],
-    ['val', 'Maitinimas, gėrimas', 5, null, 'Kas 4–6 val.; sąmoningam – ~100–125 ml/val. per burną'],
+    ['val', 'Maitinimas, gėrimas', 5, null, 'Kas 4–6 val.; sąmoningam (AVPU – A) – ~100–125 ml/val. per burną; kitaip netaikoma', 'avpu'],
     ['jud', 'Sąnarių judesiai, kojų masažas', 8, 8, ''],
     ['oda', 'Nuprausti, nusausinti odą', 24, 24, ''],
     ['neuro', 'Neurologinė apžiūra ir vyzdžiai (galvos trauma)', 1, 1, 'Ne rečiau kaip kas valandą', 'tbi'],
@@ -189,10 +218,11 @@ const PC = (() => {
   function careState(x, t) {
     t = t || now();
     const s0 = careStart(x);
+    const av = lastV(x.vits, 'avpu'), noA = !!av && av !== 'A'; // v3.8: kosėjimas ir maitinimas – tik sąmoningam (paskutinis AVPU – A)
     return CARE.filter(c => careOn(x.r, c)).map(c => {
       const ivl = careIvl(x.r, c), last = lastDone(x, c[0]), dt = devT(x.r, c[0]), base = last || (s0 ? Math.max(s0, dt > 1 ? dt : 0) : 0), due = base ? base + ivl * MIN : 0, left = due - t;
-      const st = !base ? 'idle' : left > 15 * MIN ? 'ok' : left > 0 ? 'soon' : left > -Math.max(15 * MIN, ivl * MIN * 0.25) ? 'due' : 'over';
-      return { k: c[0], nm: c[1], note: c[4], ivl, last, due, st };
+      const st = c[5] === 'avpu' && noA ? 'na' : !base ? 'idle' : left > 15 * MIN ? 'ok' : left > 0 ? 'soon' : left > -Math.max(15 * MIN, ivl * MIN * 0.25) ? 'due' : 'over';
+      return { k: c[0], nm: c[1], note: c[4], ivl, last, due: st === 'na' ? 0 : due, st };
     });
   }
   // vaistai: kitos dozės laikas (paskutinis to vaisto įrašas su kartojimo intervalu)
@@ -204,8 +234,10 @@ const PC = (() => {
       if (prnOf(m.name)) return { m, due, prn: 1, st: left > 0 ? 'ok' : 'prn' }; // pagal poreikį: intervalas – mažiausias, ne grafikas (nevėluoja, neskaičiuojama)
       return { m, due, st: left > 15 * MIN ? 'ok' : left > 0 ? 'soon' : left > -15 * MIN ? 'due' : 'over' }; });
   }
-  // Vaistai pagal poreikį: nuskausminimas ir sedacija (gido grupė „skausmas“), vėmimas ir kiti, kurių dozėje – „pagal poreikį“
-  function prnOf(nm) { const v = drugOf(nm); return !!v && (v.grupe === 'skausmas' || (v.dozes || []).some(d => /pagal poreikį/i.test((d.k || '') + ' ' + (d.d || '') + ' ' + (d.p || '')))); }
+  // Vaistai pagal poreikį (v3.8): tik kurių dozėje – „pagal poreikį“, arba opioidai, ketaminas, benzodiazepinai, naloksonas, ondansetronas.
+  // Paracetamolis (kas 8 val.) ir meloksikamas (kartą per parą) – pagal grafiką: priminimai ir laikrodžio žiedas.
+  const PRN = ['ketaminas', 'esketaminas', 'fentanilis', 'morfinas', 'midazolamas', 'naloksonas', 'ondansetronas'];
+  function prnOf(nm) { const v = drugOf(nm); return !!v && (PRN.indexOf(v.id) >= 0 || (v.dozes || []).some(d => /pagal poreikį/i.test((d.k || '') + ' ' + (d.d || '') + ' ' + (d.p || '')))); }
 
   // ───────── turniketai (PCC CPG ID 91): MIST kortelės galūnių turniketai + konversijos laikas ─────────
   // < 2 val. – konvertuoti kuo greičiau; 2–6 val. – konversijos langas (apmokytas medikas); > 6 val. – nenuimti iki chirurginės pagalbos
@@ -229,33 +261,68 @@ const PC = (() => {
   }
 
   // ───────── priminimai (REM kabliukas): priežiūra, rodikliai, vaistai, turniketų langai ─────────
-  function remHook(p, push, t) {
-    const x = X(p.pid); if (!x) return;
-    const cs = careState(x, t), due = cs.filter(c => c.st === 'due' || c.st === 'over');
-    const v = due.find(c => c.k === 'vit');
-    if (v) push('pvit:' + x.pid + ':' + v.due, v.st === 'over' ? 'r' : 'a', 'Gyvybiniai rodikliai', (v.last ? 'paskutiniai ' + dhm(v.last) + ' · ' : '') + 'kas ' + ivlTxt(v.ivl), '#/pacientas?t=rod');
-    const o = due.filter(c => c.k !== 'vit');
-    if (o.length) push('pcare:' + x.pid + ':' + o.map(c => c.k).join(','), o.some(c => c.st === 'over') ? 'r' : 'a', 'Priežiūra – ' + plural(o.length, ['darbas', 'darbai', 'darbų']), o.slice(0, 3).map(c => shortNm(c.nm)).join(', ') + (o.length > 3 ? '…' : ''), '#/pacientas?t=prz');
-    medState(x, t).forEach(m => { if (m.st === 'due' || m.st === 'over') push('pmed:' + x.pid + ':' + m.m.name + ':' + m.due, m.st === 'over' ? 'r' : 'a', m.m.name + ' – kita dozė', 'paskutinė ' + dhm(m.m.t) + ' · kas ' + ivlTxt(m.m.ivl), '#/pacientas?t=vst'); });
+  // Viena eilučių sąrašo funkcija (remList) – juostos (REM), „Priminimai“ puslapis ir ženkliukas skaičiuoja tą patį.
+  // v3.8: rodikliai ir mini vizitas, kai abu tą pačią valandą – viena eilutė; atidėjimas – kiekvienam darbui atskirai (grupės raktas keičiasi, atidėjimas lieka).
+  const ZK = TCFG.pre + 'rem-z';
+  const snzd = (k, t) => +obj(LS.get(ZK, {}))[k] > (t || now());
+  function remList(x, t) {
+    t = t || now();
+    const P = x.pid, cs = careState(x, t), due = cs.filter(c => c.st === 'due' || c.st === 'over'), out = [];
     tqs(x).forEach(q => {
       if (q.conv || !q.t) return;
-      const el = t - q.t, left2 = q.t + 2 * HR - t;
-      if (el >= 6 * HR) push('ptq:' + x.pid + ':' + q.k + ':' + q.t + ':6', 'r', 'Turniketas > 6 val. – nenuimti', q.limb + ' · uždėtas ' + dhm(q.t), '#/turniketai');
-      else if (el >= 2 * HR) push('ptq:' + x.pid + ':' + q.k + ':' + q.t + ':2', 'a', 'Turniketas – konversijos langas 2–6 val.', q.limb + ' · ' + dur(el) + ' · iki 6 val. liko ' + dur(q.t + 6 * HR - t), '#/turniketai');
-      else if (left2 <= 15 * MIN) push('ptq:' + x.pid + ':' + q.k + ':' + q.t + ':1', 'a', 'Turniketas – 2 val. riba', q.limb + ' · liko ' + dur(left2), '#/turniketai');
+      const el = t - q.t, left2 = q.t + 2 * HR - t, k0 = 'ptq:' + P + ':' + q.k + ':' + q.t;
+      const add = (sfx, lvl, title, sub) => { if (!snzd(k0 + sfx, t)) out.push({ key: k0 + sfx, kind: 'tq', lvl, title, sub, go: '#/turniketai', q }); };
+      if (el >= 6 * HR) add(':6', 'r', 'Turniketas > 6 val. – nenuimti', q.limb + ' · uždėtas ' + dhm(q.t));
+      else if (el >= 2 * HR) add(':2', 'a', 'Turniketas – konversijos langas 2–6 val.', q.limb + ' · ' + dur(el) + ' · iki 6 val. liko ' + dur(q.t + 6 * HR - t));
+      else if (left2 <= 15 * MIN) add(':1', 'a', 'Turniketas – 2 val. riba', q.limb + ' · liko ' + dur(left2));
     });
+    const v = due.find(c => c.k === 'vit'), mi = due.find(c => c.k === 'mini' && !snzd('pcare:' + P + ':mini', t));
+    const vOn = v && !snzd('pvit:' + P + ':' + v.due, t), merge = !!(vOn && mi && Math.abs(mi.due - v.due) < HR);
+    if (vOn) out.push({ key: 'pvit:' + P + ':' + v.due + (merge ? ':mini' : ''), kind: 'vit', lvl: v.st === 'over' || (merge && mi.st === 'over') ? 'r' : 'a', c: v, mini: merge ? mi : null,
+      title: merge ? 'Rodikliai ir mini vizitas' : 'Gyvybiniai rodikliai', sub: (v.last ? 'paskutiniai ' + dhm(v.last) + ' · ' : '') + 'kas ' + ivlTxt(v.ivl), go: '#/pacientas?t=rod&sh=' + (merge ? 'pvm' : 'pv') });
+    const o = due.filter(c => c.k !== 'vit' && !(merge && c.k === 'mini') && !snzd('pcare:' + P + ':' + c.k, t));
+    if (o.length) out.push({ key: 'pcare:' + P + ':' + o.map(c => c.k).sort().join(','), kind: 'care', cs: o, lvl: o.some(c => c.st === 'over') ? 'r' : 'a',
+      title: 'Priežiūra – ' + plural(o.length, ['darbas', 'darbai', 'darbų']), sub: o.slice(0, 3).map(c => shortNm(c.nm)).join(', ') + (o.length > 3 ? '…' : ''), go: '#/pacientas?t=prz' });
+    medState(x, t).forEach(m => {
+      if (m.st !== 'due' && m.st !== 'over') return;
+      const key = 'pmed:' + P + ':' + m.m.name + ':' + m.due; if (snzd(key, t)) return;
+      out.push({ key, kind: 'med', m, lvl: m.st === 'over' ? 'r' : 'a', title: m.m.name + ' – kita dozė', sub: 'paskutinė ' + dhm(m.m.t) + ' · kas ' + ivlTxt(m.m.ivl), go: '#/pacientas?t=vst' });
+    });
+    return out;
   }
+  function remHook(p, push, t) {
+    const x = X(p.pid); if (!x) return;
+    remList(x, t).forEach(r => push(r.key, r.lvl, r.title, r.sub, r.go));
+  }
+  // Atidėjimas: grupės raktas → kiekvieno darbo raktai (REM.snooze per TCFG.remSnz)
+  function remSnz(k) {
+    k = String(k || ''); let m = /^pvit:([^:]+):(\d+):mini$/.exec(k); if (m) return [k, 'pvit:' + m[1] + ':' + m[2], 'pcare:' + m[1] + ':mini'];
+    m = /^pcare:([^:]+):(.+)$/.exec(k); if (m) return [k].concat(m[2].split(',').map(q => 'pcare:' + m[1] + ':' + q));
+    return [k];
+  }
+  // ✓ Visi vėluojantys priežiūros darbai (be rodiklių – juos reikia išmatuoti); atšaukiama
+  function dueCare(x, t) { return careState(x, t).filter(c => c.k !== 'vit' && (c.st === 'due' || c.st === 'over')); }
+  function allDone(pid, ks) {
+    const x = X(pid); if (!x) return;
+    ks = (ks || dueCare(x).map(c => c.k)).filter(k => k !== 'vit' && CARE.some(c => c[0] === k)); if (!ks.length) return toast('Vėluojančių priežiūros darbų nėra');
+    const prev = {}, t = now(); ks.forEach(k => { prev[k] = x.r.care[k]; });
+    upd(pid, r => { ks.forEach(k => { r.care[k] = t; }); });
+    if (navigator.vibrate) navigator.vibrate(20);
+    keepY(); nav();
+    toastAct('Atlikta ' + hm(t) + ': ' + plural(ks.length, ['darbas', 'darbai', 'darbų']), 'Atšaukti', () => { upd(pid, r => { ks.forEach(k => { if (prev[k]) r.care[k] = prev[k]; else delete r.care[k]; }); }); keepY(); nav(); });
+  }
+  const allBtn = (x, n) => n >= 2 ? `<button class="btn pcall" data-act="pc-alldone" data-p="${esc(x.pid)}">✓ Visi vėluojantys priežiūros darbai (${n})</button>` : '';
   const isPcc = k => /^p(vit|care|med|tq):/.test(String(k || ''));
   const remAll = only => { try { return REM.items(only); } catch (e) { return []; } };
   const CLOCK = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2M9 2h6"/></svg>';
   const remRow = x => REM.row(x); // ✓ – atlikta (remDone), „Atidėti 15 min“ – atskirai
-  // Juostos ✓ = atlikta (kaip „Priminimai“ puslapyje): priežiūra – įrašoma (keli darbai – atveriamas sąrašas pažymėti po vieną),
-  // rodikliai – matavimo langas, vaistas – to vaisto langas, turniketas – turniketų puslapis. true – apdorota (nepaslepiama).
+  // Juostos ✓ = atlikta (kaip „Priminimai“ puslapyje): priežiūra – įrašoma (keli darbai – visi, su „Atšaukti“), rodikliai – matavimo langas
+  // (kartu su mini vizitu – jis pažymimas įrašius), vaistas – to vaisto langas, turniketas – turniketų puslapis. true – apdorota (nepaslepiama).
   function remDone(key) {
     const m = /^p(vit|care|med|tq):([^:]+):(.*)$/.exec(String(key || '')); if (!m) return false;
     const [, typ, pid, rest] = m, x = X(pid); if (!x) return false;
     PT.selectPid(pid);
-    if (typ === 'vit') { open({ kind: 'vit', pid, v: {}, fk: 'hr', bpd: 0 }); return true; }
+    if (typ === 'vit') { open({ kind: 'vit', pid, v: {}, fk: 'hr', bpd: 0, mini: /:mini$/.test(rest) }); return true; }
     if (typ === 'med') {
       const nm = rest.replace(/:\d+$/, '').toLowerCase(), md = x.r.meds.filter(y => y.kind === 'med' && String(y.name).toLowerCase() === nm).sort((a, b) => b.t - a.t)[0];
       if (md) open({ kind: 'med', pid, mk: 'med', name: md.name, dose: md.dose, route: md.route, ivl: md.ivl, note: '' }); else location.hash = '#/pacientas?t=vst';
@@ -264,7 +331,7 @@ const PC = (() => {
     if (typ === 'care') {
       const ks = rest.split(',').filter(k => CARE.some(c => c[0] === k));
       if (ks.length === 1) { upd(pid, r => { r.care[ks[0]] = now(); }); toast('Atlikta ' + hm(now())); if (navigator.vibrate) navigator.vibrate(20); return true; }
-      toast('Pažymėkite atliktus darbus'); location.hash = '#/pacientas?t=prz'; return true;
+      allDone(pid, ks); return true;
     }
     location.hash = '#/turniketai'; return true;
   }
@@ -275,21 +342,24 @@ const PC = (() => {
     const R = remRows(), lv = R.red ? 'r' : 'a';
     return `<a class="rem rem-${lv}" href="#/priminimai">${CLOCK}<div class="remt"><b>${plural(R.n, ['priminimas', 'priminimai', 'priminimų'])}</b><small>${esc(it.slice(0, 2).map(x => x.title).join(' · '))}…</small></div><span class="remb" style="display:flex;align-items:center">Visi ›</span></a>`;
   }
-  // Apatinės navigacijos „Priminimai“ ženkliukas
-  // Priminimų eilutės (tos pačios – puslapyje „Priminimai“, ženkliuke ir juostoje): kiti REM priminimai + kiekvieno sužeistojo turniketai, priežiūra, vaistai
+  // Priminimų eilutės (tos pačios – puslapyje „Priminimai“ ir ženkliuke): kiti REM priminimai + kiekvieno sužeistojo remList eilutės;
+  // priežiūros grupė puslapyje išskleidžiama po vieną darbą (✓ kiekvienam), todėl n = puslapio eilučių skaičius. Atidėti – neskaičiuojami.
   function remRows(only) {
     const L = PT.list(), other = remAll(only).filter(y => !isPcc(y.key)), pts = [];
     L.pts.forEach(p => {
       if (only && p.pid !== only) return;
       const x = X(p.pid); if (!x) return;
-      const cs = careState(x), ms = medState(x);
-      pts.push({ x, tq: tqs(x).filter(q => !q.conv && q.t && tqState(q) !== 'early'), due: cs.filter(c => c.st === 'due' || c.st === 'over').sort((a, b) => a.due - b.due),
-        md: ms.filter(m => m.st === 'due' || m.st === 'over'), soon: cs.filter(c => c.st === 'soon').map(c => [c.nm, c.due]).concat(ms.filter(m => m.st === 'soon').map(m => [m.m.name, m.due])) });
+      const RL = remList(x), cs = careState(x), ms = medState(x);
+      const rows = []; RL.forEach(r => { if (r.kind === 'care') r.cs.slice().sort((a, b) => a.due - b.due).forEach(c => rows.push({ kind: 'care1', c, lvl: c.st === 'over' ? 'r' : 'a' })); else rows.push(r); });
+      pts.push({ x, rows, care: RL.filter(r => r.kind === 'care').reduce((a, r) => a + r.cs.length, 0) + RL.filter(r => r.mini).length,
+        soon: cs.filter(c => c.st === 'soon').map(c => [c.nm, c.due]).concat(ms.filter(m => m.st === 'soon').map(m => [m.m.name, m.due])) });
     });
-    const n = other.length + pts.reduce((a, q) => a + q.tq.length + q.due.length + q.md.length, 0);
-    const red = other.some(y => y.lvl === 'r') || pts.some(q => q.tq.some(z => tqState(z) === 'late') || q.due.some(c => c.st === 'over') || q.md.some(m => m.st === 'over'));
+    const n = other.length + pts.reduce((a, q) => a + q.rows.length, 0);
+    const red = other.some(y => y.lvl === 'r') || pts.some(q => q.rows.some(r => r.lvl === 'r'));
     return { other, pts, n, red };
   }
+  const remCount = () => { try { return remRows().n; } catch (e) { return 0; } };
+  // Apatinės navigacijos „Priminimai“ ženkliukas – tiek pat, kiek eilučių „Priminimai“ puslapyje
   function nav() {
     const a = document.querySelector('#nav a[data-s="priminimai"]'); if (!a) return;
     const R = remRows(), b = a.querySelector('.nbdg'); if (!b) return;
@@ -299,18 +369,19 @@ const PC = (() => {
   const barExtra = hx => { const n = remRows(hx.p.pid).n; return n ? `<small class="hbbad">⚠ ${n}</small>` : ''; };
 
   // ───────── eilutės ─────────
-  function stTxt(st, due) { return st === 'idle' ? '—' : st === 'over' ? 'vėluoja ' + dur(now() - due) : st === 'due' ? 'dabar' : st === 'soon' ? 'po ' + dur(due - now()) : dhm(due); }
+  function stTxt(st, due) { return st === 'na' ? 'netaikoma – sąmonė' : st === 'idle' ? '—' : st === 'over' ? 'vėluoja ' + dur(now() - due) : st === 'due' ? 'dabar' : st === 'soon' ? 'po ' + dur(due - now()) : dhm(due); }
   const cls = st => st === 'over' ? 'over' : st === 'due' ? 'due' : '';
-  function careRow(x, c) {
-    const vit = c.k === 'vit';
-    return `<div class="pcli ${cls(c.st)}"><div class="x">${esc(c.nm)}<small>kas ${ivlTxt(c.ivl)}${c.last ? ' · atlikta ' + dhm(c.last) : ''}</small></div><span class="st">${stTxt(c.st, c.due)}</span>` +
-      `<button class="ok" data-act="${vit ? 'pc-vit' : 'pc-care'}" data-k="${c.k}" data-p="${esc(x.pid)}" aria-label="${vit ? 'Matuoti' : 'Atlikta dabar'}">${vit ? '+' : '✓'}</button></div>`;
+  function careRow(x, c, mini) {
+    const vit = c.k === 'vit', st = mini && mini.st === 'over' ? 'over' : c.st; // mini – rodikliai ir mini vizitas viena eilute (v3.8)
+    return `<div class="pcli ${cls(st)}${c.st === 'na' ? ' na' : ''}"><div class="x">${esc(mini ? 'Gyvybiniai rodikliai ir mini vizitas' : c.nm)}<small>kas ${ivlTxt(c.ivl)}${c.last ? ' · atlikta ' + dhm(c.last) : ''}</small></div><span class="st">${stTxt(st, mini ? Math.min(c.due, mini.due) : c.due)}</span>` +
+      `<button class="ok" data-act="${vit ? 'pc-vit' : 'pc-care'}" data-k="${c.k}" data-p="${esc(x.pid)}"${mini ? ' data-mini="1"' : ''} aria-label="${vit ? 'Matuoti' : 'Atlikta dabar'}">${vit ? '+' : '✓'}</button></div>`;
   }
   function medRow(x, m) {
-    return `<div class="pcli ${m.prn ? '' : cls(m.st)}"><div class="x">${esc(m.m.name)}<small>${esc([m.m.dose, m.m.route].filter(Boolean).join(' ') + (m.prn ? ' · ne dažniau kaip kas ' : ' · kas ') + ivlTxt(m.m.ivl) + ' · paskutinė ' + dhm(m.m.t))}</small></div><span class="st">${m.prn ? 'galima kartoti nuo ' + dhm(m.due) : stTxt(m.st, m.due)}</span><button class="ok" data-act="pc-again" data-k="${esc(m.m.id)}" data-p="${esc(x.pid)}" aria-label="Suleista dabar">✓</button></div>`;
+    return `<div class="pcli ${m.prn ? '' : cls(m.st)}"><div class="x">${esc(m.m.name)}<small>${esc([m.m.dose, m.m.route].filter(Boolean).join(' ') + (m.prn ? ' · ne dažniau kaip kas ' : ' · kas ') + ivlTxt(m.m.ivl) + ' · paskutinė ' + dhm(m.m.t))}</small></div><span class="st">${m.prn ? (m.due > now() ? 'galima kartoti nuo ' + dhm(m.due) : 'galima kartoti dabar') : stTxt(m.st, m.due)}</span><button class="ok" data-act="pc-again" data-k="${esc(m.m.id)}" data-p="${esc(x.pid)}" aria-label="Suleista dabar">✓</button></div>`;
   }
+  // Apžvalgai: tik artėjantys (vėluojantys – juostose viršuje, v3.8 – be dubliavimo)
   function dueList(x, n) {
-    const a = careState(x).filter(c => c.st !== 'ok' && c.st !== 'idle').map(c => ({ due: c.due, h: careRow(x, c) })).concat(medState(x).filter(m => !m.prn && m.st !== 'ok').map(m => ({ due: m.due, h: medRow(x, m) })));
+    const a = careState(x).filter(c => c.st === 'soon').map(c => ({ due: c.due, h: careRow(x, c) })).concat(medState(x).filter(m => !m.prn && m.st === 'soon').map(m => ({ due: m.due, h: medRow(x, m) })));
     return a.sort((p, q) => p.due - q.due).slice(0, n || 99).map(o => o.h).join('');
   }
 
@@ -347,6 +418,8 @@ const PC = (() => {
     return h + '</tbody></table></div><p class="muted">Naujausias – dešinėje. Rėmelis ir ▲▼ – blogiau nei ankstesnis' + (L.some(v => v.mc) ? '; MIST – įvesta kortelėje' : '') + '.</p>';
   }
   function uoBox(x, U, w) {
+    // v3.8: šlapimo įrašų nėra – neutraliai „nematuota“ (ne raudonai „mažiau nei tikslas“)
+    if (!x.r.io.some(e => e.k === 'out' && e.type === 'slap')) return '<div class="pcuo nm"><b>Diurezė nematuota</b><small>Šlapimo kiekis dar neįrašytas' + (U.R ? ' · tikslas ' + U.R[0] + '–' + U.R[1] + ' ml/val.' : x.kg ? ' · tikslas > 0,5 ml/kg/val.' : '') + '</small><button class="btn sm" data-act="pc-io" data-k="out">+ Išskirta</button></div>';
     const base = `${U.mlh} ml/val. · ${U.ml} ml per ${fmt1(U.hrs)} val.`;
     const msg = U.st === 'lo' ? 'Mažiau nei tikslas – vertinkite perfuziją, skysčius, kateterį' : U.st === 'hi' ? 'Daugiau nei tikslas – mažinkite skysčių greitį' : 'Tikslas pasiektas';
     if (U.R) return `<div class="pcuo ${U.st}"><b>${U.mlh} ml/val.</b><span>${U.ml} ml per ${fmt1(U.hrs)} val. · tikslas ${U.R[0]}–${U.R[1]} ml/val. (${U.mode === 'crush' ? 'suspaudimo sindromas' : 'nudegimai'})</span><small>${msg}</small></div>`;
@@ -396,9 +469,9 @@ const PC = (() => {
   }
   const autoIvl = s => { const v = drugOf(s.name), i = v ? ivlOf(v, s.route) : -1; if (i >= 0) s.ivl = i; };
   // MIST kortelės C lentelės eilutės, įvestos ne per žurnalą (pvz. MIST vaisto langu)
-  const mistRows = x => (x.c.rows || []).filter(r => r && !/^pcc:/.test(String(r.src || '')) && [r.name, r.dose].some(s => String(s || '').trim()));
+  const mistRows = x => { const L = x.r.meds.map(m => m.src).filter(Boolean); return (x.c.rows || []).filter(r => r && !/^pcc:/.test(String(r.src || '')) && [r.name, r.dose].some(s => String(s || '').trim()) && L.indexOf(rowKey(r)) < 0); }; // susieti su žurnalu – rodomi kaip žurnalo įrašai
   function journal(x) {
-    const own = x.r.meds.map(m => ({ t: m.t, h: `<div class="pcli"><span class="tm">${dhm(m.t)}</span><div class="x">${m.kind === 'int' ? '✚ ' : ''}${esc(m.name)}<small>${esc([m.dose, m.route, m.ivl ? 'kas ' + ivlTxt(m.ivl) : '', m.note].filter(Boolean).join(' · '))}</small></div><button class="del" data-act="pc-mdel" data-k="${esc(m.id)}" aria-label="Ištrinti">×</button></div>` }));
+    const own = x.r.meds.map(m => ({ t: m.t, h: `<div class="pcli"><span class="tm">${dhm(m.t)}</span><div class="x">${m.kind === 'int' ? '✚ ' : ''}${esc(m.name)}<small>${esc([m.dose, m.route, m.ivl ? 'kas ' + ivlTxt(m.ivl) : '', m.note, m.src ? 'iš kortelės (DD1380)' : ''].filter(Boolean).join(' · '))}</small></div><button class="del" data-act="pc-mdel" data-k="${esc(m.id)}" aria-label="Ištrinti">×</button></div>` }));
     const mc = mistRows(x).map(r => ({ t: +r.t || PT.hmTs(r.time) || 0, h: `<div class="pcli"><span class="tm">${esc(r.t ? dhm(r.t) : r.time || '—')}</span><div class="x">${esc(r.name)}<small>${esc([r.dose, r.route, 'Nukentėjusiojo kortelė (DD1380)'].filter(Boolean).join(' · '))}</small></div></div>` }));
     return own.concat(mc).sort((a, b) => b.t - a.t).map(o => o.h).join('');
   }
@@ -423,7 +496,7 @@ const PC = (() => {
     const tr = (TREND.find(y => y[0] === r.trend) || ['', ''])[1].toLowerCase(), cr = (CRIT.find(y => y[0] === r.crit) || ['', ''])[1].toLowerCase();
     const since = x.tInj ? 'Nuo traumos ' + dur(t - x.tInj) : 'Traumos laikas nežinomas' + (cs ? ', stebima nuo ' + dhm(cs) : '');
     return [
-      ['Įžanga', [[p.name, p.id].filter(Boolean).join(', ') || 'Šaukinys —', p.unit, s.contact ? 'ryšys ' + s.contact : ''].filter(Boolean).join(', ') + '. Realus atvejis / treniruotė: ___'],
+      ['Įžanga', [String(p.id || '').trim() ? 'Šaukinys / ID ' + String(p.id).trim() : 'Šaukinys —', p.unit, s.contact ? 'ryšys ' + s.contact : ''].filter(Boolean).join(', ') + '. Realus atvejis / treniruotė: ___'], // v3.8: vardas ir pavardė į bendrinamą tekstą nepatenka (OPSEC)
       ['Santrauka', [[x.label, r.age ? r.age + ' m.' : '', sexName(c), r.status].filter(Boolean).join(', '), mechTxt(c) ? 'Mechanizmas: ' + mechTxt(c) : '', since,
         'Evakuacija: ' + ([evacName(c), etaTxt(r, t)].filter(Boolean).join(', ') || 'nežinoma'), cr || tr ? 'Būklė: ' + [cr, tr].filter(Boolean).join(', ') : ''].filter(Boolean).map(y => y.replace(/\.$/, '') + '.').join(' ')],
       ['Sužalojimai, problemos', injNoTq(c) || '—'],
@@ -432,7 +505,7 @@ const PC = (() => {
       ['Prašymas', [r.tc.req, r.tc.spec ? 'Reikia specialisto: ' + r.tc.spec : ''].filter(Boolean).join('. ') || '—'],
       ['Rodikliai (tendencija)', trendTxt(x)],
       ['Apžiūra', r.tc.exam || '—'],
-      ['Skysčiai per 24 val.', (r.io.some(e => e.t >= t - 24 * HR && e.t <= t) ? 'įvesta ' + T.in + ' ml, išskirta ' + T.out + ' ml, balansas ' + (T.net > 0 ? '+' : '') + T.net + ' ml' : 'neįrašyta') + '; diurezė ' + (!r.io.some(e => e.type === 'slap') ? 'nematuota' : x.kg && U.mlkg != null && !U.R ? fmt2(U.mlkg) + ' ml/kg/val.' : U.mlh + ' ml/val.') + (x.kg ? ', svoris ' + x.kg + ' kg' : '')],
+      ['Skysčiai per 24 val.', (r.io.some(e => e.t >= t - 24 * HR && e.t <= t) ? 'įvesta ' + T.in + ' ml, ' + (r.io.some(e => e.k === 'out' && e.t >= t - 24 * HR && e.t <= t) ? 'išskirta ' + T.out + ' ml, balansas ' + (T.net > 0 ? '+' : '') + T.net + ' ml' : 'išskirta –') : 'neįrašyta') + '; diurezė ' + (!r.io.some(e => e.type === 'slap') ? 'nematuota' : x.kg && U.mlkg != null && !U.R ? fmt2(U.mlkg) + ' ml/kg/val.' : U.mlh + ' ml/val.') + (x.kg ? ', svoris ' + x.kg + ' kg' : '')],
       ['Ištekliai', r.tc.res || '—'],
       ['Atgalinis ryšys', r.tc.cb || s.contact || '—']
     ];
@@ -446,7 +519,7 @@ const PC = (() => {
       ['M – mechanizmas', mechTxt(c) || '—'],
       ['I – sužalojimai', injNoTq(c) || '—'],
       ['S – požymiai', L ? vitText(L) + (r.trend ? '; ' + (TREND.find(y => y[0] === r.trend) || ['', ''])[1].toLowerCase() : '') : '—'],
-      ['T – gydymas', treatTxt(x) + (r.io.some(e => e.t <= t) ? '. Skysčiai: įvesta ' + T.in + ' ml, išskirta ' + T.out + ' ml' : '')],
+      ['T – gydymas', treatTxt(x) + (r.io.some(e => e.t <= t) ? '. Skysčiai: įvesta ' + T.in + ' ml, išskirta ' + (r.io.some(e => e.k === 'out' && e.t <= t) ? T.out + ' ml' : '–') : '')],
       ['E – evakuacija', [evacName(c), etaTxt(r, t)].filter(Boolean).join(', ') || '—'],
       ['R – ko reikės', r.tc.res || '—']
     ];
@@ -482,7 +555,8 @@ const PC = (() => {
       (r.age || r.status ? `<b>Asmuo</b><span>${esc([r.age ? r.age + ' m.' : '', r.status].filter(Boolean).join(', '))}</span>` : '') + `<b>Evakuacija</b><span>${esc(ev || '—')}</span></div>` +
       '<div class="acts"><button class="btn sm" data-act="pc-pt">✎ Duomenys</button></div></div>';
     if (!careStart(x)) h += '<p class="muted">Priežiūros grafikas ir priminimai prasidės nuo pirmo įrašo: traumos laikas, būklė, rodikliai, skysčiai ar vaistai.</p>';
-    const d = dueList(x, 5); if (d) h += '<h2>Artėja ir vėluoja</h2><div class="pcl">' + d + '</div>';
+    const d = dueList(x, 5); if (d) h += '<h2>Artėja (15 min)</h2><div class="pcl">' + d + '</div>';
+    h += allBtn(x, dueCare(x).length);
     if (x.vits.length) h += '<h2>Paskutiniai rodikliai · ' + dhm(x.vits[x.vits.length - 1].t) + '</h2>' + sparks(x.vits, r.tbi);
     if (r.io.some(e => e.type === 'slap')) h += uoBox(x, urine(x, 2), 2);
     h += (tqs(x).length ? '<h2>Turniketai</h2>' : '') + tqBlock(x, false);
@@ -584,19 +658,23 @@ const PC = (() => {
     else if (k === 'tq') h += tqBlock(x, true);
     else if (k === 'clock') h += clockBlock(x);
     else h += evacBlock(x);
-    return h + row('#/pacientas', 'Paciento failas', 'Rodikliai, skysčiai, priežiūra, perdavimas');
+    return h + row('#/pacientas', 'Pacientas', 'Rodikliai, skysčiai, priežiūra, perdavimas');
   }
   // Priminimai: visų sužeistųjų vėluojantys ir artėjantys darbai
   function remView() {
     const R = remRows(), multi = PT.list().pts.length > 1, soon = [];
     let h = '<h1>Priminimai</h1>' + row('#/laikrodis', 'Paros laikrodis', 'Dabartinio sužeistojo priežiūra 24 val. ciferblate') + R.other.map(remRow).join('');
-    R.pts.forEach(({ x, tq, due, md, soon: so }) => {
+    R.pts.forEach(({ x, rows, care, soon: so }) => {
       so.forEach(([nm, d]) => soon.push([x, nm, d]));
-      if (!tq.length && !due.length && !md.length) return;
-      h += `<h2>${esc((multi ? '#' + x.n + ' ' : '') + x.label)}</h2><div class="pcl">` +
-        tq.map(q => { const s = tqState(q); return `<a class="pcli ${s === 'late' ? 'over' : 'due'}" href="#/turniketai" data-act="pc-sel" data-p="${esc(x.pid)}" data-r="#/turniketai"><div class="x">Turniketas · ${esc(q.limb)}<small>${dhm(q.t)} · ${dur(now() - q.t)} · ${tqTxt(q)}</small></div><span class="ar">›</span></a>`; }).join('') +
-        due.map(c => careRow(x, c)).join('') + md.map(m => medRow(x, m)).join('') + '</div>';
+      if (!rows.length) return;
+      h += `<h2>${esc((multi ? '#' + x.n + ' ' : '') + x.label)}</h2><div class="pcl">` + rows.map(r => {
+        if (r.kind === 'tq') { const q = r.q, s = tqState(q); return `<a class="pcli ${s === 'late' ? 'over' : 'due'}" href="#/turniketai" data-act="pc-sel" data-p="${esc(x.pid)}" data-r="#/turniketai"><div class="x">Turniketas · ${esc(q.limb)}<small>${dhm(q.t)} · ${dur(now() - q.t)} · ${tqTxt(q)}</small></div><span class="ar">›</span></a>`; }
+        if (r.kind === 'vit') return careRow(x, r.c, r.mini);
+        if (r.kind === 'care1') return careRow(x, r.c);
+        return medRow(x, r.m);
+      }).join('') + '</div>' + allBtn(x, care);
     });
+    { const z = obj(LS.get(ZK, {})), t = now(), nz = Object.keys(z).filter(k => isPcc(k) && +z[k] > t && !/^pcare:[^:]+:.*,/.test(k)); if (nz.length) h += `<p class="muted">Atidėta iki ${hm(Math.max(...nz.map(k => +z[k])))} – neskaičiuojama.</p>`; }
     if (!R.n) h += '<p class="muted">Vėluojančių darbų nėra.</p>';
     if (soon.length) h += '<h2>Artėja (15 min)</h2><div class="pcl">' + soon.sort((a, b) => a[2] - b[2]).map(([x, nm, due]) => `<a class="pcli" href="#/pacientas?t=prz" data-act="pc-sel" data-p="${esc(x.pid)}" data-r="#/pacientas?t=prz"><div class="x">${esc(shortNm(nm))}<small>${esc((multi ? '#' + x.n + ' ' : '') + x.label)}</small></div><span class="tm">${dhm(due)}</span></a>`).join('') + '</div>';
     return h + '<p class="muted">Priminimai veikia, kai programėlė atverta. ✓ – atlikta dabar.</p>';
@@ -680,7 +758,8 @@ const PC = (() => {
     h += '<p class="muted pckn">Blankūs taškai – atlikta, pilnas – kitas, tuščiaviduris – planuojama, su gintariniu žiedu – dabar ar vėluoja. Rodyklė – dabar, tamsesnis sektorius – nuo priežiūros pradžios.</p>';
     if (!s0) h += '<p class="muted">Priežiūros grafikas ir priminimai prasidės nuo pirmo įrašo: traumos laikas, būklė, rodikliai, skysčiai ar vaistai.</p>';
     const rem = remAll(x.pid).filter(y => isPcc(y.key)).map(remRow).join('');
-    if (rem) h += '<h2>Dabar</h2>' + rem;
+    const nd = dueCare(x).length;
+    if (rem || nd >= 2) h += '<h2>Dabar</h2>' + rem + allBtn(x, nd);
     // žiedų eilutės (✓ – atlikta dabar, + – matuoti) pagal kito laiko eilę; be laiko – gale
     const rows = [];
     rings.forEach(g => { if (g.k === 'med') g.ms.forEach(m => rows.push({ due: m.due || Infinity, h: medRow(x, m) })); else rows.push({ due: g.c.due || Infinity, h: careRow(x, g.c) }); });
@@ -712,9 +791,13 @@ const PC = (() => {
 
   // ───────── apatiniai langai (MIST kortelės langų išvaizda: .mqsh, klaviatūra, laiko lustai) ─────────
   let SH = null, shEl = null, shPrev = null, shInert = [], skipPop = false;
-  const TBACK = [[0, 'Dabar'], [5, '−5 min'], [10, '−10'], [15, '−15'], [30, '−30']];
-  const tRow = (list) => '<div class="mqrow mqtm" role="group" aria-label="Laikas">' + (list || TBACK).map(([m, l]) => `<button class="mqc${SH.toff === m ? ' on' : ''}" data-pa="toff" data-v="${m}" aria-pressed="${SH.toff === m}">${l}</button>`).join('') + '</div>';
-  const shTs = () => now() - (+SH.toff || 0) * MIN;
+  const TBACK = [[0, 'Dabar'], [5, '−5<span class="mqtos"> min</span>'], [10, '−10'], [15, '−15'], [30, '−30']];
+  // v3.8: „Kitas laikas…“ – HHMM klaviatūra ir diena (šiandien / vakar), kai įrašoma vėliau nei prieš 30 min (SH.tAbs – tikslus laikas)
+  const tRow = (list) => '<div class="mqrow mqtm" role="group" aria-label="Laikas">' + (list || TBACK).map(([m, l]) => `<button class="mqc${!SH.tAbs && SH.toff === m ? ' on' : ''}" data-pa="toff" data-v="${m}" aria-pressed="${!SH.tAbs && SH.toff === m}" aria-label="${m ? '−' + (m >= 60 ? m / 60 + ' val.' : m + ' min') : 'Dabar'}">${l}</button>`).join('') +
+    `<button class="mqc mqto${SH.tAbs ? ' on' : ''}" data-pa="tother" aria-pressed="${!!SH.tAbs}" aria-label="Kitas laikas${SH.tAbs ? ': ' + dayLb(SH.tAbs) + ' ' + hm(SH.tAbs) : '…'}">${SH.tAbs ? (dayLb(SH.tAbs) === 'šiandien' ? '' : 'vak. ') + hm(SH.tAbs) : 'Kitas<span class="mqtol"> laikas</span>…'}</button></div>`;
+  const tmVal = s => { const b = s.buf || ''; if (!/^\d{4}$/.test(b)) return 0; const hh = +b.slice(0, 2), mm = +b.slice(2); if (hh > 23 || mm > 59) return 0; const d0 = new Date(); d0.setHours(hh, mm, 0, 0); const t = d0.getTime() - (s.day ? 24 * HR : 0); return t <= now() + MIN ? t : 0; };
+  const dayLb = t => new Date(t).toDateString() === new Date().toDateString() ? 'šiandien' : 'vakar';
+  const shTs = () => +SH.tAbs || now() - (+SH.toff || 0) * MIN;
   const kpad = (sa, left, right) => '<div class="mqkp" role="group" aria-label="Skaičių klaviatūra">' + ['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(d => `<button data-pa="${sa}" data-v="${d}">${d}</button>`).join('') +
     left + `<button data-pa="${sa}" data-v="0">0</button>` + right + '</div>';
   const kDel = sa => `<button data-pa="${sa}" data-v="del" aria-label="Ištrinti">⌫</button>`;
@@ -747,7 +830,7 @@ const PC = (() => {
         const V = s.v, P0 = x.vits[x.vits.length - 1] || null;
         const shown = k => k === 'bp' ? (V.sys ? V.sys + '/' + (V.dia || '') : '—') : k === 'crt' ? (V.crt ? crtLb(V.crt) : '—') : (V[k] !== '' && V[k] != null ? V[k] : '—');
         const prevOf = k => { if (!P0) return ''; if (k === 'bp') return has(P0.sys) ? P0.sys + (has(P0.dia) ? '/' + P0.dia : '') : ''; if (k === 'crt') return P0.crt ? crtLb(P0.crt) : ''; return has(P0[k]) ? String(k === 'temp' ? fmt1(P0[k]) : P0[k]) : ''; };
-        const ab = k => k === 'bp' ? abn('sys', V.sys, x.r.tbi) : abn(k, String(V[k] || '').replace(',', '.'));
+        const ab = k => k === 'bp' ? abn('sys', V.sys, x.r.tbi) : abn(k, String(V[k] || '').replace(',', '.'), x.r.tbi);
         let h = tRow() + '<div class="mqavpu" role="radiogroup" aria-label="Sąmonė (AVPU)">' + AVPU.map(([k, t]) => `<button role="radio" aria-checked="${V.avpu === k}" class="${V.avpu === k ? 'on' : ''}" data-pa="av" data-v="${k}"><b>${k}</b><small>${t}</small></button>`).join('') + '</div>' +
           '<div class="mqvf n7" role="tablist" aria-label="Rodiklis">' + VFS.map(([k, lb]) => `<button role="tab" aria-selected="${s.fk === k}" class="${s.fk === k ? 'on' : ''}${ab(k) ? ' ab' : ''}" data-pa="fk" data-v="${k}"><span>${lb}</span><b>${esc(shown(k))}</b>${prevOf(k) ? `<small class="mqpv">anksčiau ${esc(prevOf(k))}</small>` : ''}</button>`).join('') + '</div>';
         const f = VFS.find(y => y[0] === s.fk);
@@ -756,19 +839,20 @@ const PC = (() => {
         else if (s.fk === 'crt') h += `<div class="mqdisp"><b class="cur${ab('crt') ? ' ab' : ''}">${esc(V.crt ? crtLb(V.crt) : '—')}</b><small>kapiliarų prisipildymas</small></div><div class="mqcrt" role="radiogroup" aria-label="Kapiliarų prisipildymas">` + CRT.map(([k, t]) => `<button role="radio" aria-checked="${V.crt === k}" class="${V.crt === k ? 'on' : ''}" data-pa="crt" data-v="${esc(k)}">${t}</button>`).join('') + '</div>';
         else h += `<div class="mqdisp"><b class="cur${ab(s.fk) ? ' ab' : ''}">${esc(has(V[s.fk]) && V[s.fk] !== '' ? V[s.fk] : '—')}</b><small>${esc(f[2])}</small></div>` +
           vStrip(s.fk, V[s.fk]) + (s.fk === 'temp' ? kpad('kp', '<button data-pa="kp" data-v=",">,</button>', kDel('kp')) + '<div class="mqrow"><button class="mqc" data-pa="kp" data-v="next">Toliau ›</button></div>' : kpad('kp', kDel('kp'), '<button data-pa="kp" data-v="next" class="nx">Toliau ›</button>'));
-        return { title: 'Rodikliai', h, foot: `<button class="btn pri mqsave" data-pa="save">Įrašyti ${hm(shTs())} matavimą</button>` };
+        return { title: 'Rodikliai', h, foot: `<button class="btn pri mqsave" data-pa="save">Įrašyti ${dhm(shTs())} matavimą</button>` };
       }
       case 'io': {
         const L = s.k === 'in' ? IN_T : OUT_T, q = s.k === 'in' ? [100, 250, 500, 1000] : [50, 100, 200, 500];
         let h = '<div class="mqrow">' + L.map(([k, t]) => `<button class="mqc${s.typ === k ? ' on' : ''}" data-pa="typ" data-v="${k}" aria-pressed="${s.typ === k}">${t}</button>`).join('') + '</div>' +
           `<div class="mqdisp"><b class="cur">${esc(s.ml || '0')}</b><small>ml</small></div><div class="mqrow">` + q.map(m => `<button class="mqc${String(m) === s.ml ? ' on' : ''}" data-pa="q" data-v="${m}">${m} ml</button>`).join('') + '</div>' +
-          kpad('ml', '<button data-pa="ml" data-v="clr" aria-label="Išvalyti">C</button>', kDel('ml')) + '<div class="mqlab">Laikas</div>' + tRow(TBACK.concat([[60, '−1 val.']])) +
+          kpad('ml', '<button data-pa="ml" data-v="clr" aria-label="Išvalyti">C</button>', kDel('ml')) + '<div class="mqlab">Laikas</div>' + tRow(TBACK.concat([[60, '−1<span class="mqtos"> val.</span>']])) +
           `<label class="mqf">Pastaba<input class="inp" data-si="note" data-dict value="${esc(s.note)}" placeholder="${s.k === 'in' ? 'pvz. Ringerio laktatas, pilnas kraujas O' : 'pvz. drenas D'}" autocomplete="off"></label>`;
         const ok2 = +s.ml > 0;
-        return { title: s.k === 'in' ? 'Įvesta (skysčiai)' : 'Išskirta', h, foot: `<button class="btn pri mqsave" data-pa="save"${ok2 ? '' : ' disabled'}>${ok2 ? 'Įrašyti: ' + esc(ioName(s.k, s.typ)) + ' ' + s.ml + ' ml · ' + hm(shTs()) : 'Įveskite kiekį'}</button>` };
+        return { title: s.k === 'in' ? 'Įvesta (skysčiai)' : 'Išskirta', h, foot: `<button class="btn pri mqsave" data-pa="save"${ok2 ? '' : ' disabled'}>${ok2 ? 'Įrašyti: ' + esc(ioName(s.k, s.typ)) + ' ' + s.ml + ' ml · ' + dhm(shTs()) : 'Įveskite kiekį'}</button>` };
       }
       case 'med': {
         const isInt = s.mk === 'int', v = !isInt && drugOf(s.name), qd = v ? ((TCFG.qd || {})[v.id] || []) : [];
+        if (s.dvId === undefined) s.dvId = v ? v.id : '';
         const names = isInt ? INTS : (E.vaistai || []).filter(y => typeof ok !== 'function' || ok(y.lygis)).map(dname);
         let h = `<label class="mqf">${isInt ? 'Veiksmas' : 'Vaistas'}<input class="inp" id="pc-mname" data-si="name" data-dict value="${esc(s.name)}" placeholder="${isInt ? 'Veiksmas' : 'Vaisto pavadinimas'}" autocomplete="off"></label>` +
           (names.indexOf(s.name) >= 0 && !s.pick ? `<div class="mqrow"><button class="mqc sm on" data-pa="name" data-v="${esc(s.name)}" aria-pressed="true">${esc(s.name)}</button><button class="mqc sm" data-pa="pick">Keisti</button></div>` // pasirinkus – sąrašas suskleidžiamas, dozė matoma iškart
@@ -782,7 +866,7 @@ const PC = (() => {
         }
         h += '<div class="mqlab">Laikas</div>' + tRow() + `<label class="mqf">Pastaba<input class="inp" data-si="note" data-dict value="${esc(s.note)}" autocomplete="off"></label>`;
         const nm = String((!isInt && s.qn) || s.name || '').trim(), okd = isInt || String(s.dose || '').trim();
-        return { title: isInt ? 'Veiksmas' : 'Vaistas', h, foot: `<button class="btn pri mqsave" data-pa="save"${nm && okd ? '' : ' disabled'}>${!nm ? 'Įveskite pavadinimą' : !okd ? 'Įveskite dozę' : 'Įrašyti: ' + esc([nm, s.dose, isInt ? '' : s.route].filter(Boolean).join(' ')) + ' · ' + hm(shTs())}</button>` };
+        return { title: isInt ? 'Veiksmas' : 'Vaistas', h, foot: `<button class="btn pri mqsave" data-pa="save"${nm && okd ? '' : ' disabled'}>${!nm ? 'Įveskite pavadinimą' : !okd ? 'Įveskite dozę' : 'Įrašyti: ' + esc([nm, s.dose, isInt ? '' : s.route].filter(Boolean).join(' ')) + ' · ' + dhm(shTs())}</button>` };
       }
       case 'kg': {
         const h = '<div class="mqrow">' + [60, 70, 80, 90, 100, 110, 120].map(k => `<button class="mqc${String(k) === s.buf ? ' on' : ''}" data-pa="kgq" data-v="${k}">${k} kg</button>`).join('') + '</div>' +
@@ -795,6 +879,12 @@ const PC = (() => {
         const h = (x.r.eta ? `<p class="muted mqhint">Dabar: <b>${hm(x.r.eta)}</b></p>` : '') + '<div class="mqrow">' + [[30, '+30 min'], [60, '+1 val.'], [120, '+2'], [240, '+4'], [480, '+8'], [720, '+12'], [1440, '+24']].map(([m, l]) => `<button class="mqc" data-pa="rel" data-v="${m}">${l}</button>`).join('') + '</div>' +
           `<div class="mqdisp"><b class="cur">${(d.slice(0, 2) + ':' + d.slice(2)).replace(/_/g, '–')}</b><small>valandos : minutės</small></div>` + kpad('tkp', '<button data-pa="tkp" data-v="clr" aria-label="Išvalyti">C</button>', kDel('tkp'));
         return { title: 'Numatomas evakuacijos laikas', h, foot: '<div class="mqg2">' + (x.r.eta ? '<button class="btn mqsave" data-pa="etaclr">Išvalyti</button>' : '') + `<button class="btn pri mqsave" data-pa="save"${ok2 ? '' : ' disabled'}>${ok2 ? 'Gerai · ' + val : 'Įveskite laiką'}</button></div>` };
+      }
+      case 'tm': {
+        const b = s.buf || '', d = (b + '____').slice(0, 4), ok2 = tmVal(s) > 0;
+        const h = '<div class="mqrow mqtday" role="radiogroup" aria-label="Diena">' + [[0, 'Šiandien'], [1, 'Vakar']].map(([k, l]) => `<button class="mqc${s.day === k ? ' on' : ''}" role="radio" aria-checked="${s.day === k}" data-pa="tday" data-v="${k}">${l}</button>`).join('') + '</div>' +
+          `<div class="mqdisp"><b class="cur">${(d.slice(0, 2) + ':' + d.slice(2)).replace(/_/g, '–')}</b><small>valandos : minutės</small></div>` + kpad('tkp', '<button data-pa="tkp" data-v="clr" aria-label="Išvalyti">C</button>', kDel('tkp'));
+        return { title: 'Kada atlikta?', h, foot: `<button class="btn pri mqsave" data-pa="save"${ok2 ? '' : ' disabled'}>${ok2 ? 'Gerai · ' + (s.day ? 'vakar ' : 'šiandien ') + hm(tmVal(s)) : b.length === 4 ? 'Laikas ateityje' : 'Įveskite laiką'}</button>` };
       }
       case 'pt': {
         const c = x.c, r = x.r, inp = (k, lb, v, ph) => `<label class="mqf">${lb}<input class="inp" data-si="${k}" data-dict value="${esc(v)}" placeholder="${esc(ph || '')}" autocomplete="off"></label>`;
@@ -870,6 +960,15 @@ const PC = (() => {
     const k = t.dataset.si, v = t.value;
     if (k.indexOf('c:') === 0) { mcCard(SH.pid, c => { c[k.slice(2)] = v; }); return; }
     if (k.indexOf('r:') === 0) { upd(SH.pid, r => { r[k.slice(2)] = v; }); return; }
+    // v3.8: ranka įvestas vaisto pavadinimas atpažintas (ar nebeatpažįstamas) – perpiešiamos greitosios dozės ir intervalas, fokusas lieka
+    if (k === 'name' && SH.kind === 'med' && SH.mk !== 'int') {
+      const nv = drugOf(v), id = nv ? nv.id : '';
+      if (id !== (SH.dvId || '')) {
+        const pv = SH.dvId ? (E.vaistai || []).find(y => y.id === SH.dvId) : null; setName(SH, v, pv); draw();
+        const inp = shEl.querySelector('#pc-mname'); if (inp) { try { inp.focus({ preventScroll: true }); inp.setSelectionRange(inp.value.length, inp.value.length); } catch (e) {} }
+        return;
+      }
+    }
     SH[k] = v; if (k === 'name') SH.qn = '';
     const f = shEl.querySelector('.mqshf'); if (f && (k === 'name' || k === 'dose')) { const B = body(); f.innerHTML = B.foot; }
   }
@@ -878,7 +977,9 @@ const PC = (() => {
     switch (d.pa) {
       case 'close': return close(false);
       case 'back': return back();
-      case 'toff': s.toff = +v || 0; return draw();
+      case 'toff': s.toff = +v || 0; s.tAbs = 0; return draw();
+      case 'tother': return swap({ kind: 'tm', pid: s.pid, buf: s.tAbs ? hm(s.tAbs).replace(':', '') : '', day: s.tAbs && dayLb(s.tAbs) === 'vakar' ? 1 : 0 });
+      case 'tday': s.day = +v || 0; return draw();
       // rodikliai
       case 'av': s.v.avpu = s.v.avpu === v ? '' : v; return draw();
       case 'fk': s.fk = v; s.bpd = 0; s.rk = vKey(); return draw();
@@ -902,7 +1003,7 @@ const PC = (() => {
       case 'ml': s.ml = v === 'del' ? String(s.ml || '').slice(0, -1) : v === 'clr' ? '' : (String(s.ml || '') + v).replace(/^0+/, '').slice(0, 5); return draw();
       // vaistai
       case 'pick': s.pick = 1; return draw();
-      case 'name': { const pv = drugOf(s.name), nv = drugOf(v); if (nv && s.mk !== 'int' && (!pv || pv.id !== nv.id)) s.dose = ''; } s.name = v; s.pick = 0; s.qn = ''; { const dv = drugOf(v), q = dv ? ((TCFG.qd || {})[dv.id] || []) : []; if (dv && s.mk !== 'int') s.route = routeOf(dv); if (q.length === 1 && !s.dose) { s.route = q[0][0]; s.dose = q[0][1] + ' ' + q[0][2]; s.qn = q[0][4] || ''; } } autoIvl(s); return draw();
+      case 'name': setName(s, v, drugOf(s.name)); s.pick = 0; return draw();
       case 'qd': { const [r, a, i] = v.split('|'), dv = drugOf(s.name), q = dv ? ((TCFG.qd || {})[dv.id] || [])[+i] : null; s.route = r; s.dose = a; s.qn = (q && q[4]) || ''; autoIvl(s); return draw(); } // 5-as elementas – įrašo pavadinimas (kitas preparatas)
       case 'route': s.route = s.route === v ? '' : v; return draw();
       case 'ivl': s.ivl = +v || 0; return draw();
@@ -923,6 +1024,16 @@ const PC = (() => {
       case 'toeta': return swap({ kind: 'eta', pid: s.pid, buf: '' });
       case 'totr': { close(true); MC.sheet('time', { field: 'trauma' }); return; } // be history.back(): MIST laiko langas atsidaro iškart
     }
+  }
+  // Vaisto pavadinimas (sąrašas ar ranka): kitas vaistas – dozė išvaloma, būdas ir intervalas iš gido, viena greitoji dozė – iškart
+  function setName(s, v, pv) {
+    const nv = s.mk === 'int' ? null : drugOf(v);
+    if (nv && (!pv || pv.id !== nv.id)) s.dose = '';
+    s.name = v; s.qn = ''; s.dvId = nv ? nv.id : '';
+    const q = nv ? ((TCFG.qd || {})[nv.id] || []) : [];
+    if (nv) s.route = routeOf(nv);
+    if (q.length === 1 && !s.dose) { s.route = q[0][0]; s.dose = q[0][1] + ' ' + q[0][2]; s.qn = q[0][4] || ''; }
+    autoIvl(s);
   }
   function vNext() {
     const s = SH, V = s.v;
@@ -948,7 +1059,8 @@ const PC = (() => {
         if (Object.keys(v).length <= 2) return toast('Įveskite bent vieną rodiklį');
         upd(s.pid, r => { r.vit.push(v); r.vit.sort((a, b) => a.t - b.t); if (r.vit.length > 500) r.vit = r.vit.slice(-500); });
         mcCard(s.pid, c => { c.vit = (c.vit || []).filter(y => +y.t !== v.t); c.vit.push(toMist(v)); c.vit.sort((a, b) => (+a.t || PT.hmTs(a.ts) || 0) - (+b.t || PT.hmTs(b.ts) || 0)); });
-        close(false); toast('Rodikliai įrašyti ' + hm(v.t)); return;
+        if (s.mini) upd(s.pid, r => { if (!(+r.care.mini >= v.t)) r.care.mini = v.t; }); // rodikliai ir mini vizitas viena eilute – mini vizitas pažymimas kartu
+        close(false); toast('Rodikliai įrašyti ' + dhm(v.t) + (s.mini ? ' · mini vizitas' : '')); return;
       }
       case 'io': {
         const ml = parseInt(s.ml, 10); if (!(ml > 0 && ml <= 10000)) return toast('Įveskite kiekį ml');
@@ -977,6 +1089,11 @@ const PC = (() => {
         upd(s.pid, r => { r.eta = t; }); toast('Evakuacija ' + hm(t)); return back();
       }
       case 'imp': return importText(document.getElementById('pc-imp').value);
+      case 'tm': {
+        const t = tmVal(s); if (!t) return toast(/^\d{4}$/.test(s.buf || '') ? 'Laikas ateityje – pasirinkite „Vakar“' : 'Įveskite VVMM');
+        if (s.back) { s.back.tAbs = Math.min(t, now()); s.back.toff = -1; }
+        return back();
+      }
     }
   }
   // Žurnalo įrašas → MIST kortelė: vaistas – C lentelės eilutė (src 'pcc:id'), veiksmas – T pastabose
@@ -995,7 +1112,7 @@ const PC = (() => {
   // Greiti veiksmai iš paciento ekrano / juostos (TCFG.hub.quickAct)
   function quick(k, o) {
     const x = X(); if (!x) return;
-    if (k === 'pv') return open({ kind: 'vit', pid: x.pid, v: {}, fk: 'hr', bpd: 0 }, o);
+    if (k === 'pv' || k === 'pvm') return open({ kind: 'vit', pid: x.pid, v: {}, fk: 'hr', bpd: 0, mini: k === 'pvm' || !!(o && o.mini) }, o);
     if (k === 'pin' || k === 'pout') return open({ kind: 'io', pid: x.pid, k: k === 'pin' ? 'in' : 'out', typ: k === 'pin' ? 'krist' : 'slap', ml: '', note: '' }, o);
     if (k === 'pmed' || k === 'pint') return open({ kind: 'med', pid: x.pid, mk: k === 'pint' ? 'int' : 'med', name: '', dose: '', route: '', ivl: 0, note: '' }, o);
   }
@@ -1006,7 +1123,8 @@ const PC = (() => {
     const pid = d.p || (X() || {}).pid; if (!pid) return;
     const up = fn => { upd(pid, fn); keepY(); };
     switch (d.act) {
-      case 'pc-vit': if (d.p) PT.selectPid(d.p); return quick('pv');
+      case 'pc-vit': if (d.p) PT.selectPid(d.p); return quick(d.mini ? 'pvm' : 'pv');
+      case 'pc-alldone': return allDone(pid);
       case 'pc-io': return quick(k === 'out' ? 'pout' : 'pin');
       case 'pc-med': return quick(k === 'int' ? 'pint' : 'pmed');
       case 'pc-kg': return open({ kind: 'kg', pid, buf: String(X(pid).kg || '') });
@@ -1043,8 +1161,9 @@ const PC = (() => {
       }
       case 'pc-mdel': {
         const x = X(pid), m = x && x.r.meds.find(y => y.id === k); if (!m) return;
-        upd(pid, r => { r.meds = r.meds.filter(y => y.id !== k); }); unlogMist(pid, m);
-        keepY(); toastAct('Įrašas ištrintas', 'Atšaukti', () => { upd(pid, r => { r.meds.push(m); r.meds.sort((a, b) => a.t - b.t); }); logMist(pid, m); keepY(); });
+        let gone = []; if (m.src) mcCard(pid, c => { gone = (c.rows || []).filter(y => rowKey(y) === m.src); c.rows = (c.rows || []).filter(y => rowKey(y) !== m.src); }); // iš kortelės – ir kortelės eilutė
+        upd(pid, r => { r.meds = r.meds.filter(y => y.id !== k); }); if (!m.src) unlogMist(pid, m);
+        keepY(); toastAct('Įrašas ištrintas', 'Atšaukti', () => { if (gone.length) mcCard(pid, c => { c.rows = (c.rows || []).concat(gone); }); upd(pid, r => { r.meds.push(m); r.meds.sort((a, b) => a.t - b.t); }); if (!m.src) logMist(pid, m); keepY(); });
         return;
       }
       // turniketai
@@ -1143,7 +1262,7 @@ const PC = (() => {
   ];
 
   return { st, sec, timers, page, remView, homeBanner, nav, barExtra, quick, act, onInput, tick, settings, dataSettings, sourceRows, remSettings, searchTools,
-    remHook, remDone, isPcc, exportRec, importRec, hasData, recSummary, exportAll, importText,
+    remHook, remDone, remSnz, remCount, importZ, isPcc, exportRec, importRec, hasData, recSummary, exportAll, importText,
     // testams ir kitiems moduliams
     X, careState, medState, urine, ioTot, tqs, tqState, teleText, atmistText, worse, abn };
 })();
@@ -1151,6 +1270,8 @@ const PC = (() => {
 // ───────── Paciento ekranas (pacientas.js) ir priminimai (REM): PCC nustatymai ─────────
 TCFG.remHook = (p, push, now) => PC.remHook(p, push, now);
 TCFG.remDone = k => PC.remDone(k);
+TCFG.remSnz = k => PC.remSnz(k);   // atidėjimas – kiekvienam grupės darbui
+TCFG.remCount = () => PC.remCount(); // programėlės ženkliukas = „Priminimai“ eilučių skaičius
 TCFG.remSettings = () => PC.remSettings();
 TCFG.hub = {
   get listDefaults() { return (E.fazes || []).map(f => (f.lists || [])[0]).filter(id => id && (E.sarasai || {})[id]).slice(0, 3); },
@@ -1162,7 +1283,7 @@ TCFG.hub = {
   noBar: ['pacientas', 'mist', 'skenuoti', 'qr-priimti', 'egzaminas', 'vertinimas', 'telekonsultacija', 'turniketai', 'evakuacija', 'laikrodis'],
   quick: [['pv', '+ Rodikliai', 1], ['pin', '+ Įvesta', 1], ['pout', '+ Išskirta', 1], ['pmed', '+ Vaistas', 1], ['tq', '+ Turniketas'], ['mk', '+ Žymė schemoje']],
   sheetQuick: [['pv', '+ Rodikliai', 1], ['pmed', '+ Vaistas', 1], ['pin', '+ Įvesta'], ['pout', '+ Išskirta'], ['prz', 'Priežiūra'], ['perduoti', 'Perduoti']],
-  quickKeys: ['pv', 'pin', 'pout', 'pmed', 'pint'],
+  quickKeys: ['pv', 'pvm', 'pin', 'pout', 'pmed', 'pint'],
   quickAct: (k, o) => PC.quick(k, o),
   go: { prz: '#/pacientas?t=prz', rod: '#/pacientas?t=rod', sks: '#/pacientas?t=sks', vst: '#/pacientas?t=vst' },
   handoff: () => [],

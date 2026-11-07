@@ -174,7 +174,7 @@ const HUB = (() => {
       '<div class="hbsh"><b>Sužeistasis</b><button class="x" data-act="hb-close" aria-label="Uždaryti">×</button></div>' +
       ptTabs() + head(x, false) + tmCards(x) + its.map(remRow).join('') +
       (last ? `<div class="hbvit"><small>Paskutiniai požymiai${last.ts ? ' · ' + esc(last.ts) : ''}</small><div>${vitLine(last)}</div></div>` : '') +
-      quick(true) + '<a class="btn pri hbfile" href="#/pacientas">Atidaryti paciento failą ›</a></section>';
+      quick(true) + '<a class="btn pri hbfile" href="#/pacientas">Atidaryti paciento ekraną ›</a></section>';
   }
 
   // ── paciento ekrano skiltys ──
@@ -247,7 +247,11 @@ const HUB = (() => {
     a11y();
     // tik paciento ekrane: kitų sąrašų skirtukai ir filtrai (?f=) lieka adrese (atgal / perkrovimas)
     if (route().p[0] === 'pacientas' && /[?&](f|sh|d|fl)=/.test(location.hash)) { fDone = true; try { history.replaceState(history.state, '', strip(location.hash)); } catch (e) {} }
-    if (pend && typeof MC !== 'undefined' && MC.sheet && route().p[0] === 'pacientas') { const p = pend; pend = null; MC.sheet(p.sh, { drug: p.d, field: p.f }); return; }
+    if (pend && route().p[0] === 'pacientas') { // ?sh= – programėlės savas langas (PCC: pv – rodikliai) arba MIST kortelės langas
+      const p = pend, C = HCFG(); pend = null;
+      if ((C.quickKeys || []).indexOf(p.sh) >= 0 && typeof C.quickAct === 'function') { C.quickAct(p.sh, {}); return; }
+      if (typeof MC !== 'undefined' && MC.sheet) { MC.sheet(p.sh, { drug: p.d, field: p.f }); return; }
+    }
     pend = null;
     if (!focus) return;
     const el = app.querySelector(FOCUS[focus]); focus = null;

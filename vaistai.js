@@ -90,7 +90,8 @@ window.ETC.vaistai = [
     "pakuote": "Ampulės 50 mg/ml arba 100 mg/ml",
     "pastabos": [
       "Ketaminas, opioidai ir benzodiazepinai stiprina vienas kitą – kiekvieno reikia mažiau (JTS PFC).",
-      "Pykinimui – ondansetronas."
+      "Pykinimui – ondansetronas.",
+      "Kiti šaltiniai – JTS PCC (ID 91): 30 mg (0,3 mg/kg) IV / IO kas 20 min; IM / IN 50–100 mg kas 20–30 min. JTS PFC (analgezija ir sedacija): 20 mg (0,1–0,2 mg/kg) IV vidutiniam skausmui; sedacijai – 1 mg/kg IV. Gide nuskausminimui naudojama TCCC 2026 schema."
     ],
     "susije": [
       "midazolamas",
@@ -977,7 +978,8 @@ window.ETC.vaistai = [
     "pakuote": "Pagal vieneto rinkinį",
     "pastabos": [
       "PCC tikslai galvos traumai: SpO₂ ≥ 92 % (ventiliuojamam > 95 %), sAKS ≥ 110 mm Hg (JTS DCR), EtCO₂ 35–40 mm Hg, galvūgalis 30–60° (JTS TBI PFC; SpO₂ riba – TCCC 2026).",
-      "Be laboratorijos 250 ml 3 % NaCl padidina natrį ~2–3 mmol/l (80 kg; JTS TBI PFC)."
+      "Be laboratorijos 250 ml 3 % NaCl padidina natrį ~2–3 mmol/l (80 kg; JTS TBI PFC).",
+      "Kiti šaltiniai – JTS TBI PFC: 250 ml 3 % per 20 min, kartoti kas 3 val.; daugiau kaip 2 dozės – tik telekonsultacijos metu. Gide naudojama TCCC 2026 dozė."
     ],
     "susije": [
       "manitolis",
