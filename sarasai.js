@@ -14,7 +14,7 @@ const E = window.ETC;
 const sk = (n, t) => `<a href="#/igudis/${n}">${t || 'Įgūdis #' + n}</a>`;
 const vs = (id, t) => `<a href="#/vaistas/${id}">${t}</a>`;
 
-E.versija = '2026-11-07 v3.8 (peržiūros pataisos: naktinis kontrastas, OPSEC, diurezė „nematuota“, laiko įvedimas praeityje, PRN logika, dozių kortelės pagal lygį, lygių žymos, GST temperatūra, priminimų nuovargis)';
+E.versija = '2026-11-13 v3.9 (patikros pataisos: 9-Line koordinačių tikrinimas ir DTG, sąrašų žymėjimai keliems sužeistiesiems, pranešimo apie klaidą langas)';
 E.programa = 'PCC gidas';
 
 // ───────── FAZĖS ─────────

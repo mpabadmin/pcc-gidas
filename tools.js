@@ -16,7 +16,7 @@ const TCFG = {
   krGrupes: true, // kraujo produktai: gavėjo ir donoro ABO grupės (šviežias pilnas kraujas lauke)
   // MIST vaisto lango greitosios dozės [būdas, kiekis, vienetai] – tik iš duomenų (vaistai.js: E.qd = { vaisto id: [[…], …] }); PCC kode dozių nėra
   get qd() { return (window.ETC || {}).qd || {}; },
-  pt: ['laikai', 'ck', 'svoris'], // šie raktai priklauso dabartiniam pacientui (perjungiami kartu su MIST kortele)
+  pt: ['laikai', 'ck', 'ck-sig', 'svoris'], // šie raktai priklauso dabartiniam pacientui (perjungiami kartu su MIST kortele)
   // OPSEC: kartu su sužeistųjų duomenimis trinami PCC įrašai, telekonsultacijos ryšys ir diurezės laikotarpis (pcc-nust), priminimų atidėjimai ir intervalas,
   // neišsiųsti pranešimai apie klaidas (gali būti ekrano vaizdai), vertinimo lapai; „Aš“ profilis (as) lieka
   opKeys: ['pcc', 'pcc-nust', 'rem-z', 'remvit', 'fb-out', 'vl'],
@@ -274,7 +274,18 @@ const NL = (() => {
   // pirmenybės terminai (LK formos išnaša)
   const PREC_FN = { A: 'reikia evakuoti 2 val. laikotarpyje', B: 'reikalingas chirurginis gydymas per 2 valandas', C: 'sužeistieji, kurių išgelbėjimui reikalinga evakuacija per 4 valandas' };
   const lc1 = t => /^[A-ZĄČĘĖĮŠŲŪŽ]{2}/.test(t) ? t : t.charAt(0).toLowerCase() + t.slice(1); // „LT karys“ lieka, „Ne LT karys“ → „ne LT karys“
-  const dtg = () => { const d = new Date(); return String(d.getDate()).padStart(2, '0') + nowHM().replace(':', ''); };
+  // MGRS formato patikra – tik įspėja, neblokuoja (zona 1–60 + raidė C–X, 100 km kvadratas 2 raidės, 4–10 skaitmenų); kaip March gide
+  const MGRS_PAT = '\\s*\\d{1,2}[C-HJ-NP-Xc-hj-np-x]\\s?[A-HJ-NP-Za-hj-np-z]{2}\\s?(\\d{2,5}\\s?\\d{2,5})\\s*';
+  const MGRS_RE = /^\s*\d{1,2}[C-HJ-NP-X]\s?[A-HJ-NP-Z]{2}\s?(\d+)(?:\s(\d+))?\s*$/i;
+  const mgrsHint = v => {
+    v = String(v || '').trim(); if (!v) return '';
+    const m = v.match(MGRS_RE);
+    if (!m) return 'Neatpažintas MGRS formatas – tikėtina: zona (pvz. 35U), kvadratas (LA), skaitmenys (1234 5678). Galima siųsti ir taip.';
+    const d = m[1] + (m[2] || ''), okLen = d.length % 2 === 0 && d.length >= 4 && d.length <= 10, okHalf = !m[2] || m[1].length === m[2].length;
+    return okLen && okHalf ? '' : 'Skaitmenų turi būti lyginis skaičius, abi pusės vienodo ilgio (4, 6, 8 ar 10), pvz. 35U LA 1234 5678. Galima siųsti ir taip.';
+  };
+  // DTG kaip SITREP: DDHHMM + zona (L – vietinis) + mėnuo + metai, pvz. „031709L NOV 26“
+  const dtg = () => { if (typeof SR !== 'undefined' && SR.dtg) return SR.dtg(Date.now(), false); const d = new Date(); return String(d.getDate()).padStart(2, '0') + nowHM().replace(':', ''); };
   // Anglų kalba (NATO / JTS 9-Line)
   const EQ_EN = { A: 'None', B: 'Hoist', C: 'Extraction equipment', D: 'Ventilator' };
   const SEC_EN = { N: 'No enemy troops in area', P: 'Possible enemy troops – approach with caution', E: 'Enemy troops in area – approach with caution', X: 'Enemy troops in area – armed escort required' };
@@ -359,7 +370,7 @@ const NL = (() => {
     h += `<div class="seg2" role="group" aria-label="Situacija">${chip('nl-peace', '0', !s.peace, 'Karo metu')}${chip('nl-peace', '1', s.peace, 'Taikos metu')}</div>`;
     h += `<div class="nlprog"><div class="prog"><i style="width:${req * 20}%"></i></div><small class="muted">Būtinos 1–5 eilutės: ${req} / 5. Prieš kviesdami surinkite visą informaciją; kodus ir ryšio saugumą – pagal SOP.</small></div>`;
     h += `<section class="nl nlhd"><div class="nlh"><b>Padalinio siunčiančio 9liner šaukinys</b><small class="muted">pranešimo DTG – ${esc(dtg())}</small></div><input class="inp" data-nl="snd" value="${esc(s.snd)}" placeholder="pvz. Vilkas 1" autocomplete="off" aria-label="Padalinio siunčiančio 9liner šaukinys"></section>`;
-    h += card(1, s, `<input class="inp" data-nl="l1" value="${esc(s.l1)}" placeholder="pvz. 35U LA 1234 5678" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Surinkimo vietos koordinatės (MGRS)"><button class="btn sm" data-act="nl-gps">📍 Mano vieta (GPS → MGRS)</button>`, '8 skaitmenų tinklelio koordinatė (MGRS). GPS koordinates patikrinkite žemėlapyje.');
+    h += card(1, s, `<input class="inp mgrs" data-nl="l1" value="${esc(s.l1)}" placeholder="pvz. 35U LA 1234 5678" autocomplete="off" autocapitalize="characters" autocorrect="off" spellcheck="false" inputmode="text" pattern="${MGRS_PAT}" aria-label="Surinkimo vietos koordinatės (MGRS)" aria-describedby="nl-l1h"><small class="muted mqhint" id="nl-l1h"${mgrsHint(s.l1) ? '' : ' hidden'}>${mgrsHint(s.l1)}</small><button class="btn sm" data-act="nl-gps">📍 Mano vieta (GPS → MGRS)</button>`, '8 skaitmenų tinklelio koordinatė (MGRS). GPS koordinates patikrinkite žemėlapyje.');
     h += card(2, s, `<div class="in3"><input class="inp" data-nl="freq" value="${esc(s.freq)}" placeholder="Dažnis" inputmode="decimal" autocomplete="off" aria-label="Dažnis"><input class="inp" data-nl="cs" value="${esc(s.cs)}" placeholder="Šaukinys" autocomplete="off" aria-label="Šaukinys"><input class="inp" data-nl="sfx" value="${esc(s.sfx)}" placeholder="Slaptažodis" autocomplete="off" aria-label="Slaptažodis (NATO – suffix)"></div>`, 'Surinkimo vietos (ne retransliatoriaus) dažnis.');
     h += card(3, s, fillBtn() + PREC.map(([k, lt, en]) => stepper('nl-p', k, s.p[k], k + ' – ' + lt, en + (PREC_FN[k] ? ' · ' + PREC_FN[k] : ''))).join('') + precHelp(), 'Kiekvienai kategorijai – sužeistųjų skaičius.');
     h += card(4, s, '<div class="opts">' + EQ.map(([k, t]) => chip('nl-eq', k, s.eq.indexOf(k) >= 0, k + ' – ' + t)).join('') + '</div>');
@@ -420,9 +431,11 @@ const NL = (() => {
   }
 
   function onInput(t) {
+    if (t.dataset.nl === 'l1') { const u = t.value.toUpperCase(); if (u !== t.value) { const p = t.selectionStart; t.value = u; try { t.setSelectionRange(p, p); } catch (e) {} } } // MGRS – didžiosios raidės
     const s = get(); s[t.dataset.nl] = t.value; save(s);
     const o = document.getElementById('nl-out'); if (o) o.textContent = text(s, outEn());
     const sec = t.closest('section.nl'), n = sec ? +sec.dataset.n : 0; if (n) sec.classList.toggle('ok', !!lines(s)[n - 1]);
+    if (t.dataset.nl === 'l1') { const hh = document.getElementById('nl-l1h'), m = mgrsHint(t.value); if (hh) { hh.textContent = m; hh.hidden = !m; } }
   }
   return { view, act, onInput, status, lines, text };
 })();
@@ -1926,6 +1939,8 @@ const PT = (() => {
     if (ch) LS.set(MK, st);
     const s = store(), pid = st.pts[st.cur].pid, alive = st.pts.map(p => p.pid);
     let sch = false;
+    // sąrašų žymėjimų parašas keliauja kartu su sužeistojo žymėjimais; anksčiau išsaugotiems (be parašo) – dabartinių sąrašų parašas
+    { const CK = TCFG.pre + 'ck', SG = TCFG.pre + 'ck-sig'; Object.keys(s.data).forEach(k => { const d = s.data[k]; if (d && d[CK] && typeof d[CK] === 'object' && d[SG] == null && typeof ckSig === 'function') { const g = {}; Object.keys(d[CK]).forEach(id => { g[id] = ckSig(id); }); d[SG] = g; sch = true; } }); }
     if (s.cur !== pid) {
       if (s.cur) {
         if (alive.indexOf(s.cur) >= 0) { const d = {}; keys().forEach(k => { d[k] = LS.get(k, null); }); s.data[s.cur] = d; }
