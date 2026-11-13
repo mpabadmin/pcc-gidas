@@ -271,9 +271,14 @@ window.ETC.vaistai = [
     "kontra": "PCS: alergija opioidams, kvėpavimo slopinimas, obstrukcinė kvėpavimo takų liga, MAO inhibitoriai (per 2 sav.). Šokas ar kvėpavimo distresas – pirmenybė ketaminui.",
     "dozes": [
       {
-        "k": "IV / IO (JTS PFC)",
-        "d": "50 mcg (25–100 mcg) kas 30 min – 2 val. pagal poreikį",
-        "p": "50 mcg/ml – 1 ml. Leisti per 30–60 s. IM – nerekomenduojama."
+        "k": "IV / IO (ankstesnės TCCC, 2024)",
+        "d": "50 mcg lėtai, kartoti kas 30 min pagal poreikį",
+        "p": "50 mcg/ml – 1 ml. Leisti per 30–60 s; stebėkite kvėpavimą. IM – nerekomenduojama (JTS PFC)."
+      },
+      {
+        "k": "Į nosį (ankstesnės TCCC, 2024)",
+        "d": "100 mcg, kartoti kas 30 min pagal poreikį",
+        "p": "Dalyti per abi šnerves, ≤ 1 ml į šnervę (50 mcg/ml: 100 mcg = 2 ml – po 1 ml į kiekvieną). PCC metu į nosį – vengti, pirmenybė IV / IO (JTS PFC)."
       }
     ],
     "ispejimai": [
@@ -286,14 +291,19 @@ window.ETC.vaistai = [
     "pakuote": "Ampulės 50 mcg/ml (2 ml = 100 mcg)",
     "pastabos": [
       "Narkotinė medžiaga – apskaita pagal SOP.",
-      "Skiriasi nuo March gido: March (TCCC 2024) – dar 100 mcg į nosį; PCC metu į nosį vengti ir IM nerekomenduojama (JTS PFC). Lygis CPP – kaip March."
+      "Schema – kaip ETC ir March giduose (ankstesnės TCCC gairės). Kiti šaltiniai – JTS PFC: IV / IO 25–100 mcg kas 30 min – 2 val.",
+      "Lygis CPP – kaip March."
     ],
     "susije": [
       "naloksonas",
       "ketaminas"
     ],
-    "saltinis": "JTS CPG „Analgesia and Sedation Management during PFC“ (2023); PCS (fentanilis)",
+    "saltinis": "Ankstesnės TCCC gairės (2024-01-25); JTS CPG „Analgesia and Sedation Management during PFC“ (2023); PCS (fentanilis)",
     "nuorodos": [
+      [
+        "TCCC gairės 2024-01-25 (ankstesnės, PDF, tccc.org.ua)",
+        "https://tccc.org.ua/files/downloads/clinical-guidelines-2024-en.pdf"
+      ],
       [
         "JTS CPG „Analgesia and Sedation Management during PFC“ (tccc.org.ua, 2023)",
         "https://tccc.org.ua/en/guide/analgesia-and-sedation-management-during-prolonged-field-care-pcc"
@@ -1228,34 +1238,44 @@ window.ETC.vaistai = [
   {
     "id": "gliukoze",
     "name": "Gliukozė (hipoglikemija)",
-    "klase": "50 % arba 10 % tirpalas; per burną",
+    "klase": "10 % infuzinis tirpalas; per burną",
     "grupe": "kita",
     "lygis": "CMC",
     "tipas": "papild",
     "ne26": true,
     "kam": "Kovos medikas (CMC)",
-    "ind": "Gliukozė < 5,6 mmol/l galvos traumai (JTS TBI PFC); < 4,4 mmol/l kitiems (JTS ID 70); ilgai nemaitinamas sužeistasis.",
+    "ind": "Gliukozė < 4 mmol/l arba hipoglikemijos požymiai (silpnumas, prakaitavimas, sumišimas, traukuliai); galvos traumai – < 5,6 mmol/l (JTS TBI PFC); ilgai nemaitinamas sužeistasis.",
     "kontra": "",
     "dozes": [
       {
-        "k": "Per burną arba IV / IO (JTS TBI PFC)",
-        "d": "20 g per burną arba 25 g IV / IO (50 ml 50 % arba 250 ml 10 %)",
-        "p": "Po 1 val. pakartoti matavimą."
+        "k": "IV / IO lašinti",
+        "d": "200 ml 10 % gliukozės (20 g) per 15 min",
+        "p": "Po 10 min pakartoti gliukozės matavimą; vis dar < 4 mmol/l (galvos traumai < 5,6) – kartoti."
+      },
+      {
+        "k": "Sąmoningas, ryja",
+        "d": "15–20 g greitų angliavandenių per burną",
+        "p": "Po 10–15 min pakartoti matavimą."
       }
     ],
     "ispejimai": [
-      "50 % tirpalas dirgina veną – į gerai veikiančią prieigą."
+      "Turint tik 40 % gliukozę: 50 ml (20 g) į didelę veną lėtai – stipriai dirgina veną, ekstravazacija sukelia nekrozę."
     ],
     "pastabos": [
       "Nemaitinamam gliukozę matuoti kas 8 val. (JTS ID 70).",
       "Galvos traumai tikslas ~10 mmol/l (JTS TBI PFC).",
-      "Skiriasi nuo ETC gido: ETC – 200 ml 10 % gliukozės per 15 min (NHS / JBDS); čia – JTS TBI PFC 25 g (50 ml 50 % arba 250 ml 10 %)."
+      "Kraujo gliukozę matuoti kas valandą, kol stabili; vienas matavimas po gydymo nepakankamas.",
+      "Dozė – kaip ETC gide (NHS / JBDS). Kiti šaltiniai – JTS TBI PFC: 20 g per burną arba 25 g IV / IO, matavimą kartoti po 1 val.; JTS ID 70: gydyti < 4,4 mmol/l."
     ],
     "susije": [
       "insulinas"
     ],
-    "saltinis": "JTS CPG „TBI Management in PFC“ (2023); JTS CPG ID 70 (2025)",
+    "saltinis": "NHS / JBDS suaugusiųjų hipoglikemijos gydymo algoritmas; JTS CPG „TBI Management in PFC“ (2023); JTS CPG ID 70 (2025)",
     "nuorodos": [
+      [
+        "NHS Scotland – suaugusiųjų hipoglikemijos gydymas (JBDS)",
+        "https://www.cem.scot.nhs.uk/adult/hypoglycaemia.pdf"
+      ],
       [
         "JTS CPG „TBI Management in PFC“ (tccc.org.ua, 2023)",
         "https://tccc.org.ua/en/guide/traumatic-brain-injury-management-in-prolonged-field-care-pcc"

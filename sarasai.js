@@ -14,7 +14,7 @@ const E = window.ETC;
 const sk = (n, t) => `<a href="#/igudis/${n}">${t || 'Įgūdis #' + n}</a>`;
 const vs = (id, t) => `<a href="#/vaistas/${id}">${t}</a>`;
 
-E.versija = '2026-11-13 v3.9 (patikros pataisos: 9-Line koordinačių tikrinimas ir DTG, sąrašų žymėjimai keliems sužeistiesiems, pranešimo apie klaidą langas)';
+E.versija = '2026-11-13 v3.10 (suderinta su ETC gidu: gliukozė 200 ml 10 % (20 g), fentanilis 50 mcg kas 30 min; 9-Line prilipusi juosta „Skaityti per radiją“; GKS rezultato juosta pirštinių režime)';
 E.programa = 'PCC gidas';
 
 // ───────── FAZĖS ─────────

@@ -385,6 +385,8 @@ const NL = (() => {
     h += `<section class="outp"><div class="nlh"><b>Perduoti</b></div>${langSeg('nl-lang')}<pre id="nl-out">${esc(text(s, outEn()))}</pre>` +
       '<div class="acts"><button class="btn pri" data-act="nl-read">Skaityti per radiją</button><button class="btn" data-act="nl-copy">Kopijuoti</button><button class="btn" data-act="nl-share">Bendrinti</button><button class="btn" data-act="nl-clear">Išvalyti</button></div></section>';
     h += tcfgRows(TCFG.nl());
+    // prilipusi apatinė juosta – būtinų eilučių skaitiklis ir „Skaityti per radiją“ be slinkimo į apačią (kaip March gide)
+    h += `<div class="nlbar"><span class="nlbc" title="Būtinos 1–5 eilutės"><span class="nlbw">Būtinos 1–5: </span><b id="nl-req">${req}</b> / 5</span><button class="btn pri" data-act="nl-read">Skaityti per radiją</button></div>`;
     return h;
   }
 
@@ -436,6 +438,7 @@ const NL = (() => {
     const o = document.getElementById('nl-out'); if (o) o.textContent = text(s, outEn());
     const sec = t.closest('section.nl'), n = sec ? +sec.dataset.n : 0; if (n) sec.classList.toggle('ok', !!lines(s)[n - 1]);
     if (t.dataset.nl === 'l1') { const hh = document.getElementById('nl-l1h'), m = mgrsHint(t.value); if (hh) { hh.textContent = m; hh.hidden = !m; } }
+    const rq = document.getElementById('nl-req'); if (rq) rq.textContent = lines(s).slice(0, 5).filter(Boolean).length;
   }
   return { view, act, onInput, status, lines, text };
 })();

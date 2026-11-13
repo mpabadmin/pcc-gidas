@@ -584,6 +584,17 @@ body.field{--sEb:#353533;--sEf:#F1EFE8}
 @media(prefers-color-scheme:dark){body.learn .mqdate{color-scheme:dark}}
 .mqhint{margin:8px 0 0;font-size:13px}
 .nl .mqhint{display:block;margin:4px 0 8px}
+/* 9-Line prilipusi apatinė juosta (skaitiklis + „Skaityti per radiją“) – kaip March gide; pirštinių „Atgal“ (#glback) čia kairėje */
+.nlbar{position:sticky;bottom:calc(66px + env(safe-area-inset-bottom));z-index:3;display:flex;align-items:center;gap:10px;margin:12px 0 4px;padding:8px 10px 8px 14px;border-radius:14px;background:var(--tx);color:var(--bg);box-shadow:0 4px 18px rgba(0,0,0,.28)}
+.nlbar .nlbc{flex:1;min-width:0;font-size:14px;line-height:1.25}.nlbar .nlbc b{font-size:18px}
+.nlbar .btn,.nlbar .btn.pri{flex:none;width:auto;display:inline-block;font-size:15px;margin:0;background:var(--bg);color:var(--tx);border-color:var(--bg);font-weight:700;min-height:44px;padding:8px 14px}
+html.gl .nlbar .btn{min-height:52px}
+body.hasbar .nlbar{bottom:calc(126px + env(safe-area-inset-bottom))}
+/* pirštinių režimas: „Atgal“ (#glback) ir aukštesnė sužeistojo juosta – prilipusios juostos (9-Line, GKS rezultatas) virš jų */
+html.gl .nlbar,html.gl .gres{bottom:calc(82px + env(safe-area-inset-bottom));margin-left:76px}
+html.gl body.hasbar .nlbar,html.gl body.hasbar .gres{bottom:calc(148px + env(safe-area-inset-bottom));margin-left:0}
+@media(max-width:400px){html.gl .nlbar .nlbw{display:none}html.gl .nlbar .btn{padding:8px 10px}html.gl .nlbar{padding-left:10px}}
+body.night .nlbar{background:#000;color:#fff;border:1px solid #fff;box-shadow:none}body.night .nlbar .btn{background:#000!important;color:#fff!important;border:2px solid #fff!important}
 .mqg{display:inline-flex;align-items:center;justify-content:center;flex:none;width:26px;height:26px;border-radius:50%;background:var(--g);color:var(--gf);font-weight:800;font-size:12px;box-shadow:0 0 0 1.5px var(--mkr)}
 .mqtools{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;margin:4px 0 8px}
 .mqtools button{display:flex;flex-direction:column;align-items:center;gap:3px;min-height:60px;padding:4px 2px;border:1px solid var(--line);border-radius:10px;background:transparent;color:var(--tx);font:inherit;font-size:11px;line-height:1.1;text-align:center;overflow:hidden;touch-action:manipulation}

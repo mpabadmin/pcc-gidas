@@ -1,4 +1,4 @@
-# PCC gidas – turinio failai (v3.8, 2026-11-07)
+# PCC gidas – turinio failai (v3.10, 2026-11-13)
 
 Turinys PCC gidui (1040 medkuopa), parašytas **March gido duomenų formatais**. Įdėkite failus į perstatytos programėlės šaknį vietoje March failų.
 
@@ -67,7 +67,7 @@ Atnaujinti: turinio failai redaguojami tiesiogiai (generatoriaus ir tikrintuvo r
 - **Kalcis**: transfuzijai – 30 ml (TCCC 2026); hiperkalemijai – nuo v3.7 ta pati dozė (ERC 2025), žr. žemiau. p2 nebežymi 10 ml kaip klaidos.
 - **Scenarijų lygiai**: p8 ir p15 → CPP.
 - **Ketaminas**: pridėta TCCC 2026 IN 50 mg (kaip March) su JTS PFC pastaba „PCC metu vengti“.
-- **Skiriasi nuo ETC / March gido** (pastabose): gliukozė 25 g (ETC 200 ml 10 %), noradrenalinas 0,1–0,4 (ETC 0,05–1 mcg/kg/min), fentanilis be IN (March – 100 mcg IN; lygis CPP kaip March), naloksonas titruojamas (March 0,4 mg). Manitolis ir kalcis hiperkalemijai nuo v3.7 suvienodinti.
+- **Skiriasi nuo ETC / March gido** (pastabose): noradrenalinas 0,1–0,4 (ETC 0,05–1 mcg/kg/min), naloksonas titruojamas (March 0,4 mg). Nuo v3.10 gliukozė (200 ml 10 % = 20 g per 15 min) ir fentanilis (IV / IO 50 mcg, IN 100 mcg, kas 30 min; IN – su JTS PFC pastaba „PCC metu vengti“, kaip ketaminas) – kaip ETC; JTS skaičiai – pastabose „Kiti šaltiniai“. Manitolis ir kalcis hiperkalemijai nuo v3.7 suvienodinti.
 - **Stabligė**: TIG 500 VV užterštai karo žaizdai / 250 VV švariai didelei – kaip JTS žaizdų PFC; pastaba, kad įprasta dozė 250 VV.
 - **Lidokainas**: „ne daugiau kaip 3 mg/kg (80 kg – ne daugiau kaip 240 mg)“, be skaičiuoklės.
 

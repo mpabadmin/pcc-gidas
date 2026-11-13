@@ -1732,11 +1732,11 @@ window.ETC.scenarijai = [
       "ok": false
      },
      {
-      "t": "25 g gliukozės IV, po valandos – matavimas",
+      "t": "20 g gliukozės IV (200 ml 10 %), po 10 min – matavimas",
       "ok": true
      }
     ],
-    "why": "JTS TBI PFC: tikslas ~10 mmol/l; < 5,6 mmol/l – 20 g per burną arba 25 g IV / IO, po valandos pakartoti.",
+    "why": "JTS TBI PFC: galvos traumai tikslas ~10 mmol/l, < 5,6 mmol/l – gydyti. Dozė – 200 ml 10 % gliukozės (20 g) IV / IO per 15 min, sąmoningam ir ryjančiam – 15–20 g per burną; po 10 min pakartoti matavimą.",
     "ref": [
      "#/vaistas/gliukoze",
      "#/s/y-galva"
